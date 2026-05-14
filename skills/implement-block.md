@@ -146,35 +146,142 @@ Read the selected block's folder. **Do this systematically, in order:**
      rồi thêm photo upload sau khi core hoạt động. OK?"
   ```
 
-- **Lock decisions** — after interview, summarize:
-  ```
-  ## Tóm tắt trước khi build
-
-  **Feature**: Product Reviews
-  **Block**: ugc.product-reviews
-
-  **Quyết định:**
-  - Verified buyer check: BẬT (chỉ khách đã mua)
-  - Auto-approve: rating >= 4 sao
-  - Reviews per page: 10
-  - Min review length: 20 chars
-
-  **Thêm ngoài block:**
-  - Photo upload (sau khi core xong)
-
-  **Config cần setup sau:**
-  - (không có external service nào cần config)
-
-  Bắt đầu build?
-  ```
-
-- **User confirms** → Phase 4.
+- **Lock decisions** — after interview, confirm decisions verbally → Phase 4.
 
 ---
 
-## Phase 4: IMPLEMENT — Build it
+## Phase 4: CLONE + CUSTOMIZE — Tạo blueprint riêng cho project
 
-Now implement the block into the current codebase. Follow this order:
+Bước này tạo bản copy của block **trong project của user**, customize theo decisions từ Phase 3.
+Block gốc trong library giữ nguyên — không bao giờ sửa.
+
+### Step 1: Clone block vào project
+
+```bash
+# Tạo thư mục .blocks/ trong project root (convention)
+mkdir -p .blocks/{block.category}/{block.feature-slug}/
+# Copy toàn bộ block folder
+cp -r {BLOCKS_ROOT}/{category}/{feature}/* .blocks/{category}/{feature}/
+```
+
+Convention: `.blocks/` ở project root — tương tự `.github/`, `.vscode/`. Đây là nơi chứa
+blueprints đã customize cho project này.
+
+### Step 2: Customize README.md
+
+Sửa **config surface** — thay defaults bằng actual values từ interview:
+
+```diff
+  | Key | Type | Default | Description |
+  |-----|------|---------|-------------|
+- | `REQUIRE_VERIFIED_BUYER` | `boolean` | `false` | Reject reviews from non-buyers |
++ | `REQUIRE_VERIFIED_BUYER` | `boolean` | `true` | ✅ User confirmed: chỉ khách đã mua |
+- | `AUTO_APPROVE_THRESHOLD` | `number` | `0` (disabled) | Ratings >= this auto-approve |
++ | `AUTO_APPROVE_THRESHOLD` | `number` | `4` | ✅ User confirmed: auto-approve ≥ 4 sao |
+```
+
+Thêm section ở đầu README.md:
+
+```markdown
+## Project Customizations
+
+> Block này đã customize cho project [project-name].
+> Source block: {block.id} v{block.version}
+> Customized: {date}
+
+### Decisions locked
+- Verified buyer: ON
+- Auto-approve: >= 4 stars
+- Reviews per page: 10
+- Min review body: 20 chars
+
+### Added beyond block
+- [ ] Photo upload in reviews (deferred — implement after core)
+
+### Removed from block
+- (none)
+
+### Project context
+- Framework: {detected}
+- Database: {detected}
+- Test runner: {detected}
+- Existing auth: {detected or "none"}
+```
+
+### Step 3: Customize .feature files
+
+- **Remove** scenarios user explicitly excluded
+- **Add** new scenarios for features beyond the block:
+  ```gherkin
+  @custom
+  Scenario: Shopper uploads photo with review
+    Given a logged-in shopper on a product page
+    When they submit a review with a photo attachment
+    Then the photo is stored and displayed alongside the review text
+  ```
+- **Modify** scenarios where user's decisions change behavior:
+  ```diff
+  - Given REQUIRE_VERIFIED_BUYER is "false"
+  + Given REQUIRE_VERIFIED_BUYER is "true"
+  ```
+
+### Step 4: Customize data model (if needed)
+
+Nếu user thêm feature ngoài block (photo upload), thêm columns/tables vào data model
+section trong README.md:
+
+```diff
+  reviews {
+      ...
++     text photo_url "nullable — uploaded review photo"
+  }
++
++ review_photos {
++     text id PK
++     text review_id FK "→ reviews.id"
++     text url "S3/R2 URL"
++     int size_bytes
++     timestamptz created_at
++ }
+```
+
+### Step 5: Update acceptance.md
+
+Thêm project-specific acceptance criteria:
+```diff
+  - [ ] Tất cả unit tests pass
+  - [ ] tsc --noEmit pass
++ - [ ] Photo upload endpoint returns 200 (nếu implemented)
++ - [ ] Existing auth middleware protects review submit endpoint
++ - [ ] Review routes registered in app router (src/routes/index.ts)
+```
+
+### Step 6: User review
+
+Trình bày cho user xem customized blueprint:
+
+```
+Đã tạo blueprint tại .blocks/ugc/product-reviews/
+
+Thay đổi so với block gốc:
+- Config: verified_buyer=ON, auto_approve=4 sao
+- Thêm scenario: photo upload (deferred)
+- Data model: giữ nguyên
+- Acceptance: +3 items project-specific
+
+Bạn review .blocks/ugc/product-reviews/README.md rồi confirm để tôi implement?
+Hoặc cần sửa gì trong blueprint?
+```
+
+**User confirms** → Phase 5.
+**User muốn sửa** → iterate trên blueprint (cheap — chỉ sửa markdown, không code).
+
+---
+
+## Phase 5: IMPLEMENT — Build from customized blueprint
+
+Read from `.blocks/{category}/{feature}/` (customized version), NOT from library.
+Follow this order:
 
 ### Step 1: Database
 - Read block's data model section
@@ -197,22 +304,40 @@ Now implement the block into the current codebase. Follow this order:
 - Don't skip security items even if user didn't mention them
 
 ### Step 5: Tests
-- Read `tests/unit.ts` and `tests/integration.ts` (if exist)
-- Adapt test patterns to project's test framework
-- Read `.feature` files — generate tests for each scenario
+- Read `.blocks/{category}/{feature}/*.feature` — generate tests for each Gherkin scenario
+  (including @custom scenarios added in Phase 4)
+- Read `tests/unit.ts` and `tests/integration.ts` (if exist) — adapt patterns
 - **Run tests** — iterate until pass
 
 ### Step 6: Acceptance
-- Read `acceptance.md` — run through every checklist item
+- Read `.blocks/{category}/{feature}/acceptance.md` — run through every checklist item
+  (including project-specific items added in Phase 4)
 - Run `tsc --noEmit`
-- Run test suite
+- Run full test suite
 - Verify each item, fix any failures
 
 ### Step 7: Report
 - List all files created/modified
 - List configuration that needs manual setup (env vars, external services)
 - Generate SETUP.md if external service config needed
-- List what was implemented vs what was deferred (e.g., photo upload)
+- List what was implemented vs what was deferred
+
+### Step 8: Update blueprint status
+
+Mark the customized blueprint as implemented — it becomes living documentation:
+
+```markdown
+## Implementation Status
+
+> Implemented: {date}
+> Files created: {list}
+> Tests: {pass count}/{total count}
+> Deferred: {list or "none"}
+```
+
+Add to top of `.blocks/{category}/{feature}/README.md`. Future Claude Code sessions
+read this and know: this feature exists, here's where it lives, here's the blueprint
+it was built from.
 
 ---
 
