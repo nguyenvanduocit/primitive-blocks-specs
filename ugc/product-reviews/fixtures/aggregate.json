@@ -1,0 +1,14 @@
+{
+  "_comment": "Aggregate for product-abc based on 3 approved reviews (review-001: 5, review-002: 3, review-005: 2). review-003 is pending and review-004 is rejected — both excluded from aggregate.",
+  "id": "agg-001",
+  "shop_id": "shop-001",
+  "product_id": "product-abc",
+  "avg_rating": 3.3,
+  "total_count": 3,
+  "count_star_1": 0,
+  "count_star_2": 1,
+  "count_star_3": 1,
+  "count_star_4": 0,
+  "count_star_5": 1,
+  "last_updated_at": "2025-01-17T08:00:00Z"
+}

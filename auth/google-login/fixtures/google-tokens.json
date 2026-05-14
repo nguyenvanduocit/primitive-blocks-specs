@@ -1,0 +1,39 @@
+{
+  "_comment": "Mock Google OAuth2 token exchange responses — returned by POST oauth2.googleapis.com/token",
+  "_usage": "Use in tests that mock the code-for-token exchange step.",
+
+  "valid_token_response": {
+    "access_token": "ya29.a0AXoXfWh-mock-access-token-1234567890",
+    "expires_in": 3599,
+    "scope": "openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",
+    "token_type": "Bearer",
+    "id_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.mock-payload.mock-signature"
+  },
+
+  "invalid_grant_error": {
+    "_comment": "Returned when code is expired, already used, or invalid",
+    "error": "invalid_grant",
+    "error_description": "Code was already redeemed."
+  },
+
+  "invalid_client_error": {
+    "_comment": "Returned when client_id or client_secret is wrong",
+    "error": "invalid_client",
+    "error_description": "The OAuth client was not found."
+  },
+
+  "redirect_uri_mismatch_error": {
+    "_comment": "Returned when redirect_uri does not match registered URI",
+    "error": "redirect_uri_mismatch",
+    "error_description": "Bad Request"
+  },
+
+  "token_exchange_request": {
+    "_comment": "Reference shape for the POST body sent to Google",
+    "code": "4/0AX4XfWh-valid-code",
+    "client_id": "test-client-id.apps.googleusercontent.com",
+    "client_secret": "GOCSPX-test-secret",
+    "redirect_uri": "https://myapp.example.com/auth/callback",
+    "grant_type": "authorization_code"
+  }
+}

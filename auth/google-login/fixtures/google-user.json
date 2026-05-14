@@ -1,0 +1,68 @@
+{
+  "_comment": "Mock Google userinfo response — returned when calling googleapis.com/oauth2/v3/userinfo with valid access_token. Also represents decoded id_token payload claims.",
+  "_usage": "Use in tests that verify user creation/update from Google profile data.",
+
+  "userinfo_response": {
+    "sub": "google-uid-112233",
+    "email": "alice@example.com",
+    "email_verified": true,
+    "name": "Alice Johnson",
+    "given_name": "Alice",
+    "family_name": "Johnson",
+    "picture": "https://lh3.googleusercontent.com/a/example-photo-hash=s96-c",
+    "locale": "en"
+  },
+
+  "id_token_payload": {
+    "iss": "https://accounts.google.com",
+    "azp": "test-client-id.apps.googleusercontent.com",
+    "aud": "test-client-id.apps.googleusercontent.com",
+    "sub": "google-uid-112233",
+    "email": "alice@example.com",
+    "email_verified": true,
+    "at_hash": "HK6E_P6Dh8Y93mRNtsDB1Q",
+    "name": "Alice Johnson",
+    "picture": "https://lh3.googleusercontent.com/a/example-photo-hash=s96-c",
+    "given_name": "Alice",
+    "family_name": "Johnson",
+    "locale": "en",
+    "iat": 1700000000,
+    "exp": 1700003600
+  },
+
+  "unverified_email_payload": {
+    "_comment": "Use for testing email_verified=false rejection",
+    "iss": "https://accounts.google.com",
+    "aud": "test-client-id.apps.googleusercontent.com",
+    "sub": "google-uid-445566",
+    "email": "unverified@example.com",
+    "email_verified": false,
+    "name": "Unverified User",
+    "given_name": "Unverified",
+    "family_name": "User",
+    "iat": 1700000000,
+    "exp": 1700003600
+  },
+
+  "wrong_audience_payload": {
+    "_comment": "Use for testing aud mismatch rejection",
+    "iss": "https://accounts.google.com",
+    "aud": "wrong-client-id.apps.googleusercontent.com",
+    "sub": "google-uid-778899",
+    "email": "wrong-aud@example.com",
+    "email_verified": true,
+    "name": "Wrong Audience",
+    "iat": 1700000000,
+    "exp": 1700003600
+  },
+
+  "expected_user_row": {
+    "_comment": "Expected database row after processing userinfo_response",
+    "email": "alice@example.com",
+    "name": "Alice Johnson",
+    "avatar_url": "https://lh3.googleusercontent.com/a/example-photo-hash=s96-c",
+    "google_id": "google-uid-112233",
+    "domain": "example.com",
+    "role": "user"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "_comment": "Sample welcome email template — use in tests for user.created event handling",
+  "id": "tmpl_welcome_001",
+  "shop_id": "shop_001",
+  "slug": "welcome",
+  "subject_template": "Welcome to {{shop_name}}, {{user_name}}!",
+  "body_template": "<!DOCTYPE html><html><body style=\"font-family: sans-serif; max-width: 600px; margin: 0 auto;\"><h1 style=\"color: #333;\">Welcome, {{user_name}}!</h1><p>Thanks for joining <strong>{{shop_name}}</strong>. We're excited to have you.</p><p>Here's how to get started:</p><ul><li>Browse our catalog</li><li>Set up your profile</li><li>Check out our latest deals</li></ul><p><a href=\"{{login_url}}\" style=\"display: inline-block; padding: 12px 24px; background: #4F46E5; color: white; text-decoration: none; border-radius: 6px;\">Get Started</a></p><p style=\"color: #666; font-size: 14px;\">If you didn't create this account, you can ignore this email.</p></body></html>",
+  "category": "transactional",
+  "active": true,
+  "created_at": "2025-01-15T10:00:00Z",
+  "updated_at": "2025-01-15T10:00:00Z",
+  "_sample_variables": {
+    "user_name": "Alice",
+    "shop_name": "Merchant Store",
+    "login_url": "https://merchant.com/login"
+  }
+}

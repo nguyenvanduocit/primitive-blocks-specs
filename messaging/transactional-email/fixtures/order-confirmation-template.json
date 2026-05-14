@@ -1,0 +1,18 @@
+{
+  "_comment": "Sample order confirmation template — use in tests for order.created event handling",
+  "id": "tmpl_order_001",
+  "shop_id": "shop_001",
+  "slug": "order-confirmation",
+  "subject_template": "Order #{{order_number}} confirmed",
+  "body_template": "<!DOCTYPE html><html><body style=\"font-family: sans-serif; max-width: 600px; margin: 0 auto;\"><h1 style=\"color: #333;\">Order Confirmed</h1><p>Hi {{customer_name}},</p><p>Thanks for your order! Here's a summary:</p><table style=\"width: 100%; border-collapse: collapse;\"><tr style=\"background: #f9fafb;\"><td style=\"padding: 8px; border: 1px solid #e5e7eb;\"><strong>Order Number</strong></td><td style=\"padding: 8px; border: 1px solid #e5e7eb;\">{{order_number}}</td></tr><tr><td style=\"padding: 8px; border: 1px solid #e5e7eb;\"><strong>Total</strong></td><td style=\"padding: 8px; border: 1px solid #e5e7eb;\">{{order_total}}</td></tr></table><p><a href=\"{{order_url}}\" style=\"display: inline-block; padding: 12px 24px; background: #4F46E5; color: white; text-decoration: none; border-radius: 6px;\">View Order</a></p><p style=\"color: #666; font-size: 14px;\">Questions? Reply to this email and we'll help out.</p></body></html>",
+  "category": "transactional",
+  "active": true,
+  "created_at": "2025-01-15T10:00:00Z",
+  "updated_at": "2025-01-15T10:00:00Z",
+  "_sample_variables": {
+    "customer_name": "Bob",
+    "order_number": "1042",
+    "order_total": "$89.99",
+    "order_url": "https://merchant.com/orders/1042"
+  }
+}
