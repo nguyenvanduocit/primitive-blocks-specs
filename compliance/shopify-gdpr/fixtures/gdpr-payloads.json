@@ -1,0 +1,196 @@
+{
+  "_comment": "Sample GDPR webhook payloads matching Shopify's actual payload format. Used for testing all 3 mandatory GDPR endpoints.",
+
+  "customers_data_request": {
+    "_comment": "POST /api/gdpr/customers-data-request — Shopify asks the app to report all data stored for a customer",
+    "headers": {
+      "X-Shopify-Topic": "customers/data_request",
+      "X-Shopify-Shop-Domain": "example.myshopify.com",
+      "X-Shopify-Api-Version": "2024-01",
+      "X-Shopify-Hmac-Sha256": "compute-using-SHOPIFY_API_SECRET-over-raw-body",
+      "Content-Type": "application/json"
+    },
+    "payload": {
+      "shop_id": 690933842,
+      "shop_domain": "example.myshopify.com",
+      "orders_requested": [
+        299938,
+        280263,
+        220458
+      ],
+      "customer": {
+        "id": 207119551,
+        "email": "john@example.com",
+        "phone": "+15551234567"
+      },
+      "data_request": {
+        "id": 9999
+      }
+    },
+    "variants": {
+      "no_orders": {
+        "_comment": "Customer with no associated orders",
+        "shop_id": 690933842,
+        "shop_domain": "example.myshopify.com",
+        "orders_requested": [],
+        "customer": {
+          "id": 111222333,
+          "email": "noorders@example.com",
+          "phone": null
+        },
+        "data_request": {
+          "id": 10001
+        }
+      },
+      "unknown_customer": {
+        "_comment": "Customer ID not found in app database — valid request, app returns empty data set",
+        "shop_id": 690933842,
+        "shop_domain": "example.myshopify.com",
+        "orders_requested": [],
+        "customer": {
+          "id": 999999999,
+          "email": "ghost@example.com",
+          "phone": null
+        },
+        "data_request": {
+          "id": 10002
+        }
+      }
+    }
+  },
+
+  "customers_redact": {
+    "_comment": "POST /api/gdpr/customers-redact — Shopify orders the app to erase all PII for a customer",
+    "headers": {
+      "X-Shopify-Topic": "customers/redact",
+      "X-Shopify-Shop-Domain": "example.myshopify.com",
+      "X-Shopify-Api-Version": "2024-01",
+      "X-Shopify-Hmac-Sha256": "compute-using-SHOPIFY_API_SECRET-over-raw-body",
+      "Content-Type": "application/json"
+    },
+    "payload": {
+      "shop_id": 690933842,
+      "shop_domain": "example.myshopify.com",
+      "customer": {
+        "id": 207119551,
+        "email": "john@example.com",
+        "phone": "+15551234567"
+      },
+      "orders_to_redact": [
+        299938,
+        280263,
+        220458
+      ]
+    },
+    "variants": {
+      "no_orders_to_redact": {
+        "_comment": "Customer redact with no associated orders — only profile/review PII should be erased",
+        "shop_id": 690933842,
+        "shop_domain": "example.myshopify.com",
+        "customer": {
+          "id": 444555666,
+          "email": "reviews-only@example.com",
+          "phone": null
+        },
+        "orders_to_redact": []
+      },
+      "email_only": {
+        "_comment": "Redact where only email is available (legacy customer without numeric ID)",
+        "shop_id": 690933842,
+        "shop_domain": "example.myshopify.com",
+        "customer": {
+          "id": null,
+          "email": "legacy@example.com",
+          "phone": null
+        },
+        "orders_to_redact": []
+      }
+    }
+  },
+
+  "shop_redact": {
+    "_comment": "POST /api/gdpr/shop-redact — Shopify orders the app to erase ALL data for a shop (sent 48h after uninstall)",
+    "headers": {
+      "X-Shopify-Topic": "shop/redact",
+      "X-Shopify-Shop-Domain": "example.myshopify.com",
+      "X-Shopify-Api-Version": "2024-01",
+      "X-Shopify-Hmac-Sha256": "compute-using-SHOPIFY_API_SECRET-over-raw-body",
+      "Content-Type": "application/json"
+    },
+    "payload": {
+      "shop_id": 690933842,
+      "shop_domain": "example.myshopify.com"
+    },
+    "variants": {
+      "unknown_shop": {
+        "_comment": "Shop not found in app database — app was uninstalled before any data was stored",
+        "shop_id": 111111111,
+        "shop_domain": "ghost-store.myshopify.com"
+      }
+    }
+  },
+
+  "invalid_requests": {
+    "_comment": "Payloads for testing HMAC rejection and error handling",
+    "tampered_hmac": {
+      "_comment": "Use any valid payload but replace X-Shopify-Hmac-Sha256 with this value — should return 401",
+      "X-Shopify-Hmac-Sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "missing_hmac": {
+      "_comment": "Omit X-Shopify-Hmac-Sha256 header entirely — should return 401"
+    }
+  },
+
+  "gdpr_request_records": {
+    "_comment": "Sample gdpr_requests table records for fixture setup in tests",
+    "completed_data_request": {
+      "id": "gdpr-req-001",
+      "shop_id": "shop-001",
+      "request_type": "customers_data_request",
+      "shopify_request_id": "9999",
+      "customer_id": 207119551,
+      "customer_email": "john@example.com",
+      "orders_requested": [299938, 280263, 220458],
+      "status": "completed",
+      "completed_at": "2025-01-15T10:05:00Z",
+      "created_at": "2025-01-15T10:00:00Z"
+    },
+    "completed_customer_redact": {
+      "id": "gdpr-req-002",
+      "shop_id": "shop-001",
+      "request_type": "customers_redact",
+      "shopify_request_id": null,
+      "customer_id": 207119551,
+      "customer_email": "john@example.com",
+      "orders_requested": null,
+      "status": "completed",
+      "completed_at": "2025-01-16T08:30:00Z",
+      "created_at": "2025-01-16T08:25:00Z"
+    },
+    "completed_shop_redact": {
+      "id": "gdpr-req-003",
+      "shop_id": null,
+      "_comment_shop_id": "null because shop was deleted by this request — ON DELETE SET NULL",
+      "request_type": "shop_redact",
+      "shopify_request_id": null,
+      "customer_id": null,
+      "customer_email": null,
+      "orders_requested": null,
+      "status": "completed",
+      "completed_at": "2025-01-20T12:00:00Z",
+      "created_at": "2025-01-20T11:55:00Z"
+    },
+    "failed_request": {
+      "id": "gdpr-req-004",
+      "shop_id": "shop-002",
+      "request_type": "customers_redact",
+      "shopify_request_id": null,
+      "customer_id": 555666777,
+      "customer_email": "problem@example.com",
+      "orders_requested": null,
+      "status": "failed",
+      "completed_at": null,
+      "created_at": "2025-01-18T09:00:00Z"
+    }
+  }
+}

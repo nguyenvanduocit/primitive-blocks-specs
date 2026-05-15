@@ -1,0 +1,134 @@
+{
+  "_comment": "This file documents JSONL format — actual JSONL has one JSON object per line with no wrapping array. The 'lines' array below shows each line as a separate string for readability in this fixture.",
+
+  "description": "Shopify bulk operation JSONL output format. Each line is a complete JSON object. Nested resources (variants, metafields, line items) appear as separate objects with a __parentId field pointing to their parent's id.",
+
+  "flat_objects_example": {
+    "_comment": "Bulk query with no nesting — products only, no variants. Each line is a root object.",
+    "query": "{ products { edges { node { id title handle vendor status } } } }",
+    "lines": [
+      "{\"id\":\"gid://shopify/Product/1\",\"title\":\"Classic T-Shirt\",\"handle\":\"classic-t-shirt\",\"vendor\":\"Acme Co\",\"status\":\"ACTIVE\"}",
+      "{\"id\":\"gid://shopify/Product/2\",\"title\":\"Hoodie\",\"handle\":\"hoodie\",\"vendor\":\"Acme Co\",\"status\":\"ACTIVE\"}",
+      "{\"id\":\"gid://shopify/Product/3\",\"title\":\"Baseball Cap\",\"handle\":\"baseball-cap\",\"vendor\":\"Acme Co\",\"status\":\"DRAFT\"}"
+    ]
+  },
+
+  "nested_objects_example": {
+    "_comment": "Bulk query with one level of nesting — products with variants. Variants appear after their parent product with __parentId set to the product's GID.",
+    "query": "{ products { edges { node { id title variants { edges { node { id price sku inventoryQuantity } } } } } } }",
+    "lines": [
+      "{\"id\":\"gid://shopify/Product/1\",\"title\":\"Classic T-Shirt\"}",
+      "{\"id\":\"gid://shopify/ProductVariant/10\",\"price\":\"19.99\",\"sku\":\"TSHIRT-S\",\"inventoryQuantity\":42,\"__parentId\":\"gid://shopify/Product/1\"}",
+      "{\"id\":\"gid://shopify/ProductVariant/11\",\"price\":\"19.99\",\"sku\":\"TSHIRT-M\",\"inventoryQuantity\":87,\"__parentId\":\"gid://shopify/Product/1\"}",
+      "{\"id\":\"gid://shopify/ProductVariant/12\",\"price\":\"24.99\",\"sku\":\"TSHIRT-L\",\"inventoryQuantity\":0,\"__parentId\":\"gid://shopify/Product/1\"}",
+      "{\"id\":\"gid://shopify/Product/2\",\"title\":\"Hoodie\"}",
+      "{\"id\":\"gid://shopify/ProductVariant/20\",\"price\":\"49.99\",\"sku\":\"HOODIE-S\",\"inventoryQuantity\":15,\"__parentId\":\"gid://shopify/Product/2\"}",
+      "{\"id\":\"gid://shopify/ProductVariant/21\",\"price\":\"49.99\",\"sku\":\"HOODIE-M\",\"inventoryQuantity\":23,\"__parentId\":\"gid://shopify/Product/2\"}"
+    ],
+    "parsed_structure": [
+      {
+        "id": "gid://shopify/Product/1",
+        "title": "Classic T-Shirt",
+        "children": [
+          { "id": "gid://shopify/ProductVariant/10", "price": "19.99", "sku": "TSHIRT-S", "inventoryQuantity": 42 },
+          { "id": "gid://shopify/ProductVariant/11", "price": "19.99", "sku": "TSHIRT-M", "inventoryQuantity": 87 },
+          { "id": "gid://shopify/ProductVariant/12", "price": "24.99", "sku": "TSHIRT-L", "inventoryQuantity": 0 }
+        ]
+      },
+      {
+        "id": "gid://shopify/Product/2",
+        "title": "Hoodie",
+        "children": [
+          { "id": "gid://shopify/ProductVariant/20", "price": "49.99", "sku": "HOODIE-S", "inventoryQuantity": 15 },
+          { "id": "gid://shopify/ProductVariant/21", "price": "49.99", "sku": "HOODIE-M", "inventoryQuantity": 23 }
+        ]
+      }
+    ]
+  },
+
+  "deep_nesting_example": {
+    "_comment": "Multi-level nesting: products → variants → metafields. Each level references its parent via __parentId.",
+    "query": "{ products { edges { node { id title variants { edges { node { id sku metafields(first: 5) { edges { node { id namespace key value } } } } } } } } } }",
+    "lines": [
+      "{\"id\":\"gid://shopify/Product/1\",\"title\":\"Classic T-Shirt\"}",
+      "{\"id\":\"gid://shopify/ProductVariant/10\",\"sku\":\"TSHIRT-S\",\"__parentId\":\"gid://shopify/Product/1\"}",
+      "{\"id\":\"gid://shopify/Metafield/100\",\"namespace\":\"myapp\",\"key\":\"material\",\"value\":\"100% organic cotton\",\"__parentId\":\"gid://shopify/ProductVariant/10\"}",
+      "{\"id\":\"gid://shopify/Metafield/101\",\"namespace\":\"myapp\",\"key\":\"weight_grams\",\"value\":\"180\",\"__parentId\":\"gid://shopify/ProductVariant/10\"}",
+      "{\"id\":\"gid://shopify/ProductVariant/11\",\"sku\":\"TSHIRT-M\",\"__parentId\":\"gid://shopify/Product/1\"}",
+      "{\"id\":\"gid://shopify/Metafield/102\",\"namespace\":\"myapp\",\"key\":\"material\",\"value\":\"100% organic cotton\",\"__parentId\":\"gid://shopify/ProductVariant/11\"}"
+    ],
+    "parsed_structure": [
+      {
+        "id": "gid://shopify/Product/1",
+        "title": "Classic T-Shirt",
+        "children": [
+          {
+            "id": "gid://shopify/ProductVariant/10",
+            "sku": "TSHIRT-S",
+            "children": [
+              { "id": "gid://shopify/Metafield/100", "namespace": "myapp", "key": "material", "value": "100% organic cotton" },
+              { "id": "gid://shopify/Metafield/101", "namespace": "myapp", "key": "weight_grams", "value": "180" }
+            ]
+          },
+          {
+            "id": "gid://shopify/ProductVariant/11",
+            "sku": "TSHIRT-M",
+            "children": [
+              { "id": "gid://shopify/Metafield/102", "namespace": "myapp", "key": "material", "value": "100% organic cotton" }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+
+  "orders_example": {
+    "_comment": "Order export with nested line items — common use case for analytics or ERP sync.",
+    "query": "{ orders { edges { node { id name totalPriceSet { shopMoney { amount currencyCode } } createdAt lineItems { edges { node { id title quantity originalUnitPrice { amount currencyCode } } } } } } } }",
+    "lines": [
+      "{\"id\":\"gid://shopify/Order/5001\",\"name\":\"#1001\",\"totalPriceSet\":{\"shopMoney\":{\"amount\":\"59.97\",\"currencyCode\":\"USD\"}},\"createdAt\":\"2026-05-14T10:30:00Z\"}",
+      "{\"id\":\"gid://shopify/LineItem/50010\",\"title\":\"Classic T-Shirt\",\"quantity\":2,\"originalUnitPrice\":{\"amount\":\"19.99\",\"currencyCode\":\"USD\"},\"__parentId\":\"gid://shopify/Order/5001\"}",
+      "{\"id\":\"gid://shopify/LineItem/50011\",\"title\":\"Baseball Cap\",\"quantity\":1,\"originalUnitPrice\":{\"amount\":\"19.99\",\"currencyCode\":\"USD\"},\"__parentId\":\"gid://shopify/Order/5001\"}",
+      "{\"id\":\"gid://shopify/Order/5002\",\"name\":\"#1002\",\"totalPriceSet\":{\"shopMoney\":{\"amount\":\"49.99\",\"currencyCode\":\"USD\"}},\"createdAt\":\"2026-05-14T11:15:00Z\"}",
+      "{\"id\":\"gid://shopify/LineItem/50020\",\"title\":\"Hoodie\",\"quantity\":1,\"originalUnitPrice\":{\"amount\":\"49.99\",\"currencyCode\":\"USD\"},\"__parentId\":\"gid://shopify/Order/5002\"}"
+    ]
+  },
+
+  "mutation_variables_example": {
+    "_comment": "JSONL input for a bulk mutation — each line is a variables object for one mutation invocation. These are uploaded to the staged URL before calling bulkOperationRunMutation.",
+    "mutation": "mutation ($input: ProductVariantInput!) { productVariantUpdate(input: $input) { productVariant { id price } userErrors { field message } } }",
+    "lines": [
+      "{\"input\":{\"id\":\"gid://shopify/ProductVariant/10\",\"price\":\"21.99\"}}",
+      "{\"input\":{\"id\":\"gid://shopify/ProductVariant/11\",\"price\":\"21.99\"}}",
+      "{\"input\":{\"id\":\"gid://shopify/ProductVariant/12\",\"price\":\"26.99\"}}",
+      "{\"input\":{\"id\":\"gid://shopify/ProductVariant/20\",\"price\":\"54.99\"}}",
+      "{\"input\":{\"id\":\"gid://shopify/ProductVariant/21\",\"price\":\"54.99\"}}"
+    ]
+  },
+
+  "mutation_result_example": {
+    "_comment": "JSONL output from a completed bulk mutation — each line is the result of one mutation invocation. Check userErrors per line for individual failures.",
+    "lines": [
+      "{\"productVariantUpdate\":{\"productVariant\":{\"id\":\"gid://shopify/ProductVariant/10\",\"price\":\"21.99\"},\"userErrors\":[]}}",
+      "{\"productVariantUpdate\":{\"productVariant\":{\"id\":\"gid://shopify/ProductVariant/11\",\"price\":\"21.99\"},\"userErrors\":[]}}",
+      "{\"productVariantUpdate\":{\"productVariant\":null,\"userErrors\":[{\"field\":\"id\",\"message\":\"Product variant not found\"}]}}",
+      "{\"productVariantUpdate\":{\"productVariant\":{\"id\":\"gid://shopify/ProductVariant/20\",\"price\":\"54.99\"},\"userErrors\":[]}}"
+    ]
+  },
+
+  "format_rules": {
+    "_comment": "Key rules for JSONL format in Shopify bulk operations",
+    "rules": [
+      "Each line is exactly one complete JSON object — no multi-line JSON",
+      "Lines are separated by a newline character (\\n)",
+      "Trailing newline at end of file is optional",
+      "Blank lines should be skipped by the parser",
+      "Nested resources appear as separate lines with __parentId set to the parent GID",
+      "The __parentId field is stripped when building the nested object structure",
+      "Parents always appear before their children in the output (parent-first ordering)",
+      "GID format: gid://shopify/{ResourceType}/{numericId}",
+      "Prices and quantities may be strings or numbers depending on the field type",
+      "Result JSONL from queries and from mutations have different structures — queries return resource objects, mutations return mutation result objects"
+    ]
+  }
+}

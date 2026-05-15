@@ -1,0 +1,139 @@
+[
+  {
+    "_comment": "Valid decoded JWT payload — all claims correct, use for happy path tests. Timestamps relative to unix 1700000000.",
+    "description": "valid-token-example-shop",
+    "header": {
+      "alg": "HS256",
+      "typ": "JWT"
+    },
+    "payload": {
+      "iss": "https://example.myshopify.com/admin",
+      "dest": "https://example.myshopify.com",
+      "aud": "test-api-key",
+      "sub": "42",
+      "exp": 1700000060,
+      "nbf": 1700000000,
+      "iat": 1700000000,
+      "jti": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      "sid": "abc123def456"
+    },
+    "signing_secret": "test-api-secret",
+    "note": "Sign with HMAC-SHA256(secret, base64url(header) + '.' + base64url(payload)) to get a real token"
+  },
+  {
+    "_comment": "JWT payload with wrong audience — use for invalid_audience error test",
+    "description": "wrong-audience-token",
+    "header": {
+      "alg": "HS256",
+      "typ": "JWT"
+    },
+    "payload": {
+      "iss": "https://example.myshopify.com/admin",
+      "dest": "https://example.myshopify.com",
+      "aud": "different-app-api-key",
+      "sub": "42",
+      "exp": 1700000060,
+      "nbf": 1700000000,
+      "iat": 1700000000,
+      "jti": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+      "sid": "session-wrong-aud"
+    },
+    "signing_secret": "test-api-secret",
+    "expected_error": "invalid_audience"
+  },
+  {
+    "_comment": "JWT payload with expired timestamp — use for expired_token error test. exp is 100 seconds before reference timestamp.",
+    "description": "expired-token",
+    "header": {
+      "alg": "HS256",
+      "typ": "JWT"
+    },
+    "payload": {
+      "iss": "https://example.myshopify.com/admin",
+      "dest": "https://example.myshopify.com",
+      "aud": "test-api-key",
+      "sub": "42",
+      "exp": 1699999900,
+      "nbf": 1699999840,
+      "iat": 1699999840,
+      "jti": "11111111-2222-3333-4444-555555555555",
+      "sid": "session-expired"
+    },
+    "signing_secret": "test-api-secret",
+    "expected_error": "expired_token"
+  },
+  {
+    "_comment": "JWT payload with mismatched iss and dest (different shops) — use for cross-shop attack test",
+    "description": "mismatched-iss-dest-token",
+    "header": {
+      "alg": "HS256",
+      "typ": "JWT"
+    },
+    "payload": {
+      "iss": "https://shop-a.myshopify.com/admin",
+      "dest": "https://shop-b.myshopify.com",
+      "aud": "test-api-key",
+      "sub": "42",
+      "exp": 1700000060,
+      "nbf": 1700000000,
+      "iat": 1700000000,
+      "jti": "mismatch-iss-dest-jti-001",
+      "sid": "session-mismatch"
+    },
+    "signing_secret": "test-api-secret",
+    "expected_error": "invalid_token"
+  },
+  {
+    "_comment": "JWT payload with nbf in the future — token issued for later, not yet valid. Use for nbf validation test.",
+    "description": "not-yet-valid-token",
+    "header": {
+      "alg": "HS256",
+      "typ": "JWT"
+    },
+    "payload": {
+      "iss": "https://example.myshopify.com/admin",
+      "dest": "https://example.myshopify.com",
+      "aud": "test-api-key",
+      "sub": "42",
+      "exp": 1700000120,
+      "nbf": 1700000060,
+      "iat": 1700000000,
+      "jti": "future-nbf-jti-001",
+      "sid": "session-future-nbf"
+    },
+    "note": "If processed at timestamp 1700000000, nbf (1700000060) is 60 seconds in the future — should fail",
+    "signing_secret": "test-api-secret",
+    "expected_error": "invalid_token"
+  },
+  {
+    "_comment": "Raw token format reference — shows how the 3 parts join with dots. Values are illustrative, not cryptographically real.",
+    "description": "token-format-reference",
+    "token_format": "<base64url(header)>.<base64url(payload)>.<base64url(signature)>",
+    "example_header_encoded": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+    "example_header_decoded": "{\"alg\":\"HS256\",\"typ\":\"JWT\"}",
+    "signing_input": "base64url(header) + '.' + base64url(payload)",
+    "signature_algorithm": "HMAC-SHA256",
+    "signature_key": "SHOPIFY_API_SECRET environment variable",
+    "note": "The signature is base64url-encoded (NOT base64). Use Buffer.from(sig, 'base64url') in Node.js."
+  },
+  {
+    "_comment": "Second shop token — use to verify multi-shop isolation tests. Different shop domain, different user.",
+    "description": "valid-token-other-shop",
+    "header": {
+      "alg": "HS256",
+      "typ": "JWT"
+    },
+    "payload": {
+      "iss": "https://other.myshopify.com/admin",
+      "dest": "https://other.myshopify.com",
+      "aud": "test-api-key",
+      "sub": "99",
+      "exp": 1700000060,
+      "nbf": 1700000000,
+      "iat": 1700000000,
+      "jti": "other-shop-jti-001",
+      "sid": "other-shop-session"
+    },
+    "signing_secret": "test-api-secret"
+  }
+]

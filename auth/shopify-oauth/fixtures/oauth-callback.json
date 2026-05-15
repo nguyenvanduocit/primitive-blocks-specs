@@ -1,0 +1,49 @@
+[
+  {
+    "_comment": "Valid OAuth callback params — use for happy path install test",
+    "query_params": {
+      "code": "abc123def456",
+      "hmac": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+      "shop": "test-store.myshopify.com",
+      "state": "f47ac10b58cc4372a5670e02b2c3d479",
+      "timestamp": "1700000000"
+    },
+    "token_exchange_response": {
+      "access_token": "<EXAMPLE_SHOPIFY_ACCESS_TOKEN>",
+      "scope": "read_products,write_orders,read_customers"
+    }
+  },
+  {
+    "_comment": "Callback with tampered HMAC — use for HMAC failure test",
+    "query_params": {
+      "code": "abc123def456",
+      "hmac": "0000000000000000000000000000000000000000000000000000000000000000",
+      "shop": "test-store.myshopify.com",
+      "state": "f47ac10b58cc4372a5670e02b2c3d479",
+      "timestamp": "1700000000"
+    }
+  },
+  {
+    "_comment": "Callback with invalid shop domain — use for domain validation test",
+    "query_params": {
+      "code": "abc123def456",
+      "hmac": "valid-hmac",
+      "shop": "evil-domain.example.com",
+      "state": "f47ac10b58cc4372a5670e02b2c3d479",
+      "timestamp": "1700000000"
+    }
+  },
+  {
+    "_comment": "Token exchange error responses from Shopify",
+    "error_responses": {
+      "invalid_grant": {
+        "status": 400,
+        "body": { "error": "invalid_grant", "error_description": "authorization code was not found or was already used" }
+      },
+      "invalid_client": {
+        "status": 400,
+        "body": { "error": "invalid_client", "error_description": "API key or secret is invalid" }
+      }
+    }
+  }
+]

@@ -1,0 +1,35 @@
+[
+  {
+    "_comment": "Active shop with full access — use for authenticated API tests",
+    "id": "shop-001",
+    "shop_domain": "test-store.myshopify.com",
+    "access_token": "encrypted:a1b2c3d4...",
+    "scopes": "read_products,write_orders,read_customers",
+    "installed_at": "2025-01-15T10:00:00Z",
+    "uninstalled_at": null,
+    "created_at": "2025-01-15T10:00:00Z",
+    "updated_at": "2025-01-15T10:00:00Z"
+  },
+  {
+    "_comment": "Uninstalled shop — use for reinstall and uninstall tests",
+    "id": "shop-002",
+    "shop_domain": "old-store.myshopify.com",
+    "access_token": "encrypted:e5f6g7h8...",
+    "scopes": "read_products",
+    "installed_at": "2024-06-01T08:00:00Z",
+    "uninstalled_at": "2025-01-10T15:30:00Z",
+    "created_at": "2024-06-01T08:00:00Z",
+    "updated_at": "2025-01-10T15:30:00Z"
+  },
+  {
+    "_comment": "Shop with limited scopes — use for scope mismatch tests",
+    "id": "shop-003",
+    "shop_domain": "limited-store.myshopify.com",
+    "access_token": "encrypted:i9j0k1l2...",
+    "scopes": "read_products",
+    "installed_at": "2025-01-20T12:00:00Z",
+    "uninstalled_at": null,
+    "created_at": "2025-01-20T12:00:00Z",
+    "updated_at": "2025-01-20T12:00:00Z"
+  }
+]

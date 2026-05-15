@@ -1,0 +1,345 @@
+{
+  "_comment": "Mock Shopify Billing API responses. Use in tests to avoid real Shopify API calls.",
+
+  "appSubscriptionCreate": {
+    "success": {
+      "_comment": "Happy path — merchant will approve. Use for subscribe + callback activation tests.",
+      "data": {
+        "appSubscriptionCreate": {
+          "appSubscription": {
+            "id": "gid://shopify/AppSubscription/456",
+            "status": "PENDING"
+          },
+          "confirmationUrl": "https://test-store.myshopify.com/admin/charges/456/confirm_recurring_application_charge?signature=eyJhbGciOiJIUzI1NiJ9",
+          "userErrors": []
+        }
+      }
+    },
+    "success_with_trial": {
+      "_comment": "Subscription created with 14-day trial period.",
+      "data": {
+        "appSubscriptionCreate": {
+          "appSubscription": {
+            "id": "gid://shopify/AppSubscription/789",
+            "status": "PENDING"
+          },
+          "confirmationUrl": "https://test-store.myshopify.com/admin/charges/789/confirm_recurring_application_charge?signature=eyJhbGciOiJIUzI1NiJ9",
+          "userErrors": []
+        }
+      }
+    },
+    "user_errors": {
+      "_comment": "Shopify rejected the subscription — userErrors returned. Use for billing error tests.",
+      "data": {
+        "appSubscriptionCreate": {
+          "appSubscription": null,
+          "confirmationUrl": null,
+          "userErrors": [
+            {
+              "field": "lineItems",
+              "message": "Price must be greater than 0"
+            }
+          ]
+        }
+      }
+    },
+    "user_errors_exceeded_cap": {
+      "_comment": "Usage billing cap exceeded.",
+      "data": {
+        "appSubscriptionCreate": {
+          "appSubscription": null,
+          "confirmationUrl": null,
+          "userErrors": [
+            {
+              "field": "cappedAmount",
+              "message": "Capped amount must be greater than or equal to the recurring price"
+            }
+          ]
+        }
+      }
+    }
+  },
+
+  "appSubscriptionQuery": {
+    "active": {
+      "_comment": "Merchant approved the charge. Use in billing callback handler to confirm activation.",
+      "data": {
+        "node": {
+          "id": "gid://shopify/AppSubscription/456",
+          "status": "ACTIVE",
+          "currentPeriodEnd": "2026-06-15T00:00:00Z",
+          "trialDays": 0,
+          "lineItems": [
+            {
+              "id": "gid://shopify/AppSubscriptionLineItem/101",
+              "plan": {
+                "pricingDetails": {
+                  "__typename": "AppRecurringPricing",
+                  "price": {
+                    "amount": "29.00",
+                    "currencyCode": "USD"
+                  },
+                  "interval": "EVERY_30_DAYS"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "active_with_trial": {
+      "_comment": "Merchant approved — subscription is active but within trial period.",
+      "data": {
+        "node": {
+          "id": "gid://shopify/AppSubscription/789",
+          "status": "ACTIVE",
+          "currentPeriodEnd": "2026-06-15T00:00:00Z",
+          "trialDays": 14,
+          "lineItems": [
+            {
+              "id": "gid://shopify/AppSubscriptionLineItem/102",
+              "plan": {
+                "pricingDetails": {
+                  "__typename": "AppRecurringPricing",
+                  "price": {
+                    "amount": "29.00",
+                    "currencyCode": "USD"
+                  },
+                  "interval": "EVERY_30_DAYS"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "declined": {
+      "_comment": "Merchant declined the charge. Use in billing callback handler for decline flow.",
+      "data": {
+        "node": {
+          "id": "gid://shopify/AppSubscription/456",
+          "status": "DECLINED",
+          "currentPeriodEnd": null,
+          "trialDays": 0,
+          "lineItems": []
+        }
+      }
+    },
+    "frozen": {
+      "_comment": "Subscription frozen due to payment failure. Use for freeze/unfreeze webhook tests.",
+      "data": {
+        "node": {
+          "id": "gid://shopify/AppSubscription/456",
+          "status": "FROZEN",
+          "currentPeriodEnd": "2026-06-15T00:00:00Z",
+          "trialDays": 0,
+          "lineItems": []
+        }
+      }
+    },
+    "cancelled": {
+      "_comment": "Subscription was cancelled. Use for cancellation webhook tests.",
+      "data": {
+        "node": {
+          "id": "gid://shopify/AppSubscription/456",
+          "status": "CANCELLED",
+          "currentPeriodEnd": null,
+          "trialDays": 0,
+          "lineItems": []
+        }
+      }
+    },
+    "not_found": {
+      "_comment": "Shopify node query returned null — charge no longer exists.",
+      "data": {
+        "node": null
+      }
+    }
+  },
+
+  "appUsageRecordCreate": {
+    "success": {
+      "_comment": "Usage record created successfully. Use for happy path usage billing tests.",
+      "data": {
+        "appUsageRecordCreate": {
+          "appUsageRecord": {
+            "id": "gid://shopify/AppUsageRecord/789"
+          },
+          "userErrors": []
+        }
+      }
+    },
+    "exceeded_cap": {
+      "_comment": "Usage charge rejected — exceeds billing cap set on the subscription.",
+      "data": {
+        "appUsageRecordCreate": {
+          "appUsageRecord": null,
+          "userErrors": [
+            {
+              "field": "price",
+              "message": "Price exceeds the usage billing cap"
+            }
+          ]
+        }
+      }
+    },
+    "subscription_not_active": {
+      "_comment": "Usage rejected — subscription is not in an active state.",
+      "data": {
+        "appUsageRecordCreate": {
+          "appUsageRecord": null,
+          "userErrors": [
+            {
+              "field": "subscriptionLineItemId",
+              "message": "Subscription is not active"
+            }
+          ]
+        }
+      }
+    }
+  },
+
+  "webhooks": {
+    "app_subscriptions_update_active": {
+      "_comment": "Shopify fires this when a frozen subscription recovers payment.",
+      "topic": "APP_SUBSCRIPTIONS_UPDATE",
+      "payload": {
+        "app_subscription": {
+          "admin_graphql_api_id": "gid://shopify/AppSubscription/456",
+          "name": "Pro Plan",
+          "status": "ACTIVE",
+          "admin_graphql_api_shop_id": "gid://shopify/Shop/99999",
+          "created_at": "2026-05-01T10:00:00Z",
+          "updated_at": "2026-05-15T12:00:00Z",
+          "currency": "USD",
+          "trial_days": 0
+        }
+      }
+    },
+    "app_subscriptions_update_frozen": {
+      "_comment": "Shopify fires this when payment fails and account is frozen.",
+      "topic": "APP_SUBSCRIPTIONS_UPDATE",
+      "payload": {
+        "app_subscription": {
+          "admin_graphql_api_id": "gid://shopify/AppSubscription/456",
+          "name": "Pro Plan",
+          "status": "FROZEN",
+          "admin_graphql_api_shop_id": "gid://shopify/Shop/99999",
+          "created_at": "2026-05-01T10:00:00Z",
+          "updated_at": "2026-05-15T12:00:00Z",
+          "currency": "USD",
+          "trial_days": 0
+        }
+      }
+    },
+    "app_subscriptions_update_cancelled": {
+      "_comment": "Shopify fires this when a subscription is cancelled.",
+      "topic": "APP_SUBSCRIPTIONS_UPDATE",
+      "payload": {
+        "app_subscription": {
+          "admin_graphql_api_id": "gid://shopify/AppSubscription/456",
+          "name": "Pro Plan",
+          "status": "CANCELLED",
+          "admin_graphql_api_shop_id": "gid://shopify/Shop/99999",
+          "created_at": "2026-05-01T10:00:00Z",
+          "updated_at": "2026-05-15T14:00:00Z",
+          "currency": "USD",
+          "trial_days": 0
+        }
+      }
+    }
+  },
+
+  "shop_subscriptions": {
+    "pending": {
+      "_comment": "A subscription awaiting merchant approval. Use for callback tests.",
+      "id": "sub-pending-001",
+      "shop_id": "shop-001",
+      "plan_id": "plan-pro-001",
+      "shopify_charge_id": "gid://shopify/AppSubscription/456",
+      "status": "pending",
+      "confirmation_url": "https://test-store.myshopify.com/admin/charges/456/confirm_recurring_application_charge?signature=eyJhbGciOiJIUzI1NiJ9",
+      "trial_ends_at": null,
+      "activated_at": null,
+      "cancelled_at": null,
+      "current_period_end": null,
+      "created_at": "2026-05-15T10:00:00Z",
+      "updated_at": "2026-05-15T10:00:00Z"
+    },
+    "active": {
+      "_comment": "A fully active subscription. Use for plan gating and usage billing tests.",
+      "id": "sub-active-001",
+      "shop_id": "shop-001",
+      "plan_id": "plan-pro-001",
+      "shopify_charge_id": "gid://shopify/AppSubscription/456",
+      "status": "active",
+      "confirmation_url": null,
+      "trial_ends_at": null,
+      "activated_at": "2026-05-01T12:00:00Z",
+      "cancelled_at": null,
+      "current_period_end": "2026-06-01T12:00:00Z",
+      "created_at": "2026-05-01T10:00:00Z",
+      "updated_at": "2026-05-01T12:00:00Z"
+    },
+    "active_in_trial": {
+      "_comment": "Active subscription still in trial period. Use for trial countdown and usage tests.",
+      "id": "sub-trial-001",
+      "shop_id": "shop-001",
+      "plan_id": "plan-pro-001",
+      "shopify_charge_id": "gid://shopify/AppSubscription/789",
+      "status": "active",
+      "confirmation_url": null,
+      "trial_ends_at": "2026-05-29T12:00:00Z",
+      "activated_at": "2026-05-15T12:00:00Z",
+      "cancelled_at": null,
+      "current_period_end": "2026-06-15T12:00:00Z",
+      "created_at": "2026-05-15T10:00:00Z",
+      "updated_at": "2026-05-15T12:00:00Z"
+    },
+    "frozen": {
+      "_comment": "Subscription frozen due to payment failure.",
+      "id": "sub-frozen-001",
+      "shop_id": "shop-001",
+      "plan_id": "plan-pro-001",
+      "shopify_charge_id": "gid://shopify/AppSubscription/456",
+      "status": "frozen",
+      "confirmation_url": null,
+      "trial_ends_at": null,
+      "activated_at": "2026-05-01T12:00:00Z",
+      "cancelled_at": null,
+      "current_period_end": "2026-06-01T12:00:00Z",
+      "created_at": "2026-05-01T10:00:00Z",
+      "updated_at": "2026-05-15T00:00:00Z"
+    },
+    "cancelled": {
+      "_comment": "Cancelled subscription. Use for post-cancel access denial tests.",
+      "id": "sub-cancelled-001",
+      "shop_id": "shop-001",
+      "plan_id": "plan-pro-001",
+      "shopify_charge_id": "gid://shopify/AppSubscription/456",
+      "status": "cancelled",
+      "confirmation_url": null,
+      "trial_ends_at": null,
+      "activated_at": "2026-04-01T12:00:00Z",
+      "cancelled_at": "2026-05-10T09:00:00Z",
+      "current_period_end": null,
+      "created_at": "2026-04-01T10:00:00Z",
+      "updated_at": "2026-05-10T09:00:00Z"
+    },
+    "declined": {
+      "_comment": "Merchant declined the charge during approval.",
+      "id": "sub-declined-001",
+      "shop_id": "shop-001",
+      "plan_id": "plan-pro-001",
+      "shopify_charge_id": "gid://shopify/AppSubscription/456",
+      "status": "declined",
+      "confirmation_url": null,
+      "trial_ends_at": null,
+      "activated_at": null,
+      "cancelled_at": null,
+      "current_period_end": null,
+      "created_at": "2026-05-14T10:00:00Z",
+      "updated_at": "2026-05-14T10:30:00Z"
+    }
+  }
+}

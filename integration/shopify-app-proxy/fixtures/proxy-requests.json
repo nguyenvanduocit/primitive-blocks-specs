@@ -1,0 +1,134 @@
+[
+  {
+    "_comment": "Valid proxy request — reviews sub-path with product_id. Signature covers all params except signature itself, sorted alphabetically, concatenated without separator.",
+    "description": "Valid proxy request — reviews widget",
+    "method": "GET",
+    "path": "/api/proxy/reviews",
+    "query_params": {
+      "path_prefix": "/apps/myapp",
+      "product_id": "123456789",
+      "shop": "test-store.myshopify.com",
+      "timestamp": "1700000000",
+      "signature": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+    },
+    "hmac_input": "path_prefix=/apps/myappproduct_id=123456789shop=test-store.myshopify.comtimestamp=1700000000",
+    "note": "Params sorted: path_prefix, product_id, shop, timestamp. Concatenated without & separator."
+  },
+  {
+    "_comment": "Valid proxy request — JSON stats endpoint. No sub-path-specific params beyond the Shopify-injected ones.",
+    "description": "Valid proxy request — aggregate stats (JSON response)",
+    "method": "GET",
+    "path": "/api/proxy/api/stats",
+    "query_params": {
+      "path_prefix": "/apps/myapp",
+      "shop": "test-store.myshopify.com",
+      "timestamp": "1700000100",
+      "signature": "b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3"
+    },
+    "hmac_input": "path_prefix=/apps/myappshop=test-store.myshopify.comtimestamp=1700000100",
+    "note": "Params sorted: path_prefix, shop, timestamp."
+  },
+  {
+    "_comment": "Forged request — signature was computed with wrong API secret. Use for signature_verification_failed test.",
+    "description": "Forged request — wrong secret used for signature",
+    "method": "GET",
+    "path": "/api/proxy/reviews",
+    "query_params": {
+      "path_prefix": "/apps/myapp",
+      "product_id": "123456789",
+      "shop": "test-store.myshopify.com",
+      "timestamp": "1700000000",
+      "signature": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "expected_error": "signature_verification_failed",
+    "expected_status": 401
+  },
+  {
+    "_comment": "Tampered request — attacker changed product_id after Shopify signed the request. Signature no longer matches.",
+    "description": "Tampered params — product_id changed post-signing",
+    "method": "GET",
+    "path": "/api/proxy/reviews",
+    "query_params": {
+      "path_prefix": "/apps/myapp",
+      "product_id": "999999999",
+      "shop": "test-store.myshopify.com",
+      "timestamp": "1700000000",
+      "signature": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+    },
+    "note": "Signature was computed for product_id=123456789, but param was changed to 999999999",
+    "expected_error": "signature_verification_failed",
+    "expected_status": 401
+  },
+  {
+    "_comment": "Missing signature param — request has no signature at all.",
+    "description": "Missing signature param",
+    "method": "GET",
+    "path": "/api/proxy/reviews",
+    "query_params": {
+      "path_prefix": "/apps/myapp",
+      "product_id": "123456789",
+      "shop": "test-store.myshopify.com",
+      "timestamp": "1700000000"
+    },
+    "expected_error": "signature_verification_failed",
+    "expected_status": 401
+  },
+  {
+    "_comment": "Request with extra UTM params from merchant theme — all included in HMAC input. Use to verify extra params don't break verification.",
+    "description": "Valid request with extra theme-injected params",
+    "method": "GET",
+    "path": "/api/proxy/reviews",
+    "query_params": {
+      "path_prefix": "/apps/myapp",
+      "product_id": "123456789",
+      "ref": "homepage",
+      "shop": "test-store.myshopify.com",
+      "timestamp": "1700000200",
+      "utm_source": "instagram",
+      "signature": "c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4"
+    },
+    "hmac_input": "path_prefix=/apps/myappproduct_id=123456789ref=homepageshop=test-store.myshopify.comtimestamp=1700000200utm_source=instagram",
+    "note": "Params sorted: path_prefix, product_id, ref, shop, timestamp, utm_source. All extra params included."
+  },
+  {
+    "_comment": "Stale timestamp — request timestamp is 600 seconds in the past. Use for stale_timestamp test when freshness check is enabled.",
+    "description": "Stale timestamp — replay attempt",
+    "method": "GET",
+    "path": "/api/proxy/reviews",
+    "query_params": {
+      "path_prefix": "/apps/myapp",
+      "shop": "test-store.myshopify.com",
+      "timestamp": "1699999400",
+      "signature": "d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5"
+    },
+    "note": "Timestamp is 600 seconds before 1700000000. With a 300-second window, this should be rejected.",
+    "expected_error": "stale_timestamp",
+    "expected_status": 401
+  },
+  {
+    "_comment": "Expected proxy responses for each content type. Use for response-type tests.",
+    "description": "Expected response shapes by content type",
+    "response_examples": {
+      "application_liquid": {
+        "content_type": "application/liquid",
+        "cache_control": "s-maxage=300",
+        "body_example": "{% assign reviews_count = 3 %}\n{% if reviews_count > 0 %}\n  <div class=\"app-reviews\">...</div>\n{% endif %}"
+      },
+      "application_json": {
+        "content_type": "application/json",
+        "cache_control": "no-store",
+        "body_example": { "total_reviews": 42, "average_rating": 4.7 }
+      },
+      "application_json_cached": {
+        "content_type": "application/json",
+        "cache_control": "s-maxage=300",
+        "body_example": { "total_members": 1024, "avg_points": 150 }
+      },
+      "text_html": {
+        "content_type": "text/html",
+        "cache_control": "no-store",
+        "body_example": "<!DOCTYPE html><html><head><title>App Embed</title></head><body>...</body></html>"
+      }
+    }
+  }
+]

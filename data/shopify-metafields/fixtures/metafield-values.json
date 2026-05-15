@@ -1,0 +1,343 @@
+{
+  "_comment": "Metafield values as returned by Shopify GraphQL API. Values live in Shopify — these fixtures mock API responses.",
+
+  "read_responses": {
+    "_comment": "Mock responses for GET /api/metafields/:ownerType/:ownerId",
+
+    "product_single_metafield": {
+      "_scenario": "Read single text metafield on a product",
+      "graphql_response": {
+        "data": {
+          "product": {
+            "metafield": {
+              "namespace": "myapp",
+              "key": "warranty_period",
+              "value": "2 years",
+              "type": "single_line_text_field",
+              "updatedAt": "2025-01-15T12:00:00Z"
+            }
+          }
+        }
+      },
+      "expected_api_response": {
+        "metafields": [
+          {
+            "namespace": "myapp",
+            "key": "warranty_period",
+            "value": "2 years",
+            "type": "single_line_text_field",
+            "updatedAt": "2025-01-15T12:00:00Z"
+          }
+        ]
+      }
+    },
+
+    "product_all_metafields": {
+      "_scenario": "Read all metafields (namespace scoped) on a product",
+      "graphql_response": {
+        "data": {
+          "product": {
+            "metafields": {
+              "edges": [
+                {
+                  "node": {
+                    "namespace": "myapp",
+                    "key": "warranty_period",
+                    "value": "2 years",
+                    "type": "single_line_text_field",
+                    "updatedAt": "2025-01-15T12:00:00Z"
+                  }
+                },
+                {
+                  "node": {
+                    "namespace": "myapp",
+                    "key": "internal_score",
+                    "value": "85",
+                    "type": "number_integer",
+                    "updatedAt": "2025-01-16T09:30:00Z"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+
+    "product_metafield_not_set": {
+      "_scenario": "Metafield has never been set — Shopify returns null",
+      "graphql_response": {
+        "data": {
+          "product": {
+            "metafield": null
+          }
+        }
+      }
+    },
+
+    "order_metafield": {
+      "_scenario": "Read delivery_notes metafield on an order",
+      "graphql_response": {
+        "data": {
+          "order": {
+            "metafields": {
+              "edges": [
+                {
+                  "node": {
+                    "namespace": "myapp",
+                    "key": "delivery_notes",
+                    "value": "Leave at front door. Do not ring bell.",
+                    "type": "multi_line_text_field",
+                    "updatedAt": "2025-01-17T14:00:00Z"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "write_requests": {
+    "_comment": "Example metafieldsSet mutation inputs for various types",
+
+    "text_value": {
+      "_scenario": "Write a single_line_text_field value",
+      "mutation_variables": {
+        "metafields": [
+          {
+            "ownerId": "gid://shopify/Product/123456789",
+            "namespace": "myapp",
+            "key": "warranty_period",
+            "type": "single_line_text_field",
+            "value": "3 years"
+          }
+        ]
+      }
+    },
+
+    "integer_value": {
+      "_scenario": "Write a number_integer value",
+      "mutation_variables": {
+        "metafields": [
+          {
+            "ownerId": "gid://shopify/Product/123456789",
+            "namespace": "myapp",
+            "key": "internal_score",
+            "type": "number_integer",
+            "value": "92"
+          }
+        ]
+      }
+    },
+
+    "boolean_value": {
+      "_scenario": "Write a boolean value",
+      "mutation_variables": {
+        "metafields": [
+          {
+            "ownerId": "gid://shopify/Product/123456789",
+            "namespace": "myapp",
+            "key": "is_featured",
+            "type": "boolean",
+            "value": "true"
+          }
+        ]
+      }
+    },
+
+    "json_value": {
+      "_scenario": "Write a json value (structured specs object)",
+      "mutation_variables": {
+        "metafields": [
+          {
+            "ownerId": "gid://shopify/Product/123456789",
+            "namespace": "myapp",
+            "key": "product_specs",
+            "type": "json",
+            "value": "{\"weight_kg\": 0.5, \"dimensions_cm\": {\"l\": 20, \"w\": 10, \"h\": 5}, \"material\": \"aluminum\"}"
+          }
+        ]
+      }
+    },
+
+    "list_value": {
+      "_scenario": "Write a list.single_line_text_field value",
+      "mutation_variables": {
+        "metafields": [
+          {
+            "ownerId": "gid://shopify/Product/123456789",
+            "namespace": "myapp",
+            "key": "related_tags",
+            "type": "list.single_line_text_field",
+            "value": "[\"sale\", \"new-arrival\", \"featured\"]"
+          }
+        ]
+      }
+    },
+
+    "batch_write_5_metafields": {
+      "_scenario": "Batch write — 5 metafields across 2 products in one metafieldsSet call",
+      "mutation_variables": {
+        "metafields": [
+          {
+            "ownerId": "gid://shopify/Product/111",
+            "namespace": "myapp",
+            "key": "warranty_period",
+            "type": "single_line_text_field",
+            "value": "1 year"
+          },
+          {
+            "ownerId": "gid://shopify/Product/111",
+            "namespace": "myapp",
+            "key": "internal_score",
+            "type": "number_integer",
+            "value": "70"
+          },
+          {
+            "ownerId": "gid://shopify/Product/111",
+            "namespace": "myapp",
+            "key": "is_featured",
+            "type": "boolean",
+            "value": "false"
+          },
+          {
+            "ownerId": "gid://shopify/Product/222",
+            "namespace": "myapp",
+            "key": "warranty_period",
+            "type": "single_line_text_field",
+            "value": "5 years"
+          },
+          {
+            "ownerId": "gid://shopify/Product/222",
+            "namespace": "myapp",
+            "key": "internal_score",
+            "type": "number_integer",
+            "value": "95"
+          }
+        ]
+      }
+    }
+  },
+
+  "write_responses": {
+    "_comment": "Mock Shopify responses for metafieldsSet mutations",
+
+    "success": {
+      "_scenario": "Successful metafield write — Shopify returns updated values",
+      "graphql_response": {
+        "data": {
+          "metafieldsSet": {
+            "metafields": [
+              {
+                "namespace": "myapp",
+                "key": "warranty_period",
+                "value": "3 years",
+                "type": "single_line_text_field",
+                "updatedAt": "2025-01-18T10:00:00Z"
+              }
+            ],
+            "userErrors": []
+          }
+        }
+      }
+    },
+
+    "user_error_type_mismatch": {
+      "_scenario": "Shopify rejects the value due to type mismatch (should be caught by local validation first)",
+      "graphql_response": {
+        "data": {
+          "metafieldsSet": {
+            "metafields": null,
+            "userErrors": [
+              {
+                "field": ["metafields", "0", "value"],
+                "message": "Value is not valid for type number_integer",
+                "code": "INVALID_VALUE_FOR_TYPE"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+
+  "definition_sync_responses": {
+    "_comment": "Mock Shopify responses for metafieldDefinitionCreate mutations",
+
+    "create_success": {
+      "_scenario": "New definition created successfully",
+      "graphql_response": {
+        "data": {
+          "metafieldDefinitionCreate": {
+            "createdDefinition": {
+              "id": "gid://shopify/MetafieldDefinition/1001",
+              "namespace": "myapp",
+              "key": "warranty_period",
+              "name": "Warranty Period",
+              "type": { "name": "single_line_text_field" },
+              "ownerType": "PRODUCT"
+            },
+            "userErrors": []
+          }
+        }
+      }
+    },
+
+    "already_exists_taken_error": {
+      "_scenario": "Definition already registered in Shopify — TAKEN error is treated as success",
+      "graphql_response": {
+        "data": {
+          "metafieldDefinitionCreate": {
+            "createdDefinition": null,
+            "userErrors": [
+              {
+                "field": ["key"],
+                "message": "Key has already been taken",
+                "code": "TAKEN"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+
+  "type_validation_examples": {
+    "_comment": "Reference examples of valid and invalid values per type for tests",
+
+    "number_integer": {
+      "valid": ["0", "1", "42", "-10", "999999"],
+      "invalid": ["hello", "3.14", "1e5", "", "null", "true"]
+    },
+    "number_decimal": {
+      "valid": ["0", "3.14", "-1.5", "100", "0.001"],
+      "invalid": ["hello", "", "NaN", "Infinity", "1,000"]
+    },
+    "boolean": {
+      "valid": ["true", "false"],
+      "invalid": ["yes", "no", "1", "0", "TRUE", "False", ""]
+    },
+    "date": {
+      "valid": ["2025-01-15", "2000-12-31", "2026-06-01"],
+      "invalid": ["January 15 2025", "15/01/2025", "2025-1-5", "2025-13-01", ""]
+    },
+    "json": {
+      "valid": ["{}", "{\"key\": \"value\"}", "[]", "[1,2,3]", "\"string\"", "42", "true"],
+      "invalid": ["{key: value}", "{\"key\": }", "undefined", ""]
+    },
+    "url": {
+      "valid": ["https://example.com", "http://mysite.com/path?q=1", "https://sub.domain.co.uk/page"],
+      "invalid": ["not-a-url", "ftp://no-scheme", "example.com", "", "javascript:alert(1)"]
+    },
+    "color": {
+      "valid": ["#FF5733", "#000000", "#FFFFFF", "#a3b4c5"],
+      "invalid": ["red", "#FFF", "#GGGGGG", "rgb(255,0,0)", ""]
+    },
+    "list.single_line_text_field": {
+      "valid": ["[\"a\",\"b\",\"c\"]", "[]", "[\"single\"]"],
+      "invalid": ["not-an-array", "{}", "a,b,c", ""]
+    }
+  }
+}
