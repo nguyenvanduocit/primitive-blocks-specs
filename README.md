@@ -62,6 +62,51 @@ Tách files theo concern — mỗi file phục vụ 1 mục đích rõ ràng. Cl
 
 ---
 
+## Abstraction Discipline
+
+> **Spec mô tả WHAT và WHY, KHÔNG phải HOW.**
+> Spec đúng abstraction level khi Claude Code có thể implement nó đúng — pass full `acceptance.md` — trên 3 stack SQL-family khác biệt mà KHÔNG cần sửa spec.
+
+Đây là tension cốt lõi của blueprint paradigm: quá abstract → Claude Code không có guidance đủ → mỗi merchant ra 1 implementation khác; quá concrete → spec biến thành code mặc áo markdown → mất tính stack-agnostic. Để cân bằng, mỗi spec có **3 lớp**:
+
+| Lớp | Nội dung | Mức độ |
+|---|---|---|
+| **L1: Semantic** (WHAT + WHY) | Data model, sequence flows, state machines, invariants, external protocol contracts, threats + mitigations | **Concrete tối đa** |
+| **L2: Mechanism** (HOW) | Framework, ORM, SQL dialect, test runner, error handling style, file convention | **Abstract — để Claude Code quyết** |
+| **L3: Illustrative** (reference) | Code snippet ≤30 dòng, có marker `PATTERN`/`PURPOSE`/`REFERENCE`/`ADAPT` | **Concrete nhưng marked** |
+
+### External Protocol Contract (carve-out)
+
+Thứ do bên ngoài (Shopify, Google, OAuth standard) dictate phải **concrete** bất kể là Mechanism — vì merchant không có quyền chọn:
+
+- Cryptographic algorithm dictated by protocol: `HMAC-SHA256` cho Shopify webhook (concrete) vs "encrypt token at rest" (abstract, merchant chọn)
+- JWT claim names: `iss`, `dest`, `aud`, `exp` của App Bridge (concrete) vs JWT library (abstract)
+- Header names: `X-Shopify-Hmac-Sha256` (concrete, case-sensitive) vs HTTP framework (abstract)
+- Parameter ordering rules: "sort alphabetically trước HMAC" (concrete) vs query parser (abstract)
+
+Discriminator đơn giản: **"Ai quyết?"** — external party → concrete; merchant project → abstract.
+
+### Logical Types (data model)
+
+Cột "Type" trong bảng định nghĩa data model dùng **logical type** (không phải SQL dialect): `unique_id`, `text`, `encrypted_text`, `integer`, `decimal`, `boolean`, `timestamp`, `json`, `enum`, `id_list`, `text_short`, `external_id`. SQL migration cụ thể (dùng `uuid`/`timestamptz`/`JSONB`) đặt ở section "Reference Migration" với marker `<!-- REFERENCE: dialect=postgres -->`.
+
+Bảng map đầy đủ Logical → Postgres/MySQL/SQLite ở `docs/SPEC_GUIDELINES.md` mục 5.
+
+### Supported Stack Scope
+
+3-Stack test áp dụng cho **SQL-family**:
+- **A**: Node 20 + Express + Postgres + Drizzle + Vitest
+- **B**: Bun + Hono + SQLite + raw SQL + Bun test
+- **C**: Deno 2 + Oak + Postgres + Prisma + Deno test
+
+NoSQL (MongoDB/DynamoDB/Firestore) là **explicit non-goal** — merchant dùng NoSQL fork block và viết adaptation riêng.
+
+### Đọc thêm
+
+Full framework + Logical Types Table canonical + side-by-side examples + self-check checklist + migration guide ở **[`docs/SPEC_GUIDELINES.md`](docs/SPEC_GUIDELINES.md)**. Mọi block mới hoặc PR sửa block phải pass self-check trong file đó.
+
+---
+
 ## File Contracts
 
 ### README.md — Block identity + architecture
@@ -265,9 +310,11 @@ Implement the following primitive block into this project.
 A good primitive block passes these checks:
 
 1. **Self-contained**: Claude Code can implement it from this file alone (no external links that might break)
-2. **Stack-agnostic patterns**: code patterns use TypeScript but don't assume specific framework (React vs Vue vs Svelte)
-3. **Security-first**: security section covers OWASP Top 10 relevant threats
-4. **Testable**: testing scenarios are specific enough to auto-generate test cases
-5. **Mermaid diagrams render**: all diagrams valid Mermaid syntax
-6. **Anti-patterns included**: "DON'T do this" is as valuable as "DO this"
-7. **Edge cases explicit**: not just happy path — failure modes documented
+2. **Abstraction discipline**: data model dùng logical types, framework syntax không leak vào L1/L2, code snippet có đủ 4 marker. Pass self-check ở `docs/SPEC_GUIDELINES.md` mục 8
+3. **3-Stack adaptability**: mental test (mục 7 của SPEC_GUIDELINES) cho stack A/B/C SQL-family đều "yes"
+4. **External contracts concrete**: cryptographic algorithm, claim names, header names, parameter ordering — không mơ hồ
+5. **Security-first**: security section covers OWASP Top 10 relevant threats
+6. **Testable**: testing scenarios are specific enough to auto-generate test cases
+7. **Mermaid diagrams render**: all diagrams valid Mermaid syntax
+8. **Anti-patterns included**: "DON'T do this" is as valuable as "DO this"
+9. **Edge cases explicit**: not just happy path — failure modes documented

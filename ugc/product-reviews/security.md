@@ -7,23 +7,23 @@
 **Impact**: High — fake reviews erode trust, pollute aggregate ratings, overwhelm moderation queue.
 
 **Mitigations**:
-- Require authentication — only logged-in customers can submit reviews
-- Rate limiting — max 5 review submissions per customer per hour
-- `REQUIRE_VERIFIED_BUYER` config — when enabled, only customers with a completed order for the product can review
-- Duplicate prevention — DB-level UNIQUE constraint on `(shop_id, product_id, customer_id)` prevents multiple reviews
-- Honeypot field — include a hidden form field; if filled, reject silently (bots fill all fields)
-- Moderation queue — all reviews start as `pending` unless auto-approved, giving merchant final control
+- Require authentication — only logged-in customers can submit reviews; `shop_id`/`customer_id` extracted from session, never request body
+- **Rate limiting**: `REVIEW_SUBMIT_RATE_LIMIT` submissions per customer per hour (default 5); enforce server-side per `(shop_id, customer_id)` — return 429 on overflow
+- `REQUIRE_VERIFIED_BUYER` config — when enabled, only customers with a paid order containing the product can review
+- Duplicate prevention — DB-level **UNIQUE** constraint on `(shop_id, product_id, customer_id)` prevents multiple reviews per customer per product
+- Honeypot field — include a hidden form field; if filled by a bot, reject silently with 201 (do not signal detection)
+- Moderation queue — all reviews start as `pending` unless auto-approved via `AUTO_APPROVE_THRESHOLD`, giving merchant final control
 
 ### 2. XSS in Review Content
 
 **Impact**: Critical — review body/title rendered on PDP could execute malicious scripts affecting all shoppers.
 
 **Mitigations**:
-- Server-side sanitization on input — strip HTML tags from `title` and `body` before storing. Use a whitelist approach (allow only plain text)
-- Output encoding — when rendering reviews, use framework's built-in XSS protection (React's JSX auto-escapes, Vue's `{{ }}` auto-escapes)
-- Content Security Policy (CSP) header — defense-in-depth against any sanitization bypass
-- Never use `dangerouslySetInnerHTML` / `v-html` for review content
-- Store sanitized content — sanitize before write, not just at read time
+- **Server-side sanitization on input** — strip ALL HTML tags from `title` and `body` before storing. Use a whitelist library with empty `allowedTags` (`sanitize-html`, `DOMPurify`, `striptags`) — store plain text only
+- **Output encoding** — when rendering reviews, use framework's built-in escaping (React JSX, Vue `{{ }}`, Svelte/Solid default) — never inject as raw HTML
+- **Content Security Policy** header — defense-in-depth: `script-src 'self'` blocks any inline script that survived sanitization bypass
+- Never use `dangerouslySetInnerHTML` / `v-html` / `innerHTML` for review content
+- **Sanitize-before-write** (not just at render) — protects raw exports, API responses, audit logs from carrying malicious markup
 
 ### 3. Fake Verified Buyer Status
 

@@ -54,53 +54,55 @@ Shopify apps must use Shopify's own Billing API to charge merchants — external
 
 ## 2. Data Model
 
+> Types dưới đây là **logical types** (canonical mapping ở `docs/SPEC_GUIDELINES.md` mục 5). Reference SQL dialect-specific ở mục [Reference Migration](#reference-migration-postgres) cuối section này.
+
 ```mermaid
 erDiagram
     shops {
-        uuid id PK "from auth.shopify-oauth"
+        unique_id id PK "from auth.shopify-oauth"
         text shop_domain UK
     }
 
     billing_plans {
-        uuid id PK "gen_random_uuid()"
-        text name UK "Human-readable plan name"
-        text slug UK "URL-safe identifier"
-        decimal price_amount "Monthly/annual price"
-        text price_currency "USD default"
-        text interval "EVERY_30_DAYS | ANNUAL"
+        unique_id id PK
+        text_short name UK "Human-readable plan name"
+        text_short slug UK "URL-safe identifier"
+        decimal price_amount "Monthly/annual price, precision (10,2)"
+        text_short price_currency "ISO 4217, 3 chars"
+        enum interval "EVERY_30_DAYS | ANNUAL"
         integer trial_days "0 = no trial"
         boolean is_test "Test charges for dev"
-        jsonb features "Feature flags array"
+        json features "Feature flag array"
         integer sort_order "Display order"
         boolean active "Whether plan is offered"
-        timestamptz created_at
-        timestamptz updated_at
+        timestamp created_at
+        timestamp updated_at
     }
 
     shop_subscriptions {
-        uuid id PK "gen_random_uuid()"
-        uuid shop_id FK "shops.id"
-        uuid plan_id FK "billing_plans.id"
-        text shopify_charge_id "Shopify GID"
-        text status "pending|active|declined|cancelled|frozen"
+        unique_id id PK
+        unique_id shop_id FK "shops.id"
+        unique_id plan_id FK "billing_plans.id"
+        external_id shopify_charge_id "Shopify GID"
+        enum status "pending|active|declined|cancelled|frozen"
         text confirmation_url "Merchant must visit to approve"
-        timestamptz trial_ends_at "null if no trial"
-        timestamptz activated_at "When merchant approved"
-        timestamptz cancelled_at "When cancelled"
-        timestamptz current_period_end "Next billing date"
-        timestamptz created_at
-        timestamptz updated_at
+        timestamp trial_ends_at "null if no trial"
+        timestamp activated_at "When merchant approved"
+        timestamp cancelled_at "When cancelled"
+        timestamp current_period_end "Next billing date"
+        timestamp created_at
+        timestamp updated_at
     }
 
     usage_records {
-        uuid id PK "gen_random_uuid()"
-        uuid shop_id FK "shops.id"
-        uuid subscription_id FK "shop_subscriptions.id"
+        unique_id id PK
+        unique_id shop_id FK "shops.id"
+        unique_id subscription_id FK "shop_subscriptions.id"
         text description "What was charged for"
-        decimal amount "Charge amount"
+        decimal amount "Charge amount, precision (10,2)"
         text idempotency_key UK "Prevent duplicate charges"
-        text shopify_usage_id "Shopify GID for record"
-        timestamptz created_at
+        external_id shopify_usage_id "Shopify GID for record"
+        timestamp created_at
     }
 
     shops ||--o{ shop_subscriptions : "has"
@@ -110,104 +112,140 @@ erDiagram
 
 ### Table: `billing_plans`
 
-| Column | Type | Constraints | Notes |
-|--------|------|-------------|-------|
-| `id` | `uuid` | PK, default `gen_random_uuid()` | |
-| `name` | `text` | NOT NULL, UNIQUE | Human-readable, e.g. `"Pro Plan"` |
-| `slug` | `text` | NOT NULL, UNIQUE | URL-safe, e.g. `"pro"` |
-| `price_amount` | `decimal(10,2)` | NOT NULL | Monthly/annual price |
-| `price_currency` | `text` | NOT NULL, default `'USD'` | ISO 4217 currency code |
-| `interval` | `text` | NOT NULL, default `'EVERY_30_DAYS'` | `EVERY_30_DAYS` or `ANNUAL` |
+| Column | Logical Type | Constraints | Notes |
+|--------|--------------|-------------|-------|
+| `id` | `unique_id` | PK | distributed-safe ID, immutable |
+| `name` | `text_short` | NOT NULL, UNIQUE | Human-readable, e.g. `"Pro Plan"` |
+| `slug` | `text_short` | NOT NULL, UNIQUE | URL-safe identifier, e.g. `"pro"`; ≤64 chars; matches `^[a-z0-9\-]+$` |
+| `price_amount` | `decimal` | NOT NULL | Monthly/annual price; precision/scale: `(10,2)` for currency |
+| `price_currency` | `text_short` | NOT NULL, default `'USD'` | ISO 4217 currency code (3 chars) |
+| `interval` | `enum` | NOT NULL, default `'EVERY_30_DAYS'` | External contract: Shopify-dictated values `EVERY_30_DAYS` \| `ANNUAL` |
 | `trial_days` | `integer` | NOT NULL, default `0` | 0 = no trial period |
 | `is_test` | `boolean` | NOT NULL, default `false` | Test charges (dev/staging) |
-| `features` | `jsonb` | NOT NULL, default `'[]'` | Feature flag array for this plan |
+| `features` | `json` | NOT NULL, default empty array `[]` | Feature flag array for this plan; queryable by key |
 | `sort_order` | `integer` | NOT NULL, default `0` | Display ordering |
 | `active` | `boolean` | NOT NULL, default `true` | Whether plan is offered to new subscribers |
-| `created_at` | `timestamptz` | NOT NULL, default `now()` | |
-| `updated_at` | `timestamptz` | NOT NULL, default `now()` | |
+| `created_at` | `timestamp` | NOT NULL, default = now | UTC instant |
+| `updated_at` | `timestamp` | NOT NULL, default = now | UTC instant; updated on every row mutation |
+
+**Indexes**: `(active, sort_order)` for plan listing query.
 
 ### Table: `shop_subscriptions`
 
-| Column | Type | Constraints | Notes |
-|--------|------|-------------|-------|
-| `id` | `uuid` | PK, default `gen_random_uuid()` | |
-| `shop_id` | `uuid` | NOT NULL, FK → `shops(id)` ON DELETE CASCADE | |
-| `plan_id` | `uuid` | NOT NULL, FK → `billing_plans(id)` | |
-| `shopify_charge_id` | `text` | nullable | Shopify's charge GID (e.g. `gid://shopify/AppSubscription/123`) |
-| `status` | `text` | NOT NULL, default `'pending'` | State machine — see below |
-| `confirmation_url` | `text` | nullable | URL merchant must visit to approve charge |
-| `trial_ends_at` | `timestamptz` | nullable | null if no trial |
-| `activated_at` | `timestamptz` | nullable | Set when merchant approves |
-| `cancelled_at` | `timestamptz` | nullable | Set when subscription is cancelled |
-| `current_period_end` | `timestamptz` | nullable | Next billing date |
-| `created_at` | `timestamptz` | NOT NULL, default `now()` | |
-| `updated_at` | `timestamptz` | NOT NULL, default `now()` | |
+| Column | Logical Type | Constraints | Notes |
+|--------|--------------|-------------|-------|
+| `id` | `unique_id` | PK | distributed-safe ID |
+| `shop_id` | `unique_id` | NOT NULL, FK → `shops(id)` ON DELETE CASCADE | Tenant scope |
+| `plan_id` | `unique_id` | NOT NULL, FK → `billing_plans(id)` | |
+| `shopify_charge_id` | `external_id` | nullable | Shopify-issued GID, format `gid://shopify/AppSubscription/{numeric}` — external contract |
+| `status` | `enum` | NOT NULL, default `'pending'` | App-internal state machine values `pending` \| `active` \| `declined` \| `cancelled` \| `frozen` (see section 5) |
+| `confirmation_url` | `text` | nullable | URL merchant must visit to approve charge — issued by Shopify |
+| `trial_ends_at` | `timestamp` | nullable | null if no trial |
+| `activated_at` | `timestamp` | nullable | Set when merchant approves |
+| `cancelled_at` | `timestamp` | nullable | Set when subscription is cancelled |
+| `current_period_end` | `timestamp` | nullable | Next billing date — sourced from Shopify `currentPeriodEnd` field |
+| `created_at` | `timestamp` | NOT NULL, default = now | UTC instant |
+| `updated_at` | `timestamp` | NOT NULL, default = now | UTC instant |
+
+**Indexes**: `shop_id` (lookup by tenant), `(shop_id, status)` (gate query — find active subscription per shop).
 
 ### Table: `usage_records`
 
-| Column | Type | Constraints | Notes |
-|--------|------|-------------|-------|
-| `id` | `uuid` | PK, default `gen_random_uuid()` | |
-| `shop_id` | `uuid` | NOT NULL, FK → `shops(id)` ON DELETE CASCADE | |
-| `subscription_id` | `uuid` | NOT NULL, FK → `shop_subscriptions(id)` | |
-| `description` | `text` | NOT NULL | Human-readable charge description |
-| `amount` | `decimal(10,2)` | NOT NULL | Charge amount in plan currency |
-| `idempotency_key` | `text` | UNIQUE | Prevents duplicate charges — caller-provided |
-| `shopify_usage_id` | `text` | nullable | Shopify's usage record GID |
-| `created_at` | `timestamptz` | NOT NULL, default `now()` | |
+| Column | Logical Type | Constraints | Notes |
+|--------|--------------|-------------|-------|
+| `id` | `unique_id` | PK | distributed-safe ID |
+| `shop_id` | `unique_id` | NOT NULL, FK → `shops(id)` ON DELETE CASCADE | Tenant scope |
+| `subscription_id` | `unique_id` | NOT NULL, FK → `shop_subscriptions(id)` | |
+| `description` | `text` | NOT NULL | Human-readable charge description (≤100 chars per validation) |
+| `amount` | `decimal` | NOT NULL, `> 0` | Charge amount in plan currency; precision/scale: `(10,2)` |
+| `idempotency_key` | `text` | UNIQUE | Caller-provided key preventing duplicate charges (≤255 chars) |
+| `shopify_usage_id` | `external_id` | nullable | Shopify-issued GID, format `gid://shopify/AppUsageRecord/{numeric}` |
+| `created_at` | `timestamp` | NOT NULL, default = now | UTC instant |
 
-### Migration (reference)
+**Indexes**: `shop_id`, `subscription_id`.
+
+### Reference Migration (Postgres)
+
+Reference SQL chia 3 block — một block / bảng — để giữ mỗi snippet ≤30 dòng theo `docs/SPEC_GUIDELINES.md` mục 6. Marker `ADAPT` chung cho cả 3 block dưới đây:
+
+> **For MySQL/SQLite** — map theo bảng Logical Types ở `docs/SPEC_GUIDELINES.md` mục 5:
+> - `uuid PRIMARY KEY DEFAULT gen_random_uuid()` → MySQL: `BINARY(16) PRIMARY KEY` + UUID() trigger; SQLite: `TEXT PRIMARY KEY` + uuid4 ở app layer
+> - `timestamptz` → MySQL: `DATETIME(6)`; SQLite: `TEXT` (ISO 8601 with `Z` suffix)
+> - `jsonb` → MySQL: `JSON`; SQLite: `TEXT` (JSON string, no native key query)
+> - `decimal(10,2)` → MySQL: `DECIMAL(10,2)`; SQLite: `NUMERIC` (no precision enforcement — validate in app layer)
+> - `text ... CHECK (col IN (...))` enum form → MySQL native `ENUM(...)`; SQLite supports `CHECK` same as Postgres
+
+#### `billing_plans`
+
+<!-- REFERENCE: dialect=postgres -->
+<!-- ADAPT: see "For MySQL/SQLite" mapping above this snippet -->
 
 ```sql
 CREATE TABLE IF NOT EXISTS billing_plans (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name text NOT NULL UNIQUE,
-  slug text NOT NULL UNIQUE,
-  price_amount decimal(10,2) NOT NULL,
-  price_currency text NOT NULL DEFAULT 'USD',
-  interval text NOT NULL DEFAULT 'EVERY_30_DAYS',
-  trial_days integer NOT NULL DEFAULT 0,
-  is_test boolean NOT NULL DEFAULT false,
-  features jsonb NOT NULL DEFAULT '[]',
-  sort_order integer NOT NULL DEFAULT 0,
-  active boolean NOT NULL DEFAULT true,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name            text NOT NULL UNIQUE,
+  slug            text NOT NULL UNIQUE,
+  price_amount    decimal(10,2) NOT NULL,
+  price_currency  text NOT NULL DEFAULT 'USD',
+  interval        text NOT NULL DEFAULT 'EVERY_30_DAYS'
+                    CHECK (interval IN ('EVERY_30_DAYS', 'ANNUAL')),
+  trial_days      integer NOT NULL DEFAULT 0,
+  is_test         boolean NOT NULL DEFAULT false,
+  features        jsonb NOT NULL DEFAULT '[]',
+  sort_order      integer NOT NULL DEFAULT 0,
+  active          boolean NOT NULL DEFAULT true,
+  created_at      timestamptz NOT NULL DEFAULT now(),
+  updated_at      timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE INDEX idx_plans_active ON billing_plans(active, sort_order);
+```
 
+#### `shop_subscriptions`
+
+<!-- REFERENCE: dialect=postgres -->
+<!-- ADAPT: see "For MySQL/SQLite" mapping above -->
+
+```sql
 CREATE TABLE IF NOT EXISTS shop_subscriptions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  shop_id uuid NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
-  plan_id uuid NOT NULL REFERENCES billing_plans(id),
-  shopify_charge_id text,
-  status text NOT NULL DEFAULT 'pending',
-  confirmation_url text,
-  trial_ends_at timestamptz,
-  activated_at timestamptz,
-  cancelled_at timestamptz,
-  current_period_end timestamptz,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
+  id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  shop_id             uuid NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+  plan_id             uuid NOT NULL REFERENCES billing_plans(id),
+  shopify_charge_id   text,
+  status              text NOT NULL DEFAULT 'pending'
+                        CHECK (status IN ('pending','active','declined','cancelled','frozen')),
+  confirmation_url    text,
+  trial_ends_at       timestamptz,
+  activated_at        timestamptz,
+  cancelled_at        timestamptz,
+  current_period_end  timestamptz,
+  created_at          timestamptz NOT NULL DEFAULT now(),
+  updated_at          timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_sub_shop ON shop_subscriptions(shop_id);
+CREATE INDEX idx_sub_shop   ON shop_subscriptions(shop_id);
 CREATE INDEX idx_sub_status ON shop_subscriptions(shop_id, status);
+```
 
+#### `usage_records`
+
+<!-- REFERENCE: dialect=postgres -->
+<!-- ADAPT: see "For MySQL/SQLite" mapping above -->
+
+```sql
 CREATE TABLE IF NOT EXISTS usage_records (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  shop_id uuid NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
-  subscription_id uuid NOT NULL REFERENCES shop_subscriptions(id),
-  description text NOT NULL,
-  amount decimal(10,2) NOT NULL,
-  idempotency_key text UNIQUE,
-  shopify_usage_id text,
-  created_at timestamptz NOT NULL DEFAULT now()
+  id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  shop_id           uuid NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+  subscription_id   uuid NOT NULL REFERENCES shop_subscriptions(id),
+  description       text NOT NULL,
+  amount            decimal(10,2) NOT NULL,
+  idempotency_key   text UNIQUE,
+  shopify_usage_id  text,
+  created_at        timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE INDEX idx_usage_shop ON usage_records(shop_id);
-CREATE INDEX idx_usage_sub ON usage_records(subscription_id);
+CREATE INDEX idx_usage_sub  ON usage_records(subscription_id);
 ```
 
 ---
@@ -253,20 +291,20 @@ sequenceDiagram
 
     M->>F: Clicks "Subscribe to Pro"
     F->>A: POST /api/billing/subscribe {planSlug: "pro"}
-    A->>DB: SELECT * FROM billing_plans WHERE slug='pro' AND active=true
+    A->>DB: Lookup billing_plans by slug='pro' AND active=true
     DB-->>A: plan record
     A->>S: mutation appSubscriptionCreate {name, lineItems, returnUrl, test, trialDays}
     S-->>A: {confirmationUrl, id: "gid://shopify/AppSubscription/456"}
-    A->>DB: INSERT shop_subscriptions {shop_id, plan_id, shopify_charge_id, status: "pending", confirmation_url}
+    A->>DB: Insert shop_subscriptions {shop_id, plan_id, shopify_charge_id, status: "pending", confirmation_url}
     A-->>F: {confirmationUrl}
     F->>M: Redirect to Shopify confirmation page
     M->>S: Reviews and approves charge
     S->>A: GET /api/billing/callback?charge_id=gid://shopify/AppSubscription/456
-    A->>DB: SELECT * FROM shop_subscriptions WHERE shopify_charge_id=$1 AND status='pending'
+    A->>DB: Lookup shop_subscriptions WHERE shopify_charge_id=? AND status='pending'
     DB-->>A: pending subscription
     A->>S: query appSubscription(id) {status, currentPeriodEnd, trialDays}
     S-->>A: {status: "ACTIVE", currentPeriodEnd: "..."}
-    A->>DB: UPDATE shop_subscriptions SET status='active', activated_at=now(), current_period_end=$1
+    A->>DB: Update shop_subscriptions: status='active', activated_at=now, current_period_end=?
     A->>A: Emit subscription.activated event
     A->>M: Redirect to BILLING_RETURN_PATH
 ```
@@ -282,11 +320,11 @@ sequenceDiagram
 
     M->>S: Declines charge on confirmation page
     S->>A: GET /api/billing/callback?charge_id=gid://shopify/AppSubscription/456
-    A->>DB: SELECT * FROM shop_subscriptions WHERE shopify_charge_id=$1
+    A->>DB: Lookup shop_subscriptions WHERE shopify_charge_id=?
     DB-->>A: pending subscription
     A->>S: query appSubscription(id) {status}
     S-->>A: {status: "DECLINED"}
-    A->>DB: UPDATE shop_subscriptions SET status='declined', updated_at=now()
+    A->>DB: Update shop_subscriptions: status='declined', updated_at=now
     A->>A: Emit subscription.declined event
     A->>M: Redirect to plan selection page with declined notice
 ```
@@ -301,14 +339,14 @@ sequenceDiagram
     participant DB as Database
 
     App->>A: POST /api/billing/usage {description, amount, idempotencyKey}
-    A->>DB: SELECT active subscription for shop
+    A->>DB: Lookup active subscription for shop
     DB-->>A: active subscription
-    A->>DB: INSERT usage_records ON CONFLICT(idempotency_key) DO NOTHING
+    A->>DB: Insert usage_records with ON CONFLICT(idempotency_key) DO NOTHING
     DB-->>A: inserted or skipped (idempotent)
     alt New record (not duplicate)
         A->>S: mutation appUsageRecordCreate {subscriptionLineItemId, description, price}
         S-->>A: {id: "gid://shopify/AppUsageRecord/789"}
-        A->>DB: UPDATE usage_records SET shopify_usage_id=$1
+        A->>DB: Update usage_records: shopify_usage_id=?
         A->>A: Emit usage.recorded event
     end
     A-->>App: {usageRecordId, idempotent: true/false}
@@ -323,8 +361,8 @@ sequenceDiagram
     participant DB as Database
 
     M->>A: GET /api/some-protected-endpoint (with session token)
-    A->>A: authenticateShopifyRequest middleware — extract shopId
-    A->>DB: SELECT * FROM shop_subscriptions WHERE shop_id=$1 AND status='active' ORDER BY activated_at DESC LIMIT 1
+    A->>A: Session-token middleware — extract shopId into request context
+    A->>DB: Lookup shop_subscriptions WHERE shop_id=? AND status='active' ORDER BY activated_at DESC LIMIT 1
     alt Active subscription found
         DB-->>A: active subscription with plan features
         A->>A: Attach subscription + plan features to request context
@@ -341,21 +379,41 @@ sequenceDiagram
 
 ### Subscription Status State Machine
 
+External contract: Shopify reports subscription state via UPPERCASE values (`ACTIVE`, `DECLINED`, `CANCELLED`, `FROZEN`, `PENDING`) in the `appSubscription.status` field and `APP_SUBSCRIPTIONS_UPDATE` webhook. The local DB uses lowercase mirrors (`active`, `declined`, `cancelled`, `frozen`, `pending`) — the case translation is the only normalization performed.
+
 ```mermaid
 stateDiagram-v2
-    [*] --> pending : POST /api/billing/subscribe
-    pending --> active : Merchant approves (callback)
-    pending --> declined : Merchant declines (callback)
-    active --> cancelled : Merchant or app cancels
-    active --> frozen : Payment failed (Shopify webhook)
-    frozen --> active : Payment recovered (Shopify webhook)
+    [*] --> pending : POST /api/billing/subscribe creates record
+    pending --> active : Callback verifies Shopify status=ACTIVE
+    pending --> declined : Callback verifies Shopify status=DECLINED
+    active --> cancelled : Explicit cancel or APP_SUBSCRIPTIONS_UPDATE webhook (status=CANCELLED)
+    active --> frozen : APP_SUBSCRIPTIONS_UPDATE webhook (status=FROZEN, payment failed)
+    frozen --> active : APP_SUBSCRIPTIONS_UPDATE webhook (status=ACTIVE, payment recovered)
     declined --> [*]
     cancelled --> [*]
 ```
 
+**Explicit transitions** (anything not listed is invalid):
+
+| From | To | Trigger | Notes |
+|------|----|---------|-------|
+| (none) | `pending` | `POST /api/billing/subscribe` creates record | Initial state |
+| `pending` | `active` | Callback receives Shopify `status=ACTIVE` | Sets `activated_at`, `current_period_end`, optional `trial_ends_at` |
+| `pending` | `declined` | Callback receives Shopify `status=DECLINED` | Terminal |
+| `active` | `cancelled` | Explicit cancel API OR webhook `status=CANCELLED` | Sets `cancelled_at`; terminal |
+| `active` | `frozen` | Webhook `status=FROZEN` (payment failed) | Preserves `activated_at`; recoverable |
+| `frozen` | `active` | Webhook `status=ACTIVE` (payment recovered) | Emits `subscription.activated` |
+
+**Invalid transitions** (must reject or no-op):
+
+- `declined → active` — already terminal; merchant must subscribe again, creating a new pending record
+- `cancelled → active` — same as above
+- `active → pending` — never; only callback can leave `pending`
+- Re-running callback on already-`active` subscription — 404 (cannot re-activate)
+
 | Status | Meaning | App Access |
 |--------|---------|------------|
-| `pending` | Charge created, awaiting merchant approval | Blocked (if BILLING_REQUIRED) |
+| `pending` | Charge created, awaiting merchant approval | Blocked (if `BILLING_REQUIRED`) |
 | `active` | Charge approved, billing running | Allowed |
 | `declined` | Merchant rejected the charge | Blocked |
 | `cancelled` | Subscription cancelled | Blocked |
@@ -366,7 +424,7 @@ stateDiagram-v2
 | State | Storage | Survives Reload | Notes |
 |-------|---------|-----------------|-------|
 | `selectedPlan` | Component state | No | Reset on navigation |
-| `subscriptionStatus` | API fetch on mount | Yes (refetched) | From GET /api/billing/status |
+| `subscriptionStatus` | API fetch on mount | Yes (refetched) | From `GET /api/billing/status` |
 | `trialDaysRemaining` | Computed from `trial_ends_at` | Yes (refetched) | Show countdown banner |
 | `confirmationUrl` | Transient (redirect immediately) | No | Never stored |
 
@@ -378,10 +436,10 @@ stateDiagram-v2
 
 | Caller | How | Purpose |
 |--------|-----|---------|
-| Merchant browser (App Bridge) | GET /api/billing/plans | List available plans |
-| Merchant browser (App Bridge) | POST /api/billing/subscribe | Initiate subscription |
-| Shopify billing system | GET /api/billing/callback | Charge approved/declined |
-| App logic | POST /api/billing/usage | Record metered usage |
+| Merchant browser (App Bridge) | GET `/api/billing/plans` | List available plans |
+| Merchant browser (App Bridge) | POST `/api/billing/subscribe` | Initiate subscription |
+| Shopify billing system | GET `/api/billing/callback` | Charge approved/declined |
+| App logic | POST `/api/billing/usage` | Record metered usage |
 | All protected routes | Middleware | Gate access by subscription status |
 
 ### Outbound
@@ -389,7 +447,7 @@ stateDiagram-v2
 | Target | How | Purpose |
 |--------|-----|---------|
 | Shopify GraphQL Admin API | `appSubscriptionCreate` mutation | Create charge for merchant approval |
-| Shopify GraphQL Admin API | `appSubscription(id)` query | Verify charge status on callback |
+| Shopify GraphQL Admin API | `node(id:)` query with `... on AppSubscription` fragment | Verify charge status on callback |
 | Shopify GraphQL Admin API | `appUsageRecordCreate` mutation | Record metered usage charge |
 | Database | SQL | Store plans, subscriptions, usage records |
 
@@ -397,9 +455,9 @@ stateDiagram-v2
 
 | Event | Payload | When |
 |-------|---------|------|
-| `subscription.created` | `{ shopId, subscriptionId, planSlug, confirmationUrl }` | POST /subscribe creates pending record |
-| `subscription.activated` | `{ shopId, subscriptionId, planSlug, activatedAt }` | Callback confirms ACTIVE status |
-| `subscription.declined` | `{ shopId, subscriptionId, planSlug }` | Callback confirms DECLINED status |
+| `subscription.created` | `{ shopId, subscriptionId, planSlug, confirmationUrl }` | `POST /subscribe` creates pending record |
+| `subscription.activated` | `{ shopId, subscriptionId, planSlug, activatedAt }` | Callback or webhook confirms `ACTIVE` status |
+| `subscription.declined` | `{ shopId, subscriptionId, planSlug }` | Callback confirms `DECLINED` status |
 | `subscription.cancelled` | `{ shopId, subscriptionId, planSlug, cancelledAt }` | Subscription cancelled |
 | `usage.recorded` | `{ shopId, subscriptionId, amount, description, idempotencyKey }` | Usage record created in Shopify |
 
@@ -410,6 +468,6 @@ stateDiagram-v2
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `BILLING_REQUIRED` | `boolean` | `true` | Gate entire app behind active subscription |
-| `BILLING_TRIAL_DAYS` | `number` | `7` | Default trial period (overridden per plan) |
+| `BILLING_TRIAL_DAYS` | `number` | `7` | Default trial period (overridden per plan when `trial_days > 0`) |
 | `BILLING_TEST_MODE` | `boolean` | `false` | Create test charges (use in dev/staging) |
 | `BILLING_RETURN_PATH` | `string` | `"/"` | Redirect path after charge approval or decline |

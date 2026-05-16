@@ -77,12 +77,19 @@
 
 **Impact**: HIGH — arbitrary account access
 
-**Mitigation**:
-- Verify ID token using Google's public keys (JWKS at `https://www.googleapis.com/oauth2/v3/certs`)
-- Validate all claims: `iss` (issuer), `aud` (audience matches GOOGLE_CLIENT_ID), `exp` (not expired)
-- Use a well-maintained JWT library — never manually parse/verify
+**Mitigation** (external contract dictated by Google OIDC — algorithm and JWKS endpoint are fixed):
+- ID token signature algorithm: **RS256** (RSA-SHA256, asymmetric) — Google signs, app verifies with Google's public keys
+- Fetch Google's public keys from JWKS endpoint: `https://www.googleapis.com/oauth2/v3/certs` (cache per `Cache-Control` `max-age` header, typically ≥1 hour; respect `kid` from JWT header to pick the right key)
+- Discovery document (alternative source of JWKS URL): `https://accounts.google.com/.well-known/openid-configuration`
+- Validate all OIDC claims:
+  - `iss` ∈ `{"https://accounts.google.com", "accounts.google.com"}` (both forms valid per Google docs)
+  - `aud` === `GOOGLE_CLIENT_ID` (exact match)
+  - `exp` > now (with ≤5s clock skew tolerance)
+  - `azp` === `GOOGLE_CLIENT_ID` when present (authorized party)
+  - `email_verified` === `true` (boolean strict)
+- Use a well-maintained OIDC/JWT library configured for RS256 + JWKS — never manually parse/verify the signature
 
-**Validation rule**: Use `google-auth-library` or equivalent — verify signature + claims in one call.
+**Validation rule**: signature algorithm pinned to RS256; verifier must reject `alg: none`, HS256, or any non-RS256 token. Never trust the `alg` header from the token blindly — pin algorithm at the verifier.
 
 ---
 
@@ -92,10 +99,13 @@
 |-------|------|-------------|
 | OAuth `state` | Matches cookie, single-use, < 5 min old | Frontend: show error, redirect /login |
 | `code` | Non-empty string | 400 `missing_code` |
+| ID token `alg` (header) | Pinned to `RS256` at verifier — reject any other algorithm including `none` | 401 `google_auth_failed` |
+| ID token signature | Verified against Google JWKS (`https://www.googleapis.com/oauth2/v3/certs`) using `kid` from header | 401 `google_auth_failed` |
 | ID token `iss` | `https://accounts.google.com` or `accounts.google.com` | 401 `google_auth_failed` |
 | ID token `aud` | Equals `GOOGLE_CLIENT_ID` | 401 `google_auth_failed` |
+| ID token `azp` (if present) | Equals `GOOGLE_CLIENT_ID` | 401 `google_auth_failed` |
 | ID token `exp` | Not expired (with 5s clock skew tolerance) | 401 `google_auth_failed` |
-| ID token `email_verified` | `=== true` | 403 `email_not_verified` |
+| ID token `email_verified` | `=== true` (boolean strict, not truthy) | 403 `email_not_verified` |
 | `email` | Valid email format, lowercase, non-empty | 401 `google_auth_failed` |
 | `domain` | In `ALLOWED_DOMAINS` if configured (non-empty array) | 403 `domain_not_allowed` |
 | Post-login redirect | Relative path starting with `/`, no `//` prefix | Use default `LOGIN_REDIRECT_PATH` |
@@ -121,7 +131,14 @@
 
 ### Anti-patterns
 
-```
+The following patterns are NEVER acceptable regardless of stack — they violate baseline secret hygiene.
+
+<!-- PATTERN: secret-hygiene-anti-patterns -->
+<!-- PURPOSE: Illustrate what NEVER to write — secrets in source/URL/logs/response bodies -->
+<!-- REFERENCE: language=typescript -->
+<!-- ADAPT: applies to all stacks; equivalent forbidden patterns in other runtimes (e.g., `print()`, response writers, redirect helpers) — the rule is invariant, only the syntax of the violation changes -->
+
+```typescript
 // NEVER: secret in source code
 const CLIENT_SECRET = "GOCSPX-real-secret-here";
 

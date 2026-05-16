@@ -53,7 +53,7 @@ Claude Code runs this checklist after implementation, before reporting done.
 
 ## Security
 
-- [ ] HMAC verification uses `crypto.timingSafeEqual` (constant-time comparison)
+- [ ] HMAC verification uses **constant-time comparison** (Node `crypto.timingSafeEqual` / Web Crypto manual XOR-accumulator) — never `===` or `==`
 - [ ] Raw body buffer is used for HMAC — not re-serialized JSON
 - [ ] Webhook endpoint is excluded from CSRF protection middleware
 - [ ] Webhook endpoint is excluded from session/JWT authentication middleware

@@ -53,29 +53,31 @@ Shopify's standard GraphQL API is rate-limited and paginated — fetching 100,00
 
 ## 2. Data Model
 
+> Types dưới đây là **logical types** (canonical mapping ở `docs/SPEC_GUIDELINES.md` mục 5). Reference SQL dialect-specific ở mục [Reference Migration](#reference-migration-postgres) cuối section này.
+
 ```mermaid
 erDiagram
     shops {
-        uuid id PK "from auth.shopify-oauth"
+        unique_id id PK "from auth.shopify-oauth"
         text shop_domain UK
     }
 
     bulk_operations {
-        uuid id PK "gen_random_uuid()"
-        uuid shop_id FK "shops.id"
-        text shopify_operation_id UK "Shopify GID"
-        text type "query | mutation"
-        text status "created→running→completed|failed|cancelled"
+        unique_id id PK
+        unique_id shop_id FK "shops.id"
+        external_id shopify_operation_id UK "Shopify GID"
+        enum type "query | mutation"
+        enum status "created → running → completed|failed|cancelled"
         text query_text "GraphQL query or mutation string"
         text result_url "JSONL download URL (time-limited ~24h)"
         text error_code "null unless failed"
         text error_message "null unless failed"
-        bigint object_count "objects in result"
-        bigint file_size "result file bytes"
-        timestamptz started_at
-        timestamptz completed_at
-        timestamptz created_at
-        timestamptz updated_at
+        integer object_count "objects in result"
+        integer file_size "result file bytes"
+        timestamp started_at
+        timestamp completed_at
+        timestamp created_at
+        timestamp updated_at
     }
 
     shops ||--o{ bulk_operations : "runs"
@@ -83,26 +85,52 @@ erDiagram
 
 ### Table: `bulk_operations`
 
-| Column | Type | Constraints | Notes |
+| Column | Logical Type | Constraints | Notes |
 |--------|------|-------------|-------|
-| `id` | `uuid` | PK, default `gen_random_uuid()` | |
-| `shop_id` | `uuid` | NOT NULL, FK `shops.id` ON DELETE CASCADE | |
-| `shopify_operation_id` | `text` | UNIQUE, nullable | Shopify GID — null until Shopify accepts the operation |
-| `type` | `text` | NOT NULL | `'query'` or `'mutation'` |
-| `status` | `text` | NOT NULL, default `'created'` | State machine: `created → running → completed \| failed \| cancelled` |
-| `query_text` | `text` | NOT NULL | The full GraphQL query or mutation string |
-| `result_url` | `text` | nullable | JSONL download URL — set on completion, time-limited (~24h) |
-| `error_code` | `text` | nullable | Shopify error code if status is `failed` |
+| `id` | `unique_id` | PK | distributed-safe ID, immutable |
+| `shop_id` | `unique_id` | NOT NULL, FK `shops.id` ON DELETE CASCADE | Tenant isolation |
+| `shopify_operation_id` | `external_id` | UNIQUE, nullable | Shopify bulk operation GID, format `gid://shopify/BulkOperation/{numericId}`; null until Shopify accepts the operation |
+| `type` | `enum` | NOT NULL | Allowed values: `query`, `mutation`. Selects which Shopify mutation submits the op (`bulkOperationRunQuery` vs `bulkOperationRunMutation`). |
+| `status` | `enum` | NOT NULL, default `created` | App-side state machine. Allowed values: `created`, `running`, `completed`, `failed`, `cancelled`. Maps to Shopify enum `BulkOperationStatus` (`CREATED`, `RUNNING`, `COMPLETED`, `FAILED`, `CANCELING`, `CANCELED`, `EXPIRED`) — see §5. |
+| `query_text` | `text` | NOT NULL | The full GraphQL query or mutation string submitted to Shopify |
+| `result_url` | `text` | nullable | JSONL download URL — set on completion. **External contract: time-limited ~24h** (Shopify-signed Google Cloud Storage URL). Never expose to client. |
+| `error_code` | `text` | nullable | Shopify-supplied error code when status is `failed`. Shopify-defined values: `ACCESS_DENIED`, `INTERNAL_SERVER_ERROR`, `INVALID_URL`, `TIMEOUT`. |
 | `error_message` | `text` | nullable | Human-readable error if status is `failed` |
-| `object_count` | `bigint` | nullable | Number of objects in the JSONL result |
-| `file_size` | `bigint` | nullable | Result file size in bytes |
-| `started_at` | `timestamptz` | nullable | When Shopify moved to `RUNNING` status |
-| `completed_at` | `timestamptz` | nullable | When Shopify moved to terminal status |
-| `created_at` | `timestamptz` | NOT NULL, default `now()` | |
-| `updated_at` | `timestamptz` | NOT NULL, default `now()` | |
+| `object_count` | `integer` | nullable | Number of objects in the JSONL result |
+| `file_size` | `integer` | nullable | Result file size in bytes |
+| `started_at` | `timestamp` | nullable | UTC instant when Shopify moved to `RUNNING` status |
+| `completed_at` | `timestamp` | nullable | UTC instant when Shopify moved to terminal status |
+| `created_at` | `timestamp` | NOT NULL, default = now | UTC instant |
+| `updated_at` | `timestamp` | NOT NULL, default = now | UTC instant; updated on every row mutation |
 
-### Migration (reference)
+**Indexes**: `(shop_id)`, `(shop_id, status)`, partial `(shopify_operation_id) WHERE shopify_operation_id IS NOT NULL` for webhook reverse-lookup.
 
+### External Contract Reference (Shopify-dictated)
+
+| Item | Concrete value |
+|------|----------------|
+| Submit query | `bulkOperationRunQuery(query: String!)` — 1 active per shop |
+| Submit mutation | `bulkOperationRunMutation(mutation: String!, stagedUploadPath: String!)` — 1 active per shop |
+| Staged upload variables | `stagedUploadsCreate(input: [StagedUploadInput!]!)`, `resource: BULK_MUTATION_VARIABLES`, `mimeType: "text/jsonl"`, `httpMethod: POST` |
+| Poll | `currentBulkOperation { id status url errorCode objectCount fileSize createdAt completedAt }` |
+| Cancel | `bulkOperationCancel(id: ID!)` |
+| Completion webhook topic | `BULK_OPERATIONS_FINISH` |
+| Webhook payload key | `admin_graphql_api_id` (the bulk operation GID) |
+| Result format | JSONL (line-delimited JSON) |
+| Nested resource convention | Each child object has `__parentId` field pointing to parent's `id` |
+| Result URL TTL | ~24 hours from completion |
+| Per-shop concurrency | 1 active query + 1 active mutation per shop simultaneously |
+| Shopify BulkOperation status enum | `CREATED`, `RUNNING`, `COMPLETED`, `FAILED`, `CANCELING`, `CANCELED`, `EXPIRED` |
+
+### Reference Migration (Postgres)
+
+<!-- REFERENCE: dialect=postgres -->
+<!-- ADAPT: cho MySQL/SQLite — map theo bảng Logical Types ở docs/SPEC_GUIDELINES.md mục 5:
+       - `uuid PRIMARY KEY DEFAULT gen_random_uuid()` → MySQL: `BINARY(16) PRIMARY KEY` + UUID() trigger; SQLite: `TEXT PRIMARY KEY` + uuid4 ở app layer
+       - `bigint` → MySQL: `BIGINT`; SQLite: `INTEGER`
+       - `timestamptz` → MySQL: `DATETIME(6)`; SQLite: `TEXT` (ISO 8601 with `Z` suffix)
+       - `text CHECK (col IN (...))` enum constraint: MySQL có thể dùng `ENUM(...)`, SQLite giữ nguyên `CHECK`
+       - Partial index `WHERE col IS NOT NULL`: postgres-only. SQLite supports partial indexes too. MySQL: omit the WHERE clause (full index) — small storage cost, no semantic change. -->
 ```sql
 CREATE TABLE IF NOT EXISTS bulk_operations (
   id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),

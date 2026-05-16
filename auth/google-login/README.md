@@ -9,15 +9,11 @@ complexity: medium
 estimated_effort: "~45 min"
 files:
   - README.md
-  - frontend.md
-  - backend.md
   - security.md
   - login.feature
   - session.feature
   - fixtures/google-user.json
   - fixtures/google-tokens.json
-  - tests/unit.ts
-  - tests/integration.ts
   - acceptance.md
 ---
 
@@ -53,29 +49,31 @@ Merchant cần user authentication cho app. Google Sign-In là phương thức p
 
 ## 2. Data Model
 
+> Types dưới đây là **logical types** (canonical mapping ở `docs/SPEC_GUIDELINES.md` mục 5). Reference SQL dialect-specific ở mục [Reference Migration](#reference-migration-postgres) cuối section này.
+
 ```mermaid
 erDiagram
     users {
-        text id PK "gen_random_uuid()"
-        text email UK "Google email"
+        unique_id id PK
+        text email UK "Google email, lowercase"
         text name "Display name from Google"
-        text avatar_url "Profile picture URL"
-        text google_id UK "Google sub claim"
-        text domain "Email domain for restriction"
-        text role "user | admin"
-        timestamptz last_login_at
-        timestamptz created_at
-        timestamptz updated_at
+        text avatar_url "Profile picture URL, nullable"
+        external_id google_id UK "Google sub claim"
+        text_short domain "Email domain for restriction"
+        enum role "user | admin"
+        timestamp last_login_at
+        timestamp created_at
+        timestamp updated_at
     }
 
     sessions {
-        text id PK "gen_random_uuid()"
-        text user_id FK "→ users.id"
+        unique_id id PK
+        unique_id user_id FK "→ users.id"
         text token UK "crypto random 64 hex"
-        text user_agent "Browser UA"
-        text ip_address "Login IP"
-        timestamptz expires_at
-        timestamptz created_at
+        text user_agent "Browser UA, nullable"
+        text ip_address "Login IP, nullable"
+        timestamp expires_at
+        timestamp created_at
     }
 
     users ||--o{ sessions : "has many"
@@ -83,33 +81,43 @@ erDiagram
 
 ### Table: `users`
 
-| Column | Type | Constraints | Notes |
+| Column | Logical Type | Constraints | Notes |
 |--------|------|-------------|-------|
-| `id` | `text` | PK, default `gen_random_uuid()` | |
-| `email` | `text` | UNIQUE, NOT NULL | Lowercase |
-| `name` | `text` | NOT NULL | `given_name + family_name` |
-| `avatar_url` | `text` | nullable | Google profile picture |
-| `google_id` | `text` | UNIQUE, NOT NULL | `sub` claim |
-| `domain` | `text` | NOT NULL | `email.split('@')[1]` |
-| `role` | `text` | NOT NULL, default `'user'` | `user` or `admin` |
-| `last_login_at` | `timestamptz` | NOT NULL | Updated every login |
-| `created_at` | `timestamptz` | NOT NULL, default `now()` | |
-| `updated_at` | `timestamptz` | NOT NULL, default `now()` | |
+| `id` | `unique_id` | PK | distributed-safe ID, immutable |
+| `email` | `text` | NOT NULL, UNIQUE | Lowercase, ≤254 chars (RFC 5321) |
+| `name` | `text` | NOT NULL | `given_name + family_name` from Google profile |
+| `avatar_url` | `text` | nullable | Google profile picture URL |
+| `google_id` | `external_id` | NOT NULL, UNIQUE | Google OIDC `sub` claim — opaque stable identifier |
+| `domain` | `text_short` | NOT NULL | `email.split('@')[1]`, ≤253 chars (DNS limit) |
+| `role` | `enum` | NOT NULL, default `'user'` | Set: `{user, admin}` |
+| `last_login_at` | `timestamp` | NOT NULL | UTC instant; updated every login |
+| `created_at` | `timestamp` | NOT NULL, default = now | UTC instant |
+| `updated_at` | `timestamp` | NOT NULL, default = now | UTC instant; updated on every row mutation |
+
+**Indexes**: `email` (UNIQUE), `google_id` (UNIQUE), `domain` (lookup by domain for restriction checks).
 
 ### Table: `sessions`
 
-| Column | Type | Constraints | Notes |
+| Column | Logical Type | Constraints | Notes |
 |--------|------|-------------|-------|
-| `id` | `text` | PK, default `gen_random_uuid()` | |
-| `user_id` | `text` | FK → users.id, NOT NULL | |
-| `token` | `text` | UNIQUE, NOT NULL | 64 hex chars |
-| `user_agent` | `text` | nullable | |
-| `ip_address` | `text` | nullable | |
-| `expires_at` | `timestamptz` | NOT NULL | |
-| `created_at` | `timestamptz` | NOT NULL, default `now()` | |
+| `id` | `unique_id` | PK | |
+| `user_id` | `unique_id` | NOT NULL, FK → `users.id`, ON DELETE CASCADE | |
+| `token` | `text` | NOT NULL, UNIQUE | 64 hex chars (32 bytes entropy) |
+| `user_agent` | `text` | nullable | Browser UA at login |
+| `ip_address` | `text` | nullable | Login IP |
+| `expires_at` | `timestamp` | NOT NULL | UTC instant; index for lookup |
+| `created_at` | `timestamp` | NOT NULL, default = now | UTC instant |
 
-### Migration (reference)
+**Indexes**: `token` (UNIQUE — partial index `WHERE expires_at > now()` recommended for hot-path lookup), `user_id` (for per-user session list/logout-all).
 
+### Reference Migration (Postgres)
+
+<!-- REFERENCE: dialect=postgres -->
+<!-- ADAPT: cho MySQL/SQLite — map theo bảng Logical Types ở docs/SPEC_GUIDELINES.md mục 5:
+       - `text PRIMARY KEY DEFAULT gen_random_uuid()::text` → MySQL: `BINARY(16) PRIMARY KEY` + `UUID_TO_BIN(UUID())` trigger; SQLite: `TEXT PRIMARY KEY` + uuid4 generated ở app layer
+       - `timestamptz` → MySQL: `DATETIME(6)`; SQLite: `TEXT` (ISO 8601 with `Z` suffix)
+       - Partial index `WHERE expires_at > now()` → MySQL không hỗ trợ partial index, dùng full index + filter ở query; SQLite hỗ trợ partial index từ 3.8.0
+       - `role text NOT NULL DEFAULT 'user'` → optionally use Postgres ENUM type / MySQL `ENUM('user','admin')` / SQLite `TEXT CHECK (role IN ('user','admin'))` — chọn theo dialect, semantic không đổi -->
 ```sql
 CREATE TABLE IF NOT EXISTS users (
   id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -118,7 +126,7 @@ CREATE TABLE IF NOT EXISTS users (
   avatar_url text,
   google_id text UNIQUE NOT NULL,
   domain text NOT NULL,
-  role text NOT NULL DEFAULT 'user',
+  role text NOT NULL DEFAULT 'user' CHECK (role IN ('user','admin')),
   last_login_at timestamptz NOT NULL DEFAULT now(),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()

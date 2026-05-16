@@ -47,19 +47,19 @@ After a merchant installs the app via OAuth, every subsequent request from the e
 
 ## 2. Data Model
 
-No new tables. This block reads from `shops` (introduced by `auth.shopify-oauth`).
+> Types dưới đây là **logical types** (canonical mapping ở `docs/SPEC_GUIDELINES.md` mục 5). No new tables introduced — this block reads from `shops`, owned by `auth.shopify-oauth` (see that block's Reference Migration for dialect-specific SQL).
 
 ```mermaid
 erDiagram
     shops {
-        uuid id PK "gen_random_uuid()"
+        unique_id id PK
         text shop_domain UK "example.myshopify.com"
-        text access_token "Encrypted at rest"
+        encrypted_text access_token "App encrypts before insert"
         text scopes "Comma-separated granted scopes"
-        timestamptz installed_at
-        timestamptz uninstalled_at "null if active"
-        timestamptz created_at
-        timestamptz updated_at
+        timestamp installed_at
+        timestamp uninstalled_at "null if active"
+        timestamp created_at
+        timestamp updated_at
     }
 ```
 
@@ -198,11 +198,19 @@ This block is stateless. The middleware reads from the database per-request and 
 
 ### Per-request context shape
 
+<!-- PATTERN: shop-context-shape -->
+<!-- PURPOSE: Declare the per-request context attached by the auth middleware — downstream handlers read this -->
+<!-- REFERENCE: language=typescript -->
+<!-- ADAPT:
+       - Type system: TypeScript `interface` shown; Go → struct `ShopContext`; Python → `TypedDict`/`dataclass`; Rust → struct
+       - String vs typed ID: `shopId: string` shown as opaque ID; if using branded types (`ShopId & { __brand: "ShopId" }`), keep wire-shape identical for serialization
+       - Naming convention: camelCase shown; snake_case at boundary OK if framework convention dictates (e.g., Python `shop_id`) — keep DB column names per `shopify-oauth` data model unchanged -->
+
 ```typescript
 interface ShopContext {
-  shopId: string;        // shops.id (UUID)
+  shopId: string;        // shops.id (unique_id, opaque)
   shopDomain: string;    // e.g. "example.myshopify.com"
-  shopifyUserId: string; // JWT sub claim — Shopify user ID
+  shopifyUserId: string; // JWT `sub` claim — Shopify staff user ID
 }
 ```
 

@@ -50,25 +50,27 @@ Shopify's built-in data model covers products, orders, and customers — but mos
 
 ## 2. Data Model
 
+> Types dưới đây là **logical types** (canonical mapping ở `docs/SPEC_GUIDELINES.md` mục 5). Reference SQL dialect-specific ở mục [Reference Migration](#reference-migration-postgres) cuối section này.
+
 ```mermaid
 erDiagram
     shops {
-        uuid id PK
+        unique_id id PK
         text shop_domain UK
     }
 
     metafield_definitions {
-        uuid id PK "gen_random_uuid()"
-        uuid shop_id FK "references shops(id)"
+        unique_id id PK
+        unique_id shop_id FK "references shops(id)"
         text namespace "e.g. myapp"
         text key "e.g. warranty_period"
-        text owner_type "PRODUCT, ORDER, CUSTOMER, SHOP"
-        text type "single_line_text_field, number_integer, json, etc."
+        enum owner_type "PRODUCT, PRODUCTVARIANT, ORDER, CUSTOMER, COLLECTION, SHOP, ..."
+        enum type "Shopify metafield type string — see §7"
         text name "Human-readable label"
         text description "Optional description"
-        text shopify_gid "Shopify GID after sync"
-        timestamptz synced_at "Last synced to Shopify"
-        timestamptz created_at
+        external_id shopify_gid "Shopify GID after sync"
+        timestamp synced_at "Last synced to Shopify"
+        timestamp created_at
     }
 
     shops ||--o{ metafield_definitions : "registers definitions for"
@@ -78,39 +80,47 @@ erDiagram
 
 Local registry that mirrors what has been registered in Shopify. Used for validation and sync — the source of truth for values is always Shopify.
 
-| Column | Type | Constraints | Notes |
+| Column | Logical Type | Constraints | Notes |
 |--------|------|-------------|-------|
-| `id` | `uuid` | PK, default `gen_random_uuid()` | |
-| `shop_id` | `uuid` | NOT NULL, FK → `shops(id)` ON DELETE CASCADE | Tenant isolation |
-| `namespace` | `text` | NOT NULL | App namespace prefix, e.g. `myapp` |
+| `id` | `unique_id` | PK | distributed-safe ID, immutable |
+| `shop_id` | `unique_id` | NOT NULL, FK → `shops(id)` ON DELETE CASCADE | Tenant isolation |
+| `namespace` | `text` | NOT NULL | App namespace prefix, e.g. `myapp`. Reject value `global` (Shopify-reserved). |
 | `key` | `text` | NOT NULL | Field key within namespace, e.g. `warranty_period` |
-| `owner_type` | `text` | NOT NULL | `PRODUCT`, `ORDER`, `CUSTOMER`, `SHOP`, etc. |
-| `type` | `text` | NOT NULL | Shopify metafield type, e.g. `single_line_text_field` |
+| `owner_type` | `enum` | NOT NULL | **External contract — Shopify-defined enum.** Allowed values: `PRODUCT`, `PRODUCTVARIANT`, `ORDER`, `CUSTOMER`, `COLLECTION`, `SHOP`, `COMPANY`, `LOCATION`, `MARKET`, `DRAFTORDER`, `BLOG`, `ARTICLE`, `PAGE`, `MEDIAIMAGE`. (Reference: Shopify `MetafieldOwnerType` GraphQL enum.) |
+| `type` | `enum` | NOT NULL | **External contract — Shopify metafield type string.** Full enum value list at §7 ("Supported Metafield Types"). Examples: `single_line_text_field`, `number_integer`, `json`, `product_reference`, `list.collection_reference`. |
 | `name` | `text` | NOT NULL | Human-readable label shown in Shopify Admin |
 | `description` | `text` | nullable | Optional description |
-| `shopify_gid` | `text` | nullable | Shopify GID returned after `metafieldDefinitionCreate` |
-| `synced_at` | `timestamptz` | nullable | Timestamp of last successful sync to Shopify |
-| `created_at` | `timestamptz` | NOT NULL, default `now()` | |
+| `shopify_gid` | `external_id` | nullable, UNIQUE when present | Shopify GID returned after `metafieldDefinitionCreate`, format `gid://shopify/MetafieldDefinition/{id}` |
+| `synced_at` | `timestamp` | nullable | UTC instant of last successful sync to Shopify |
+| `created_at` | `timestamp` | NOT NULL, default = now | UTC instant |
 
 **Unique constraint**: `UNIQUE(shop_id, namespace, key, owner_type)` — one definition per shop per namespace+key+owner combination.
 
+**Indexes**: `(shop_id)` and `(shop_id, owner_type)` for tenant-scoped lookups.
+
 > **Important**: Metafield **values** live in Shopify, not in the app's database. This table only stores definitions (the schema). Every read/write of a value goes through the Shopify GraphQL API.
 
-### Migration (reference)
+### Reference Migration (Postgres)
 
+<!-- REFERENCE: dialect=postgres -->
+<!-- ADAPT: cho MySQL/SQLite — map theo bảng Logical Types ở docs/SPEC_GUIDELINES.md mục 5:
+       - `uuid PRIMARY KEY DEFAULT gen_random_uuid()` → MySQL: `BINARY(16) PRIMARY KEY` + UUID() trigger; SQLite: `TEXT PRIMARY KEY` + uuid4 ở app layer
+       - `timestamptz` → MySQL: `DATETIME(6)`; SQLite: `TEXT` (ISO 8601 with `Z` suffix)
+       - `text CHECK (col IN (...))` cho enum → MySQL `ENUM(...)` hoặc giữ nguyên CHECK; SQLite giữ nguyên CHECK
+       - Enum value LIST (owner_type, type) bị dictate bởi Shopify — KHÔNG đổi giá trị, chỉ đổi cách enforce -->
 ```sql
 CREATE TABLE IF NOT EXISTS metafield_definitions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  shop_id uuid NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
-  namespace text NOT NULL,
-  key text NOT NULL,
-  owner_type text NOT NULL,
-  type text NOT NULL,
-  name text NOT NULL,
-  description text,
-  shopify_gid text,
-  synced_at timestamptz,
-  created_at timestamptz NOT NULL DEFAULT now(),
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  shop_id      uuid NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+  namespace    text NOT NULL,
+  key          text NOT NULL,
+  owner_type   text NOT NULL,
+  type         text NOT NULL,
+  name         text NOT NULL,
+  description  text,
+  shopify_gid  text,
+  synced_at    timestamptz,
+  created_at   timestamptz NOT NULL DEFAULT now(),
   UNIQUE(shop_id, namespace, key, owner_type)
 );
 
@@ -279,12 +289,18 @@ Shop uninstalls → CASCADE DELETE removes all metafield_definitions records
 
 ### Supported Metafield Types
 
-| Category | Types |
+> **External contract — Shopify-defined enum value list.** Validation logic, definition sync, and `metafieldsSet` mutation must use these exact strings — Shopify rejects unknown type names. Source of truth: Shopify metafield type reference. Keep concrete; do NOT abstract for elegance.
+
+| Category | Type strings (Shopify-defined) |
 |----------|-------|
 | Text | `single_line_text_field`, `multi_line_text_field`, `rich_text_field` |
 | Numeric | `number_integer`, `number_decimal` |
 | Boolean | `boolean` |
 | Date/Time | `date`, `date_time` |
+| Money | `money` |
+| Rating | `rating` |
+| Dimension | `dimension`, `volume`, `weight` |
 | Structured | `json`, `url`, `color` |
-| Reference | `product_reference`, `variant_reference`, `collection_reference`, `file_reference` |
-| Lists | `list.single_line_text_field`, `list.number_integer`, `list.product_reference`, etc. |
+| Identifier | `id` |
+| Reference | `product_reference`, `variant_reference`, `collection_reference`, `file_reference`, `page_reference`, `metaobject_reference`, `mixed_reference`, `company_reference`, `customer_reference`, `order_reference` |
+| List variants | Prefix `list.` on any non-text-rich scalar/reference type, e.g. `list.single_line_text_field`, `list.number_integer`, `list.number_decimal`, `list.date`, `list.date_time`, `list.url`, `list.color`, `list.rating`, `list.money`, `list.dimension`, `list.volume`, `list.weight`, `list.product_reference`, `list.variant_reference`, `list.collection_reference`, `list.file_reference`, `list.page_reference`, `list.metaobject_reference`, `list.mixed_reference` |

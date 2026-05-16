@@ -63,7 +63,7 @@
 
 | Field | Validation | Error Code |
 |-------|-----------|------------|
-| `ownerType` (URL param) | Required, one of: `PRODUCT`, `ORDER`, `CUSTOMER`, `SHOP`, `VARIANT`, `COLLECTION` | `unsupported_owner_type` |
+| `ownerType` (URL param) | Required, one of Shopify `MetafieldOwnerType` enum values: `PRODUCT`, `PRODUCTVARIANT`, `ORDER`, `CUSTOMER`, `COLLECTION`, `SHOP`, `COMPANY`, `LOCATION`, `MARKET`, `DRAFTORDER`, `BLOG`, `ARTICLE`, `PAGE`, `MEDIAIMAGE`. Validate against the `OWNER_ROOT_FIELD` map in backend.md; values not present return `unsupported_owner_type`. Case-sensitive, uppercase. | `unsupported_owner_type` |
 | `ownerId` (URL param) | Required, must be URL-encoded Shopify GID (`gid://shopify/...`) | `invalid_owner_id` |
 | `namespace` (body/query) | Required, non-empty, matches app's configured namespace | `namespace_not_allowed` |
 | `key` (body) | Required, non-empty string, alphanumeric + underscores | `invalid_key` |
@@ -73,6 +73,14 @@
 ## Tenant Isolation
 
 Every database query includes `shop_id` in the WHERE clause. The `shop_id` is extracted from the verified session token (never from the request body or query params). A merchant cannot read or write another shop's definitions.
+
+<!-- PATTERN: metafield-tenant-isolation-rule -->
+<!-- PURPOSE: Illustrate correct vs incorrect shop_id sourcing in DB queries -->
+<!-- REFERENCE: dialect=postgres orm=raw-sql -->
+<!-- ADAPT:
+       - SQL placeholder `$1`: postgres-style; MySQL/SQLite use `?`
+       - `req.shopContext.shopId`: from `auth.shopify-session-token` middleware — adapt to merchant request-context plumbing (Express `req`, Hono `c.var`, Fastify `req`)
+       - Never read `shop_id` from `req.body`/`req.query`/`req.params` — only from verified session context -->
 
 ```typescript
 // CORRECT — shop_id from verified session context

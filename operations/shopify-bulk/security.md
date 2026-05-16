@@ -76,7 +76,15 @@
 
 ## Tenant Isolation
 
-All database queries include `shop_id` in the `WHERE` clause. A session token from Shop A cannot access bulk operations belonging to Shop B:
+All database queries include `shop_id` in the `WHERE` clause. A session token from Shop A cannot access bulk operations belonging to Shop B.
+
+<!-- PATTERN: bulk-tenant-isolation-rule -->
+<!-- PURPOSE: Illustrate correct vs incorrect shop_id sourcing in DB queries -->
+<!-- REFERENCE: dialect=postgres orm=raw-sql -->
+<!-- ADAPT:
+       - SQL placeholder `$1`/`$2`: postgres-style; MySQL/SQLite use `?`
+       - `shop_id` MUST come from `req.shopContext.shopId` (verified session token), NOT from `req.body`/`req.query`/`req.params`
+       - Same rule applies for `shopify_operation_id` reverse lookups in webhook handlers — always pair with `shop_id` filter -->
 
 ```sql
 -- Correct: always scope to shop_id from session token context
@@ -87,3 +95,12 @@ SELECT * FROM bulk_operations WHERE id = $1;
 ```
 
 The `shop_id` is extracted from the verified session token, not from a client-supplied parameter.
+
+## Result URL Confidentiality (carve-out)
+
+The `result_url` column holds a Shopify-signed Google Cloud Storage URL with **unauthenticated read access** to the full JSONL payload. Treat it as a short-lived bearer credential:
+
+- **Never** return `result_url` in any API response — not in `/api/bulk/status/:id` and not in webhook acknowledgements
+- **Never** log `result_url` to application logs, observability traces, or error reports — log only the local `operationId`
+- All result consumption flows through `/api/bulk/results/:id`, which fetches the URL server-side and streams JSONL to processing
+- After ~24h Shopify expires the URL — the app should not retry-fetch on `404` from Shopify storage; mark the operation `failed` with `result_url_expired` if no longer accessible

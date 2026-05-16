@@ -53,43 +53,45 @@ Merchant apps need to send transactional emails triggered by business events: or
 
 ## 2. Data Model
 
+> Types dưới đây là **logical types** (canonical mapping ở `docs/SPEC_GUIDELINES.md` mục 5). Reference SQL dialect-specific ở mục [Reference Migration](#reference-migration-postgres) cuối section này.
+
 ```mermaid
 erDiagram
     email_templates {
-        text id PK "gen_random_uuid()"
-        text shop_id "tenant isolation, nullable for platform defaults"
-        text slug UK "e.g. welcome, order-confirmation"
+        unique_id id PK
+        unique_id shop_id "tenant isolation, nullable for platform defaults"
+        text_short slug UK "e.g. welcome, order-confirmation"
         text subject_template "Handlebars: 'Order {{order_number}} confirmed'"
         text body_template "Handlebars HTML body"
-        text category "transactional | notification"
+        enum category "transactional | notification"
         boolean active "true = sends, false = skipped"
-        timestamptz created_at
-        timestamptz updated_at
+        timestamp created_at
+        timestamp updated_at
     }
 
     email_log {
-        text id PK "gen_random_uuid()"
-        text shop_id FK "tenant isolation"
+        unique_id id PK
+        unique_id shop_id FK "tenant isolation"
         text idempotency_key UK "event_id:template_slug:to"
         text to_address "recipient email"
         text subject "rendered subject"
-        text template_slug FK "which template was used"
-        text status "queued | sent | delivered | bounced | failed"
-        text provider_message_id "ID from Resend/SendGrid"
-        text error "error message if failed"
-        jsonb metadata "extra context: order_id, user_id, etc."
-        timestamptz sent_at "when provider accepted"
-        timestamptz created_at
-        timestamptz updated_at
+        text_short template_slug FK "which template was used"
+        enum status "queued | sent | delivered | bounced | failed"
+        external_id provider_message_id "ID from email provider"
+        text error "error message if failed, nullable"
+        json metadata "extra context: order_id, user_id, etc."
+        timestamp sent_at "when provider accepted, nullable"
+        timestamp created_at
+        timestamp updated_at
     }
 
     email_suppressions {
-        text id PK "gen_random_uuid()"
-        text shop_id FK "tenant isolation"
+        unique_id id PK
+        unique_id shop_id FK "tenant isolation"
         text email UK "suppressed recipient"
-        text reason "hard_bounce | complaint | manual"
-        text source_log_id FK "email_log entry that caused suppression"
-        timestamptz created_at
+        enum reason "hard_bounce | complaint | manual"
+        unique_id source_log_id FK "email_log entry that caused suppression, nullable"
+        timestamp created_at
     }
 
     email_templates ||--o{ email_log : "used by"
@@ -98,51 +100,67 @@ erDiagram
 
 ### Table: `email_templates`
 
-| Column | Type | Constraints | Notes |
+| Column | Logical Type | Constraints | Notes |
 |--------|------|-------------|-------|
-| `id` | `text` | PK, default `gen_random_uuid()` | |
-| `shop_id` | `text` | nullable | NULL = platform default template; non-null = merchant override |
-| `slug` | `text` | NOT NULL | Unique per `(shop_id, slug)` |
-| `subject_template` | `text` | NOT NULL | Handlebars template |
-| `body_template` | `text` | NOT NULL | Handlebars HTML template |
-| `category` | `text` | NOT NULL, default `'transactional'` | `transactional` or `notification` |
-| `active` | `boolean` | NOT NULL, default `true` | Inactive = sends skipped |
-| `created_at` | `timestamptz` | NOT NULL, default `now()` | |
-| `updated_at` | `timestamptz` | NOT NULL, default `now()` | |
+| `id` | `unique_id` | PK | distributed-safe ID |
+| `shop_id` | `unique_id` | nullable | NULL = platform default template; non-null = merchant override |
+| `slug` | `text_short` | NOT NULL | Unique per `(shop_id, slug)`; charset `^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$` |
+| `subject_template` | `text` | NOT NULL | Handlebars template (≤998 chars after render — RFC 5322 line limit) |
+| `body_template` | `text` | NOT NULL | Handlebars HTML template (≤256KB) |
+| `category` | `enum` | NOT NULL, default `'transactional'` | Set: `{transactional, notification}` |
+| `active` | `boolean` | NOT NULL, default `true` | Inactive = sends skipped silently |
+| `created_at` | `timestamp` | NOT NULL, default = now | UTC instant |
+| `updated_at` | `timestamp` | NOT NULL, default = now | UTC instant; updated on every row mutation |
 
 **Template resolution order**: lookup by `(shop_id, slug)` first; if no match, fallback to `(NULL, slug)` for platform default.
 
+**Indexes**: `(shop_id, slug)` UNIQUE composite (covers both lookup paths).
+
 ### Table: `email_log`
 
-| Column | Type | Constraints | Notes |
+| Column | Logical Type | Constraints | Notes |
 |--------|------|-------------|-------|
-| `id` | `text` | PK, default `gen_random_uuid()` | |
-| `shop_id` | `text` | NOT NULL | Tenant isolation |
-| `idempotency_key` | `text` | UNIQUE, NOT NULL | `${event_id}:${template_slug}:${to}` |
+| `id` | `unique_id` | PK | |
+| `shop_id` | `unique_id` | NOT NULL | Tenant isolation |
+| `idempotency_key` | `text` | NOT NULL, UNIQUE | Format: `${event_id}:${template_slug}:${to}` — deterministic, prevents duplicate sends per event |
 | `to_address` | `text` | NOT NULL | Recipient email |
-| `subject` | `text` | NOT NULL | Rendered subject |
-| `template_slug` | `text` | NOT NULL | Which template was used |
-| `status` | `text` | NOT NULL, default `'queued'` | `queued` -> `sent` -> `delivered` / `bounced` / `failed` |
-| `provider_message_id` | `text` | nullable | Returned by provider on accept |
+| `subject` | `text` | NOT NULL | Rendered subject (no `\r\n\0` chars permitted) |
+| `template_slug` | `text_short` | NOT NULL | Which template was used (slug, not FK ID — survives template deletion) |
+| `status` | `enum` | NOT NULL, default `'queued'` | Set: `{queued, sent, delivered, bounced, failed}` — transitions: `queued → sent → delivered / bounced / failed` |
+| `provider_message_id` | `external_id` | nullable | ID returned by provider on accept |
 | `error` | `text` | nullable | Error message on failure |
-| `metadata` | `jsonb` | nullable | Context: `{ order_id, user_id }` |
-| `sent_at` | `timestamptz` | nullable | When provider accepted the email |
-| `created_at` | `timestamptz` | NOT NULL, default `now()` | |
-| `updated_at` | `timestamptz` | NOT NULL, default `now()` | |
+| `metadata` | `json` | nullable | Context: `{ order_id, user_id, ... }` |
+| `sent_at` | `timestamp` | nullable | UTC instant when provider accepted |
+| `created_at` | `timestamp` | NOT NULL, default = now | UTC instant |
+| `updated_at` | `timestamp` | NOT NULL, default = now | UTC instant |
+
+**Indexes**: `shop_id`, `status` (partial — only `WHERE status IN ('queued','sent')` for retry/polling hot path), `(to_address, shop_id)` (for per-recipient queries).
 
 ### Table: `email_suppressions`
 
-| Column | Type | Constraints | Notes |
+| Column | Logical Type | Constraints | Notes |
 |--------|------|-------------|-------|
-| `id` | `text` | PK, default `gen_random_uuid()` | |
-| `shop_id` | `text` | NOT NULL | Tenant isolation |
+| `id` | `unique_id` | PK | |
+| `shop_id` | `unique_id` | NOT NULL | Tenant isolation |
 | `email` | `text` | NOT NULL | Unique per `(shop_id, email)` |
-| `reason` | `text` | NOT NULL | `hard_bounce`, `complaint`, `manual` |
-| `source_log_id` | `text` | FK -> email_log.id, nullable | Log entry that triggered suppression |
-| `created_at` | `timestamptz` | NOT NULL, default `now()` | |
+| `reason` | `enum` | NOT NULL | Set: `{hard_bounce, complaint, manual}` |
+| `source_log_id` | `unique_id` | nullable, FK → `email_log.id` | Log entry that triggered suppression |
+| `created_at` | `timestamp` | NOT NULL, default = now | UTC instant |
 
-### Migration (reference)
+**Indexes**: `(shop_id, email)` UNIQUE composite — primary lookup before every send.
 
+### Reference Migration (Postgres)
+
+> Per-table split theo convention `docs/SPEC_GUIDELINES.md` Reference Migration. Mỗi table có ADAPT riêng liệt kê dialect-specific constructs của chính table đó.
+
+#### `email_templates` table
+
+<!-- REFERENCE: dialect=postgres -->
+<!-- ADAPT:
+       - `text PRIMARY KEY DEFAULT gen_random_uuid()::text` → MySQL: `BINARY(16) PRIMARY KEY` + UUID() trigger; SQLite: `TEXT PRIMARY KEY` + uuid4 generated ở app
+       - `timestamptz` → MySQL: `DATETIME(6)`; SQLite: `TEXT` (ISO 8601 with `Z`)
+       - `boolean` → MySQL: `TINYINT(1)`; SQLite: `INTEGER 0/1`
+       - `CHECK (category IN (...))` → MySQL: optionally `ENUM('transactional','notification')`; SQLite: CHECK works as-is -->
 ```sql
 CREATE TABLE IF NOT EXISTS email_templates (
   id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -150,13 +168,27 @@ CREATE TABLE IF NOT EXISTS email_templates (
   slug text NOT NULL,
   subject_template text NOT NULL,
   body_template text NOT NULL,
-  category text NOT NULL DEFAULT 'transactional',
+  category text NOT NULL DEFAULT 'transactional'
+    CHECK (category IN ('transactional','notification')),
   active boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (shop_id, slug)
 );
 
+CREATE INDEX idx_email_templates_shop_slug ON email_templates(shop_id, slug);
+```
+
+#### `email_log` table
+
+<!-- REFERENCE: dialect=postgres -->
+<!-- ADAPT:
+       - `text PRIMARY KEY DEFAULT gen_random_uuid()::text` → same as email_templates
+       - `timestamptz` → MySQL: `DATETIME(6)`; SQLite: `TEXT` (ISO 8601)
+       - `jsonb` → MySQL: `JSON` (operators differ — `JSON_EXTRACT`/`->>`); SQLite: `TEXT` (store JSON string, query via app-side parse)
+       - `CHECK (status IN (...))` → MySQL: optionally `ENUM(...)`; SQLite: CHECK works as-is
+       - Partial index `WHERE status IN ('queued','sent')` → MySQL không hỗ trợ partial index → full index + query filter; SQLite hỗ trợ partial index (≥3.8.0) -->
+```sql
 CREATE TABLE IF NOT EXISTS email_log (
   id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
   shop_id text NOT NULL,
@@ -164,7 +196,8 @@ CREATE TABLE IF NOT EXISTS email_log (
   to_address text NOT NULL,
   subject text NOT NULL,
   template_slug text NOT NULL,
-  status text NOT NULL DEFAULT 'queued',
+  status text NOT NULL DEFAULT 'queued'
+    CHECK (status IN ('queued','sent','delivered','bounced','failed')),
   provider_message_id text,
   error text,
   metadata jsonb,
@@ -173,20 +206,31 @@ CREATE TABLE IF NOT EXISTS email_log (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE INDEX idx_email_log_shop_id ON email_log(shop_id);
+CREATE INDEX idx_email_log_status ON email_log(status) WHERE status IN ('queued', 'sent');
+CREATE INDEX idx_email_log_to ON email_log(to_address, shop_id);
+```
+
+#### `email_suppressions` table
+
+<!-- REFERENCE: dialect=postgres -->
+<!-- ADAPT:
+       - `text PRIMARY KEY DEFAULT gen_random_uuid()::text` → same as email_templates
+       - `timestamptz` → MySQL: `DATETIME(6)`; SQLite: `TEXT` (ISO 8601)
+       - `CHECK (reason IN (...))` → MySQL: optionally `ENUM(...)`; SQLite: CHECK works as-is
+       - FK `REFERENCES email_log(id)`: same syntax across dialects -->
+```sql
 CREATE TABLE IF NOT EXISTS email_suppressions (
   id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
   shop_id text NOT NULL,
   email text NOT NULL,
-  reason text NOT NULL,
+  reason text NOT NULL
+    CHECK (reason IN ('hard_bounce','complaint','manual')),
   source_log_id text REFERENCES email_log(id),
   created_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (shop_id, email)
 );
 
-CREATE INDEX idx_email_templates_shop_slug ON email_templates(shop_id, slug);
-CREATE INDEX idx_email_log_shop_id ON email_log(shop_id);
-CREATE INDEX idx_email_log_status ON email_log(status) WHERE status IN ('queued', 'sent');
-CREATE INDEX idx_email_log_to ON email_log(to_address, shop_id);
 CREATE INDEX idx_email_suppressions_lookup ON email_suppressions(shop_id, email);
 ```
 

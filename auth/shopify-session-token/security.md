@@ -70,12 +70,19 @@
 
 ## Timing Attack Prevention
 
-The signature comparison uses `crypto.timingSafeEqual`. A naive string comparison (`===`) leaks information about how many characters match, allowing an attacker to reconstruct the expected HMAC byte-by-byte via many requests. `timingSafeEqual` always takes the same time regardless of where the mismatch occurs.
+The signature comparison MUST be **constant-time**. A naive string comparison (`===`) short-circuits on first byte mismatch and leaks how many characters matched, allowing an attacker to reconstruct the expected HMAC byte-by-byte via many requests. A constant-time comparison always takes the same time regardless of where the mismatch occurs.
+
+<!-- PATTERN: constant-time-compare-illustration -->
+<!-- PURPOSE: Show the correct vs incorrect comparison style for signature bytes — invariant across stacks -->
+<!-- REFERENCE: runtime=node20+ crypto=node-builtin -->
+<!-- ADAPT:
+       - `crypto.timingSafeEqual`: edge/Workers/Deno don't expose this — implement constant-time compare manually with an XOR accumulator over equal-length byte arrays (never bail on first mismatch); Python `hmac.compare_digest`; Go `crypto/subtle.ConstantTimeCompare`; Rust `subtle::ConstantTimeEq`
+       - Length pre-check: comparing two strings of different length always leaks length difference — match length first AND treat the entire `mismatch` as `invalid_token` to keep error behavior uniform -->
 
 ```typescript
 // CORRECT: constant-time
-crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(received))
+crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(received));
 
 // WRONG: leaks timing information
-expected === received
+expected === received;
 ```

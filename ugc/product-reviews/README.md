@@ -52,38 +52,40 @@ Social proof drives conversion. Shoppers trust other shoppers more than marketin
 
 ## 2. Data Model
 
+> Types dưới đây là **logical types** (canonical mapping ở `docs/SPEC_GUIDELINES.md` mục 5). Reference SQL dialect-specific ở mục [Reference Migration](#reference-migration-postgres) cuối section này.
+
 ```mermaid
 erDiagram
     reviews {
-        text id PK "gen_random_uuid()"
-        text shop_id FK "tenant isolation"
-        text product_id "Shopify product ID"
-        text customer_id "Shopify customer ID"
+        unique_id id PK
+        unique_id shop_id "tenant isolation"
+        external_id product_id "Shopify product ID/GID"
+        external_id customer_id "Shopify customer ID/GID"
         text customer_name "Display name"
-        text customer_email "Contact email"
-        int rating "1-5 stars"
-        text title "Review headline"
+        text customer_email "Contact email (never displayed)"
+        integer rating "1-5 stars"
+        text title "Optional headline"
         text body "Review content"
-        text status "pending | approved | rejected"
-        boolean verified_buyer "Checked via order history"
-        timestamptz moderated_at "When moderated"
-        text moderated_by "Admin who moderated"
-        timestamptz created_at
-        timestamptz updated_at
+        enum status "pending | approved | rejected"
+        boolean verified_buyer "Server-computed at submit"
+        timestamp moderated_at
+        text moderated_by "Admin user ID"
+        timestamp created_at
+        timestamp updated_at
     }
 
     review_aggregates {
-        text id PK "gen_random_uuid()"
-        text shop_id FK "tenant isolation"
-        text product_id UK "One row per product per shop"
-        numeric avg_rating "Rounded to 1 decimal"
-        int total_count "Approved reviews only"
-        int count_star_1
-        int count_star_2
-        int count_star_3
-        int count_star_4
-        int count_star_5
-        timestamptz last_updated_at
+        unique_id id PK
+        unique_id shop_id "tenant isolation"
+        external_id product_id "One row per product per shop"
+        decimal avg_rating "Rounded to 1 decimal — precision 2 scale 1"
+        integer total_count "Approved reviews only"
+        integer count_star_1
+        integer count_star_2
+        integer count_star_3
+        integer count_star_4
+        integer count_star_5
+        timestamp last_updated_at
     }
 
     reviews }o--|| review_aggregates : "aggregated into"
@@ -91,43 +93,68 @@ erDiagram
 
 ### Table: `reviews`
 
-| Column | Type | Constraints | Notes |
+| Column | Logical Type | Constraints | Notes |
 |--------|------|-------------|-------|
-| `id` | `text` | PK, default `gen_random_uuid()` | |
-| `shop_id` | `text` | NOT NULL, indexed | Tenant isolation |
-| `product_id` | `text` | NOT NULL | Shopify product GID |
-| `customer_id` | `text` | NOT NULL | Shopify customer GID |
-| `customer_name` | `text` | NOT NULL | Display name on review |
-| `customer_email` | `text` | NOT NULL | Not displayed publicly |
-| `rating` | `integer` | NOT NULL, CHECK 1-5 | Star rating |
-| `title` | `text` | nullable | Optional headline |
-| `body` | `text` | NOT NULL | Review content |
-| `status` | `text` | NOT NULL, default `'pending'` | `pending`, `approved`, `rejected` |
-| `verified_buyer` | `boolean` | NOT NULL, default `false` | Checked at submit time |
-| `moderated_at` | `timestamptz` | nullable | Set on approve/reject |
-| `moderated_by` | `text` | nullable | Admin user ID |
-| `created_at` | `timestamptz` | NOT NULL, default `now()` | |
-| `updated_at` | `timestamptz` | NOT NULL, default `now()` | |
+| `id` | `unique_id` | PK | distributed-safe ID |
+| `shop_id` | `unique_id` | NOT NULL, indexed | Tenant isolation |
+| `product_id` | `external_id` | NOT NULL | Shopify product ID/GID |
+| `customer_id` | `external_id` | NOT NULL | Shopify customer ID/GID |
+| `customer_name` | `text` | NOT NULL | Display name shown on review |
+| `customer_email` | `text` | NOT NULL | Stored for merchant contact; **never returned in public APIs** |
+| `rating` | `integer` | NOT NULL, CHECK `1 ≤ rating ≤ 5` | Star rating |
+| `title` | `text` | nullable | Optional headline (≤200 chars, HTML-stripped) |
+| `body` | `text` | NOT NULL | Review content (`MIN_BODY_LENGTH..MAX_BODY_LENGTH`, HTML-stripped) |
+| `status` | `enum` | NOT NULL, default `pending` | one of: `pending`, `approved`, `rejected` |
+| `verified_buyer` | `boolean` | NOT NULL, default `false` | **Server-computed** at submit time — never accepted from client |
+| `moderated_at` | `timestamp` | nullable | Set on approve/reject |
+| `moderated_by` | `text` | nullable | Admin user ID or `system` for auto-approve |
+| `created_at` | `timestamp` | NOT NULL, default = now | UTC instant |
+| `updated_at` | `timestamp` | NOT NULL, default = now | UTC instant |
+
+**Indexes**: `shop_id`; `(shop_id, product_id, status)` for storefront list; partial `(shop_id, status, created_at) WHERE status = 'pending'` for moderation queue.
+**UNIQUE**: `(shop_id, product_id, customer_id)` — one review per customer per product per shop.
 
 ### Table: `review_aggregates`
 
 Denormalized table (not materialized view) — updated transactionally on each approve/reject. This avoids refresh-overhead and staleness windows that hurt PDP latency. Trade-off: slight write overhead on moderation actions, but moderation is low-frequency compared to PDP reads.
 
-| Column | Type | Constraints | Notes |
+| Column | Logical Type | Constraints | Notes |
 |--------|------|-------------|-------|
-| `id` | `text` | PK, default `gen_random_uuid()` | |
-| `shop_id` | `text` | NOT NULL | Tenant isolation |
-| `product_id` | `text` | NOT NULL | One row per product per shop |
-| `avg_rating` | `numeric(2,1)` | NOT NULL, default `0` | Average of approved reviews |
+| `id` | `unique_id` | PK | |
+| `shop_id` | `unique_id` | NOT NULL | Tenant isolation |
+| `product_id` | `external_id` | NOT NULL | Shopify product ID/GID |
+| `avg_rating` | `decimal` | NOT NULL, default `0`, precision 2 scale 1 | Range `0.0..5.0`, rounded to 1 decimal place |
 | `total_count` | `integer` | NOT NULL, default `0` | Count of approved reviews |
 | `count_star_1` | `integer` | NOT NULL, default `0` | |
 | `count_star_2` | `integer` | NOT NULL, default `0` | |
 | `count_star_3` | `integer` | NOT NULL, default `0` | |
 | `count_star_4` | `integer` | NOT NULL, default `0` | |
 | `count_star_5` | `integer` | NOT NULL, default `0` | |
-| `last_updated_at` | `timestamptz` | NOT NULL, default `now()` | |
+| `last_updated_at` | `timestamp` | NOT NULL, default = now | UTC instant |
 
-### Migration (reference)
+**UNIQUE**: `(shop_id, product_id)` — one aggregate row per product per shop.
+
+### Aggregate Rating Calculation Rule
+
+- `avg_rating = AVG(rating)` over reviews where `status = 'approved'`, rounded to **1 decimal place** (e.g. `4.23` → `4.2`)
+- `total_count = COUNT(*)` over reviews where `status = 'approved'`
+- `count_star_N = COUNT(*)` over reviews where `status = 'approved' AND rating = N` for N in 1..5
+- Recalculation is **full recompute** from `reviews` (not increment/decrement) — race-free, drift-proof
+- Recalculated transactionally with the moderation status change
+
+### Reference Migration (Postgres)
+
+<!-- REFERENCE: dialect=postgres -->
+<!-- ADAPT: cho MySQL/SQLite — map theo bảng Logical Types ở docs/SPEC_GUIDELINES.md mục 5:
+       - `text PRIMARY KEY DEFAULT gen_random_uuid()::text` → MySQL `CHAR(36) PRIMARY KEY` + UUID() default; SQLite `TEXT PRIMARY KEY` + uuid4 ở app layer
+       - `timestamptz` → MySQL `DATETIME(6)`; SQLite `TEXT` ISO 8601 với `Z` suffix
+       - `numeric(2,1)` → MySQL `DECIMAL(2,1)`; SQLite `NUMERIC`
+       - `boolean` → MySQL `TINYINT(1)`; SQLite `INTEGER 0/1`
+       - `COUNT(*) FILTER (WHERE ...)` (Postgres) → MySQL/SQLite `SUM(CASE WHEN ... THEN 1 ELSE 0 END)`
+       - Partial index `WHERE status = 'pending'`: postgres + SQLite; MySQL dùng full index (chấp nhận overhead nhỏ)
+       - `CHECK (rating BETWEEN 1 AND 5)`: phổ thông SQL — giữ nguyên -->
+
+Table `reviews`:
 
 ```sql
 CREATE TABLE IF NOT EXISTS reviews (
@@ -140,22 +167,25 @@ CREATE TABLE IF NOT EXISTS reviews (
   rating integer NOT NULL CHECK (rating BETWEEN 1 AND 5),
   title text,
   body text NOT NULL,
-  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  status text NOT NULL DEFAULT 'pending'
+         CHECK (status IN ('pending','approved','rejected')),
   verified_buyer boolean NOT NULL DEFAULT false,
   moderated_at timestamptz,
   moderated_by text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-
--- Tenant isolation + common queries
 CREATE INDEX idx_reviews_shop_id ON reviews(shop_id);
 CREATE INDEX idx_reviews_product_status ON reviews(shop_id, product_id, status);
-CREATE INDEX idx_reviews_moderation_queue ON reviews(shop_id, status, created_at) WHERE status = 'pending';
+CREATE INDEX idx_reviews_moderation_queue
+  ON reviews(shop_id, status, created_at) WHERE status = 'pending';
+CREATE UNIQUE INDEX idx_reviews_unique_per_customer
+  ON reviews(shop_id, product_id, customer_id);
+```
 
--- Prevent duplicate reviews: one review per customer per product per shop
-CREATE UNIQUE INDEX idx_reviews_unique_per_customer ON reviews(shop_id, product_id, customer_id);
+Table `review_aggregates`:
 
+```sql
 CREATE TABLE IF NOT EXISTS review_aggregates (
   id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
   shop_id text NOT NULL,
@@ -169,9 +199,8 @@ CREATE TABLE IF NOT EXISTS review_aggregates (
   count_star_5 integer NOT NULL DEFAULT 0,
   last_updated_at timestamptz NOT NULL DEFAULT now()
 );
-
--- One aggregate row per product per shop
-CREATE UNIQUE INDEX idx_review_aggregates_product ON review_aggregates(shop_id, product_id);
+CREATE UNIQUE INDEX idx_review_aggregates_product
+  ON review_aggregates(shop_id, product_id);
 ```
 
 ---
@@ -182,15 +211,15 @@ CREATE UNIQUE INDEX idx_review_aggregates_product ON review_aggregates(shop_id, 
 flowchart TD
     A[Shopper submits review on PDP] --> B[Frontend validates form locally]
     B --> C[POST /api/reviews]
-    C --> D[Backend validates input]
+    C --> D[Backend validates + sanitizes input]
     D --> E{Verified buyer check}
     E -->|Config requires + not verified| F[Reject 403]
-    E -->|Verified or not required| G{Duplicate check}
+    E -->|Verified or not required| G{Duplicate check via UNIQUE constraint}
     G -->|Already reviewed| H[Reject 409]
     G -->|New review| I{Auto-approve?}
     I -->|Rating >= threshold| J[Insert with status=approved]
     I -->|Below threshold| K[Insert with status=pending]
-    J --> L[Recalculate aggregate]
+    J --> L[Recalculate aggregate transactionally]
     K --> M[Emit review.submitted event]
     L --> M
 
@@ -198,7 +227,7 @@ flowchart TD
     O --> P[Merchant approves or rejects]
     P --> Q[PATCH /api/admin/reviews/:id]
     Q --> R[Update review status]
-    R --> S[Recalculate aggregate]
+    R --> S[Recalculate aggregate transactionally]
     S --> T[Emit review.approved or review.rejected]
 
     U[Shopper visits PDP] --> V[GET /api/reviews/aggregate/:product_id]
@@ -224,14 +253,14 @@ sequenceDiagram
     F->>F: Validate locally (rating 1-5, body length)
     F->>B: POST /api/reviews { product_id, rating, title, body }
 
-    B->>B: Validate input (rating range, body length, sanitize)
-    B->>DB: SELECT id FROM reviews WHERE shop_id=$1 AND product_id=$2 AND customer_id=$3
+    B->>B: Validate input (rating range, body length, HTML-strip)
+    B->>DB: Lookup duplicate review by (shop_id, product_id, customer_id)
     alt Duplicate exists
         DB-->>B: row found
         B-->>F: 409 { error: "already_reviewed" }
     else No duplicate
         DB-->>B: null
-        B->>DB: SELECT id FROM orders WHERE shop_id=$1 AND customer_id=$2 AND product_id in line_items
+        B->>DB: Check verified buyer (order exists for customer + product)
         alt Verified buyer
             DB-->>B: order found
             B->>B: verified_buyer = true
@@ -246,7 +275,7 @@ sequenceDiagram
         B->>B: Check auto-approve (rating >= threshold)
         B->>DB: INSERT review (status = approved or pending)
         alt Auto-approved
-            B->>DB: UPSERT review_aggregates (recalculate)
+            B->>DB: Upsert review_aggregates (full recalculate)
         end
         B-->>F: 201 { review }
         B->>B: Emit review.submitted event
@@ -265,15 +294,15 @@ sequenceDiagram
 
     M->>A: Open moderation queue
     A->>B: GET /api/admin/reviews?status=pending
-    B->>DB: SELECT reviews WHERE shop_id=$1 AND status='pending' ORDER BY created_at
+    B->>DB: Lookup pending reviews scoped to shop_id, ordered by created_at
     DB-->>B: pending reviews
     B-->>A: 200 { reviews[], total }
     A->>A: Render queue with approve/reject buttons
 
     M->>A: Click approve on review-123
     A->>B: PATCH /api/admin/reviews/review-123 { status: "approved" }
-    B->>DB: UPDATE reviews SET status='approved', moderated_at=now(), moderated_by=$admin WHERE id=$1 AND shop_id=$2
-    B->>DB: Recalculate review_aggregates for product_id
+    B->>DB: Update review status + moderated_at + moderated_by (scoped to shop_id)
+    B->>DB: Recalculate review_aggregates for product_id (transactional)
     DB-->>B: done
     B-->>A: 200 { review }
     B->>B: Emit review.approved event
@@ -291,12 +320,12 @@ sequenceDiagram
 
     S->>F: Navigate to product page
     F->>B: GET /api/reviews/aggregate/product-123
-    B->>DB: SELECT * FROM review_aggregates WHERE shop_id=$1 AND product_id=$2
+    B->>DB: Lookup aggregate row (shop_id, product_id)
     DB-->>B: aggregate row (or null)
     B-->>F: 200 { avg_rating, total_count, count_star_1..5 }
 
     F->>B: GET /api/reviews?product_id=product-123&page=1&sort=newest
-    B->>DB: SELECT * FROM reviews WHERE shop_id=$1 AND product_id=$2 AND status='approved' ORDER BY created_at DESC LIMIT $per_page OFFSET $offset
+    B->>DB: Lookup approved reviews paginated, sorted
     DB-->>B: review rows + total
     B-->>F: 200 { reviews[], pagination }
 
@@ -354,7 +383,7 @@ Page Change → fetch reviews page N → append or replace list
 | Target | How | Purpose |
 |--------|-----|---------|
 | Database | SQL | Reviews + aggregates CRUD |
-| Orders data (CDM) | SQL query | Verified buyer check — lookup `orders` table for customer + product match |
+| Orders data | Order lookup | Verified buyer check — does an order exist for this customer + product? |
 
 ### Events
 
@@ -366,7 +395,7 @@ Page Change → fetch reviews page N → append or replace list
 
 ### Verified Buyer Check Strategy
 
-Synchronous lookup against CDM `orders` table at submit time. Query: does an order exist for this `shop_id` + `customer_id` that contains `product_id` in its line items? Result is stored as `verified_buyer` boolean on the review row — not re-checked later.
+Synchronous lookup against the orders source at submit time. Logical query: does an order exist for this `shop_id` + `customer_id` that contains `product_id` in its line items? Result is stored as `verified_buyer` boolean on the review row — not re-checked later.
 
 Trade-off: if a customer returns the product after reviewing, the badge persists. Acceptable because post-return badge removal adds complexity with minimal UX benefit, and the review content remains valid.
 
@@ -377,8 +406,9 @@ Trade-off: if a customer returns the product after reviewing, the badge persists
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `REQUIRE_VERIFIED_BUYER` | `boolean` | `false` | Reject reviews from non-buyers when true |
-| `AUTO_APPROVE_THRESHOLD` | `number` | `0` (disabled) | Ratings >= this value auto-approve. Set 4 or 5 to auto-approve positive reviews. `0` = all reviews go to moderation queue |
+| `AUTO_APPROVE_THRESHOLD` | `number` | `0` (disabled) | Ratings ≥ this value auto-approve. Set 4 or 5 to auto-approve positive reviews. `0` = all reviews go to moderation queue |
 | `MIN_BODY_LENGTH` | `number` | `10` | Minimum characters for review body |
 | `MAX_BODY_LENGTH` | `number` | `5000` | Maximum characters for review body |
 | `REVIEWS_PER_PAGE` | `number` | `10` | Pagination size for storefront display |
 | `DEFAULT_SORT` | `string` | `"newest"` | Default sort order: `newest`, `highest`, `lowest` |
+| `REVIEW_SUBMIT_RATE_LIMIT` | `number` | `5` | Max submissions per customer per hour (anti-spam) |

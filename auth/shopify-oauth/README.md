@@ -50,25 +50,27 @@ Every Shopify app must implement the OAuth handshake to get installed on a merch
 
 ## 2. Data Model
 
+> Types dưới đây là **logical types** (canonical mapping ở `docs/SPEC_GUIDELINES.md` mục 5). Reference SQL dialect-specific ở mục [Reference Migration](#reference-migration-postgres) cuối section này.
+
 ```mermaid
 erDiagram
     shops {
-        uuid id PK "gen_random_uuid()"
+        unique_id id PK
         text shop_domain UK "example.myshopify.com"
-        text access_token "Encrypted at rest"
+        encrypted_text access_token "App encrypts before insert"
         text scopes "Comma-separated granted scopes"
-        timestamptz installed_at
-        timestamptz uninstalled_at "null if active"
-        timestamptz created_at
-        timestamptz updated_at
+        timestamp installed_at
+        timestamp uninstalled_at "null if active"
+        timestamp created_at
+        timestamp updated_at
     }
 
     oauth_nonces {
-        uuid id PK "gen_random_uuid()"
+        unique_id id PK
         text nonce UK "Random 32-char hex"
         text shop_domain "Which shop initiated"
-        timestamptz expires_at "5 min TTL"
-        timestamptz created_at
+        timestamp expires_at "5 min TTL"
+        timestamp created_at
     }
 
     shops ||--o{ oauth_nonces : "generates during install"
@@ -76,31 +78,39 @@ erDiagram
 
 ### Table: `shops`
 
-| Column | Type | Constraints | Notes |
+| Column | Logical Type | Constraints | Notes |
 |--------|------|-------------|-------|
-| `id` | `uuid` | PK, default `gen_random_uuid()` | |
-| `shop_domain` | `text` | NOT NULL, UNIQUE | `example.myshopify.com` format |
-| `access_token` | `text` | NOT NULL | Encrypted at rest |
-| `scopes` | `text` | NOT NULL | Comma-separated, e.g. `read_products,write_orders` |
-| `installed_at` | `timestamptz` | NOT NULL, default `now()` | |
-| `uninstalled_at` | `timestamptz` | nullable | Set on `APP_UNINSTALLED` webhook |
-| `created_at` | `timestamptz` | NOT NULL, default `now()` | |
-| `updated_at` | `timestamptz` | NOT NULL, default `now()` | |
+| `id` | `unique_id` | PK | distributed-safe ID, immutable |
+| `shop_domain` | `text` | NOT NULL, UNIQUE | `example.myshopify.com` format (≤253 chars DNS limit) |
+| `access_token` | `encrypted_text` | NOT NULL | app encrypts before insert; never store plaintext, never log |
+| `scopes` | `text` | NOT NULL | Comma-separated granted scopes, e.g. `read_products,write_orders` |
+| `installed_at` | `timestamp` | NOT NULL, default = now | UTC instant |
+| `uninstalled_at` | `timestamp` | nullable | Set on `APP_UNINSTALLED` webhook |
+| `created_at` | `timestamp` | NOT NULL, default = now | UTC instant |
+| `updated_at` | `timestamp` | NOT NULL, default = now | UTC instant; updated on every row mutation |
+
+**Indexes**: `shop_domain` (already UNIQUE → index implicit).
 
 ### Table: `oauth_nonces`
 
 Single-use CSRF tokens for the OAuth callback. Deleted immediately after use.
 
-| Column | Type | Constraints | Notes |
+| Column | Logical Type | Constraints | Notes |
 |--------|------|-------------|-------|
-| `id` | `uuid` | PK, default `gen_random_uuid()` | |
-| `nonce` | `text` | NOT NULL, UNIQUE | Random 32-char hex string |
+| `id` | `unique_id` | PK | |
+| `nonce` | `text` | NOT NULL, UNIQUE | Random 32-char hex string (16 bytes entropy) |
 | `shop_domain` | `text` | NOT NULL | Which shop initiated the flow |
-| `expires_at` | `timestamptz` | NOT NULL | 5 minutes from creation |
-| `created_at` | `timestamptz` | NOT NULL, default `now()` | |
+| `expires_at` | `timestamp` | NOT NULL | 5 minutes from creation; index for cleanup query |
+| `created_at` | `timestamp` | NOT NULL, default = now | |
 
-### Migration (reference)
+**Indexes**: `expires_at` (for periodic cleanup query).
 
+### Reference Migration (Postgres)
+
+<!-- REFERENCE: dialect=postgres -->
+<!-- ADAPT: cho MySQL/SQLite — map theo bảng Logical Types ở docs/SPEC_GUIDELINES.md mục 5:
+       - `uuid PRIMARY KEY DEFAULT gen_random_uuid()` → MySQL: `BINARY(16) PRIMARY KEY` + UUID() trigger; SQLite: `TEXT PRIMARY KEY` + uuid4 ở app layer
+       - `timestamptz` → MySQL: `DATETIME(6)`; SQLite: `TEXT` (ISO 8601 with `Z` suffix) -->
 ```sql
 CREATE TABLE IF NOT EXISTS shops (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
