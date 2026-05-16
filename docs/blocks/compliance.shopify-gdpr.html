@@ -7,7 +7,7 @@
 <meta name="description" content="The three GDPR webhook endpoints every Shopify App Store submission must implement: customers/data_request, customers/redact, and shop/redact. Missing or wrong implementation = rejected review.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
@@ -15,14 +15,15 @@
 <header class="site">
   <nav class="nav">
     <a href="../" class="brand">
-      <span class="brand-mark">P</span>
+      <span class="brand-mark">§</span>
       <span>Primitive Block Library</span>
     </a>
     <ul class="nav-links">
-      <li><a href="../#philosophy">Philosophy</a></li>
+      <li><a href="../#example">Example</a></li>
+      <li><a href="../#philosophy">Why</a></li>
       <li><a href="../#consume">Workflow</a></li>
       <li><a href="../#blocks">Blocks</a></li>
-      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
     </ul>
   </nav>
 </header>
@@ -33,13 +34,7 @@
     <aside class="toc">
       <a class="back" href="../">Back to library</a>
       <div class="toc-section">On this page</div>
-      <nav class="toc-nav">
-        <a href="#overview" class="active">Overview</a>
-        <a href="#prerequisites">Prerequisites</a>
-        <a href="#data-model">Data model</a>
-        <a href="#usage">Use / Avoid</a>
-        <a href="#files">Spec files</a>
-      </nav>
+      <nav class="toc-nav"><a href="#problem" class="active">Problem</a><a href="#prerequisites">Dependencies</a><a href="#data-model">Data model</a><a href="#files">Spec files</a></nav>
       <div class="toc-meta">
         <div class="meta-row"><span class="label">Category</span><span class="cat-badge compliance">compliance</span></div>
         <div class="meta-row"><span class="label">Complexity</span><span class="complexity low">low</span></div>
@@ -53,52 +48,80 @@
         <a href="../">Library</a>
         <span class="sep">/</span>
         <span>compliance</span>
-        <span class="sep">/</span>
-        <span>Shopify GDPR Mandatory Webhooks</span>
       </div>
       <span class="block-id-large">compliance.shopify-gdpr</span>
       <h1>Shopify GDPR Mandatory Webhooks</h1>
       <p class="lead">The three GDPR webhook endpoints every Shopify App Store submission must implement: customers/data_request, customers/redact, and shop/redact. Missing or wrong implementation = rejected review.</p>
       <div class="block-tags"><span class="tag">shopify</span><span class="tag">gdpr</span><span class="tag">privacy</span><span class="tag">data-erasure</span><span class="tag">mandatory</span></div>
 
-      <section id="overview">
-        <h2>Overview</h2>
-        <p>The three GDPR webhook endpoints every Shopify App Store submission must implement: customers/data_request, customers/redact, and shop/redact. Missing or wrong implementation = rejected review.</p>
+      
+      <section id="problem">
+        <div class="section-rule">
+          <span class="section-label">Problem</span>
+          <span class="section-line"></span>
+        </div>
+        <p class="problem-callout">Every app published on the Shopify App Store must implement 3 mandatory GDPR/privacy webhook endpoints. Shopify calls these endpoints when a merchant's customer exercises their data rights (access or erasure) or when a merchant uninstalls and their shop data must be purged. Without these 3 endpoints, app review is rejected — they are a hard requirement, not optional compliance.</p>
       </section>
 
       <section id="prerequisites">
-        <h2>Prerequisites</h2>
-        <p>This block depends on the following blocks being implemented first:</p><div class="prereq-list"><a class="prereq" href="webhooks.shopify-webhooks.html">webhooks.shopify-webhooks</a></div>
+        <div class="section-rule">
+          <span class="section-label">Dependencies</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="related-blocks">
+          <div class="related-row">
+            <span class="related-label">Depends on</span>
+            <div class="related-chips"><a class="prereq" href="webhooks.shopify-webhooks.html">webhooks.shopify-webhooks</a></div>
+          </div>
+          <div class="related-row">
+            <span class="related-label">Required by</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+        </div>
       </section>
 
       <section id="data-model">
-        <h2>Data Model</h2>
-        <p>Logical tables introduced by this block. Types resolve to dialect-specific SQL per the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">canonical logical-type mapping</a>.</p>
+        <div class="section-rule">
+          <span class="section-label">Data model</span>
+          <span class="section-line"></span>
+        </div>
         <div class="tables-grid"><div class="table-card">
           <div class="table-name">gdpr_requests</div>
           <div class="table-desc">Audit trail with request_type enum, idempotency by shopify_request_id, status state machine. Survives shop deletion via ON DELETE SET NULL.</div>
         </div></div>
       </section>
 
-      <section id="usage">
-        <h2>Use it / Avoid it</h2>
-        <div class="two-col">
-          <div class="use-card yes">
-            <h5>Use when</h5>
-            <ul><li>Any app submitted to the Shopify App Store (mandatory).</li><li>Mentions &ldquo;GDPR&rdquo;, &ldquo;privacy webhooks&rdquo;, &ldquo;data erasure&rdquo;.</li><li>App stores any customer PII.</li></ul>
-          </div>
-          <div class="use-card no">
-            <h5>Avoid when</h5>
-            <ul><li>Building a Shopify theme &mdash; not subject to these webhooks.</li><li>Internal tooling never published to the App Store.</li><li>Apps that provably store zero customer data (rare in practice).</li></ul>
-          </div>
-        </div>
-      </section>
-
       <section id="files">
-        <h2>Spec files</h2>
-        <p>Every file in the <code>compliance/shopify-gdpr/</code> folder. Click any link to open the file on GitHub.</p>
-        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/data-request.feature" target="_blank" rel="noopener">data-request.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/customer-redact.feature" target="_blank" rel="noopener">customer-redact.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/shop-redact.feature" target="_blank" rel="noopener">shop-redact.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/fixtures/gdpr-payloads.json" target="_blank" rel="noopener">fixtures/gdpr-payloads.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
-        <p style="margin-top: 20px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/compliance/shopify-gdpr" target="_blank" rel="noopener">Open the folder on GitHub &rarr;</a></p>
+        <div class="section-rule">
+          <span class="section-label">Spec files</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Documentation</span>
+          <span class="files-section-count">3</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Scenarios</span>
+          <span class="files-section-count">3</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/data-request.feature" target="_blank" rel="noopener">data-request.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/customer-redact.feature" target="_blank" rel="noopener">customer-redact.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/shop-redact.feature" target="_blank" rel="noopener">shop-redact.feature<span class="ftype">GHERKIN</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Fixtures</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/fixtures/gdpr-payloads.json" target="_blank" rel="noopener">fixtures/gdpr-payloads.json<span class="ftype">JSON</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Acceptance</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/compliance/shopify-gdpr/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+      </div>
+        <p style="margin-top: 24px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/compliance/shopify-gdpr" target="_blank" rel="noopener">Browse <code>compliance/shopify-gdpr/</code> on GitHub &rarr;</a></p>
       </section>
 
 
@@ -113,12 +136,10 @@
 <footer class="site">
   <div class="footer-inner">
     <p>
-      Primitive Block Library &middot;
       <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
     </p>
-    <p style="margin-top: 8px; color: var(--text-dim);">
-      Read the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">Spec Guidelines</a>
-      for the abstraction discipline that every block must pass.
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
     </p>
   </div>
 </footer>

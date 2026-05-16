@@ -7,7 +7,7 @@
 <meta name="description" content="Serve app-generated content (HTML, JSON, or Liquid) under the merchant&rsquo;s own storefront domain. Shopify forwards proxied requests &mdash; the app verifies the signature and responds with the app">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
@@ -15,14 +15,15 @@
 <header class="site">
   <nav class="nav">
     <a href="../" class="brand">
-      <span class="brand-mark">P</span>
+      <span class="brand-mark">§</span>
       <span>Primitive Block Library</span>
     </a>
     <ul class="nav-links">
-      <li><a href="../#philosophy">Philosophy</a></li>
+      <li><a href="../#example">Example</a></li>
+      <li><a href="../#philosophy">Why</a></li>
       <li><a href="../#consume">Workflow</a></li>
       <li><a href="../#blocks">Blocks</a></li>
-      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
     </ul>
   </nav>
 </header>
@@ -33,13 +34,7 @@
     <aside class="toc">
       <a class="back" href="../">Back to library</a>
       <div class="toc-section">On this page</div>
-      <nav class="toc-nav">
-        <a href="#overview" class="active">Overview</a>
-        <a href="#prerequisites">Prerequisites</a>
-        <a href="#data-model">Data model</a>
-        <a href="#usage">Use / Avoid</a>
-        <a href="#files">Spec files</a>
-      </nav>
+      <nav class="toc-nav"><a href="#problem" class="active">Problem</a><a href="#prerequisites">Dependencies</a><a href="#data-model">Data model</a><a href="#files">Spec files</a></nav>
       <div class="toc-meta">
         <div class="meta-row"><span class="label">Category</span><span class="cat-badge integration">integration</span></div>
         <div class="meta-row"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
@@ -53,52 +48,80 @@
         <a href="../">Library</a>
         <span class="sep">/</span>
         <span>integration</span>
-        <span class="sep">/</span>
-        <span>Shopify App Proxy</span>
       </div>
       <span class="block-id-large">integration.shopify-app-proxy</span>
       <h1>Shopify App Proxy</h1>
       <p class="lead">Serve app-generated content (HTML, JSON, or Liquid) under the merchant&rsquo;s own storefront domain. Shopify forwards proxied requests &mdash; the app verifies the signature and responds with the appropriate content type.</p>
       <div class="block-tags"><span class="tag">shopify</span><span class="tag">app-proxy</span><span class="tag">storefront</span><span class="tag">liquid</span></div>
 
-      <section id="overview">
-        <h2>Overview</h2>
-        <p>Serve app-generated content (HTML, JSON, or Liquid) under the merchant&rsquo;s own storefront domain. Shopify forwards proxied requests &mdash; the app verifies the signature and responds with the appropriate content type.</p>
+      
+      <section id="problem">
+        <div class="section-rule">
+          <span class="section-label">Problem</span>
+          <span class="section-line"></span>
+        </div>
+        <p class="problem-callout">Shopify apps run in the admin iframe, but merchants often need app-generated content surfaced on their storefront — a loyalty widget, a review feed, a custom form. The App Proxy is Shopify's mechanism for this: Shopify forwards storefront requests to the app, and the app responds with HTML, JSON, or Liquid that Shopify renders within the active theme. Without App Proxy, apps have no legitimate way to inject dynamic content into the merchant's storefront under the store's own domain.</p>
       </section>
 
       <section id="prerequisites">
-        <h2>Prerequisites</h2>
-        <p>This block depends on the following blocks being implemented first:</p><div class="prereq-list"><a class="prereq" href="auth.shopify-oauth.html">auth.shopify-oauth</a></div>
+        <div class="section-rule">
+          <span class="section-label">Dependencies</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="related-blocks">
+          <div class="related-row">
+            <span class="related-label">Depends on</span>
+            <div class="related-chips"><a class="prereq" href="auth.shopify-oauth.html">auth.shopify-oauth</a></div>
+          </div>
+          <div class="related-row">
+            <span class="related-label">Required by</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+        </div>
       </section>
 
       <section id="data-model">
-        <h2>Data Model</h2>
-        <p>Logical tables introduced by this block. Types resolve to dialect-specific SQL per the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">canonical logical-type mapping</a>.</p>
+        <div class="section-rule">
+          <span class="section-label">Data model</span>
+          <span class="section-line"></span>
+        </div>
         <div class="tables-grid"><div class="table-card shared">
           <div class="table-name">shops</div>
           <div class="table-desc">Read-only lookup by shop_domain query param. Owned by auth.shopify-oauth.</div>
         </div></div>
       </section>
 
-      <section id="usage">
-        <h2>Use it / Avoid it</h2>
-        <div class="two-col">
-          <div class="use-card yes">
-            <h5>Use when</h5>
-            <ul><li>App surfaces content on the storefront, not just the admin.</li><li>Mentions &ldquo;storefront widget&rdquo;, &ldquo;liquid template&rdquo;, &ldquo;/apps/ URL&rdquo;.</li><li>Content needs to live under the merchant&rsquo;s domain.</li></ul>
-          </div>
-          <div class="use-card no">
-            <h5>Avoid when</h5>
-            <ul><li>Content only needed in the admin.</li><li>Building a headless storefront &mdash; use Storefront API directly.</li><li>Need customer auth on the endpoint &mdash; proxy is always public.</li></ul>
-          </div>
-        </div>
-      </section>
-
       <section id="files">
-        <h2>Spec files</h2>
-        <p>Every file in the <code>integration/shopify-app-proxy/</code> folder. Click any link to open the file on GitHub.</p>
-        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/signature-verification.feature" target="_blank" rel="noopener">signature-verification.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/response-types.feature" target="_blank" rel="noopener">response-types.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/storefront-integration.feature" target="_blank" rel="noopener">storefront-integration.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/fixtures/proxy-requests.json" target="_blank" rel="noopener">fixtures/proxy-requests.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
-        <p style="margin-top: 20px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/integration/shopify-app-proxy" target="_blank" rel="noopener">Open the folder on GitHub &rarr;</a></p>
+        <div class="section-rule">
+          <span class="section-label">Spec files</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Documentation</span>
+          <span class="files-section-count">3</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Scenarios</span>
+          <span class="files-section-count">3</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/signature-verification.feature" target="_blank" rel="noopener">signature-verification.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/response-types.feature" target="_blank" rel="noopener">response-types.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/storefront-integration.feature" target="_blank" rel="noopener">storefront-integration.feature<span class="ftype">GHERKIN</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Fixtures</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/fixtures/proxy-requests.json" target="_blank" rel="noopener">fixtures/proxy-requests.json<span class="ftype">JSON</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Acceptance</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/integration/shopify-app-proxy/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+      </div>
+        <p style="margin-top: 24px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/integration/shopify-app-proxy" target="_blank" rel="noopener">Browse <code>integration/shopify-app-proxy/</code> on GitHub &rarr;</a></p>
       </section>
 
 
@@ -113,12 +136,10 @@
 <footer class="site">
   <div class="footer-inner">
     <p>
-      Primitive Block Library &middot;
       <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
     </p>
-    <p style="margin-top: 8px; color: var(--text-dim);">
-      Read the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">Spec Guidelines</a>
-      for the abstraction discipline that every block must pass.
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
     </p>
   </div>
 </footer>

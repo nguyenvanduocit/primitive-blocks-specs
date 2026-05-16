@@ -7,7 +7,7 @@
 <meta name="description" content="The OAuth handshake every Shopify app must implement. Merchant approves install, app exchanges authorization code for an offline access token, and the token is persisted for Admin API access.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
@@ -15,14 +15,15 @@
 <header class="site">
   <nav class="nav">
     <a href="../" class="brand">
-      <span class="brand-mark">P</span>
+      <span class="brand-mark">§</span>
       <span>Primitive Block Library</span>
     </a>
     <ul class="nav-links">
-      <li><a href="../#philosophy">Philosophy</a></li>
+      <li><a href="../#example">Example</a></li>
+      <li><a href="../#philosophy">Why</a></li>
       <li><a href="../#consume">Workflow</a></li>
       <li><a href="../#blocks">Blocks</a></li>
-      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
     </ul>
   </nav>
 </header>
@@ -33,13 +34,7 @@
     <aside class="toc">
       <a class="back" href="../">Back to library</a>
       <div class="toc-section">On this page</div>
-      <nav class="toc-nav">
-        <a href="#overview" class="active">Overview</a>
-        <a href="#prerequisites">Prerequisites</a>
-        <a href="#data-model">Data model</a>
-        <a href="#usage">Use / Avoid</a>
-        <a href="#files">Spec files</a>
-      </nav>
+      <nav class="toc-nav"><a href="#problem" class="active">Problem</a><a href="#prerequisites">Dependencies</a><a href="#data-model">Data model</a><a href="#files">Spec files</a></nav>
       <div class="toc-meta">
         <div class="meta-row"><span class="label">Category</span><span class="cat-badge auth">auth</span></div>
         <div class="meta-row"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
@@ -53,27 +48,43 @@
         <a href="../">Library</a>
         <span class="sep">/</span>
         <span>auth</span>
-        <span class="sep">/</span>
-        <span>Shopify App Installation & OAuth</span>
       </div>
       <span class="block-id-large">auth.shopify-oauth</span>
       <h1>Shopify App Installation & OAuth</h1>
       <p class="lead">The OAuth handshake every Shopify app must implement. Merchant approves install, app exchanges authorization code for an offline access token, and the token is persisted for Admin API access.</p>
       <div class="block-tags"><span class="tag">shopify</span><span class="tag">oauth</span><span class="tag">installation</span><span class="tag">access-token</span><span class="tag">embedded-app</span></div>
 
-      <section id="overview">
-        <h2>Overview</h2>
-        <p>The OAuth handshake every Shopify app must implement. Merchant approves install, app exchanges authorization code for an offline access token, and the token is persisted for Admin API access.</p>
+      
+      <section id="problem">
+        <div class="section-rule">
+          <span class="section-label">Problem</span>
+          <span class="section-line"></span>
+        </div>
+        <p class="problem-callout">Every Shopify app must implement the OAuth handshake to get installed on a merchant's store. The merchant clicks &quot;Install&quot; → Shopify redirects to the app with a permission prompt → the merchant grants access → Shopify returns an authorization code → the app exchanges it for an offline access token. This token persists and gives the app API access to the store's data. Without this flow, the app cannot read products, process orders, or do anything useful.</p>
       </section>
 
       <section id="prerequisites">
-        <h2>Prerequisites</h2>
-        <p>This block has no prerequisites &mdash; it can be implemented standalone.</p>
+        <div class="section-rule">
+          <span class="section-label">Dependencies</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="related-blocks">
+          <div class="related-row">
+            <span class="related-label">Depends on</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+          <div class="related-row">
+            <span class="related-label">Required by</span>
+            <div class="related-chips"><a class="prereq" href="auth.shopify-session-token.html" title="Shopify Session Token Verification">auth.shopify-session-token</a><a class="prereq" href="integration.shopify-app-proxy.html" title="Shopify App Proxy">integration.shopify-app-proxy</a><a class="prereq" href="webhooks.shopify-webhooks.html" title="Shopify Webhook Management">webhooks.shopify-webhooks</a></div>
+          </div>
+        </div>
       </section>
 
       <section id="data-model">
-        <h2>Data Model</h2>
-        <p>Logical tables introduced by this block. Types resolve to dialect-specific SQL per the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">canonical logical-type mapping</a>.</p>
+        <div class="section-rule">
+          <span class="section-label">Data model</span>
+          <span class="section-line"></span>
+        </div>
         <div class="tables-grid"><div class="table-card">
           <div class="table-name">shops</div>
           <div class="table-desc">Merchant record with encrypted access token, granted scopes, install/uninstall timestamps.</div>
@@ -83,25 +94,37 @@
         </div></div>
       </section>
 
-      <section id="usage">
-        <h2>Use it / Avoid it</h2>
-        <div class="two-col">
-          <div class="use-card yes">
-            <h5>Use when</h5>
-            <ul><li>App needs to be installed on a Shopify store.</li><li>Mentions &ldquo;shopify app&rdquo;, &ldquo;install app&rdquo;, &ldquo;oauth&rdquo;, &ldquo;access token&rdquo;.</li><li>App needs to call the Shopify Admin API on behalf of a merchant.</li></ul>
-          </div>
-          <div class="use-card no">
-            <h5>Avoid when</h5>
-            <ul><li>Building a Shopify theme &mdash; no OAuth needed.</li><li>Building a sales channel &mdash; different auth flow.</li><li>Need per-request auth for an embedded app &mdash; use <code>auth.shopify-session-token</code>.</li></ul>
-          </div>
-        </div>
-      </section>
-
       <section id="files">
-        <h2>Spec files</h2>
-        <p>Every file in the <code>auth/shopify-oauth/</code> folder. Click any link to open the file on GitHub.</p>
-        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/install-flow.feature" target="_blank" rel="noopener">install-flow.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/uninstall.feature" target="_blank" rel="noopener">uninstall.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/security.feature" target="_blank" rel="noopener">security.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/fixtures/oauth-callback.json" target="_blank" rel="noopener">fixtures/oauth-callback.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/fixtures/shop-records.json" target="_blank" rel="noopener">fixtures/shop-records.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
-        <p style="margin-top: 20px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/auth/shopify-oauth" target="_blank" rel="noopener">Open the folder on GitHub &rarr;</a></p>
+        <div class="section-rule">
+          <span class="section-label">Spec files</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Documentation</span>
+          <span class="files-section-count">3</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Scenarios</span>
+          <span class="files-section-count">3</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/install-flow.feature" target="_blank" rel="noopener">install-flow.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/uninstall.feature" target="_blank" rel="noopener">uninstall.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/security.feature" target="_blank" rel="noopener">security.feature<span class="ftype">GHERKIN</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Fixtures</span>
+          <span class="files-section-count">2</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/fixtures/oauth-callback.json" target="_blank" rel="noopener">fixtures/oauth-callback.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/fixtures/shop-records.json" target="_blank" rel="noopener">fixtures/shop-records.json<span class="ftype">JSON</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Acceptance</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+      </div>
+        <p style="margin-top: 24px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/auth/shopify-oauth" target="_blank" rel="noopener">Browse <code>auth/shopify-oauth/</code> on GitHub &rarr;</a></p>
       </section>
 
 
@@ -116,12 +139,10 @@
 <footer class="site">
   <div class="footer-inner">
     <p>
-      Primitive Block Library &middot;
       <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
     </p>
-    <p style="margin-top: 8px; color: var(--text-dim);">
-      Read the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">Spec Guidelines</a>
-      for the abstraction discipline that every block must pass.
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
     </p>
   </div>
 </footer>

@@ -7,7 +7,7 @@
 <meta name="description" content="Shopper-submitted product reviews with rating, optional title and body, verified-buyer attribution, moderation workflow, auto-approve threshold, and a denormalized aggregate for fast PDP rendering.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
@@ -15,14 +15,15 @@
 <header class="site">
   <nav class="nav">
     <a href="../" class="brand">
-      <span class="brand-mark">P</span>
+      <span class="brand-mark">§</span>
       <span>Primitive Block Library</span>
     </a>
     <ul class="nav-links">
-      <li><a href="../#philosophy">Philosophy</a></li>
+      <li><a href="../#example">Example</a></li>
+      <li><a href="../#philosophy">Why</a></li>
       <li><a href="../#consume">Workflow</a></li>
       <li><a href="../#blocks">Blocks</a></li>
-      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
     </ul>
   </nav>
 </header>
@@ -33,13 +34,7 @@
     <aside class="toc">
       <a class="back" href="../">Back to library</a>
       <div class="toc-section">On this page</div>
-      <nav class="toc-nav">
-        <a href="#overview" class="active">Overview</a>
-        <a href="#prerequisites">Prerequisites</a>
-        <a href="#data-model">Data model</a>
-        <a href="#usage">Use / Avoid</a>
-        <a href="#files">Spec files</a>
-      </nav>
+      <nav class="toc-nav"><a href="#problem" class="active">Problem</a><a href="#prerequisites">Dependencies</a><a href="#data-model">Data model</a><a href="#files">Spec files</a></nav>
       <div class="toc-meta">
         <div class="meta-row"><span class="label">Category</span><span class="cat-badge ugc">ugc</span></div>
         <div class="meta-row"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
@@ -53,27 +48,43 @@
         <a href="../">Library</a>
         <span class="sep">/</span>
         <span>ugc</span>
-        <span class="sep">/</span>
-        <span>Product Reviews</span>
       </div>
       <span class="block-id-large">ugc.product-reviews</span>
       <h1>Product Reviews</h1>
       <p class="lead">Shopper-submitted product reviews with rating, optional title and body, verified-buyer attribution, moderation workflow, auto-approve threshold, and a denormalized aggregate for fast PDP rendering.</p>
       <div class="block-tags"><span class="tag">reviews</span><span class="tag">ugc</span><span class="tag">social-proof</span><span class="tag">moderation</span><span class="tag">ratings</span></div>
 
-      <section id="overview">
-        <h2>Overview</h2>
-        <p>Shopper-submitted product reviews with rating, optional title and body, verified-buyer attribution, moderation workflow, auto-approve threshold, and a denormalized aggregate for fast PDP rendering.</p>
+      
+      <section id="problem">
+        <div class="section-rule">
+          <span class="section-label">Problem</span>
+          <span class="section-line"></span>
+        </div>
+        <p class="problem-callout">Social proof drives conversion. Shoppers trust other shoppers more than marketing copy — a product with 50 reviews at 4.3 stars converts measurably better than one with zero reviews. Merchants need a way for shoppers to submit reviews, a moderation workflow to filter spam/abuse, and a storefront display that shows aggregate ratings + individual reviews on product pages.</p>
       </section>
 
       <section id="prerequisites">
-        <h2>Prerequisites</h2>
-        <p>This block has no prerequisites &mdash; it can be implemented standalone.</p>
+        <div class="section-rule">
+          <span class="section-label">Dependencies</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="related-blocks">
+          <div class="related-row">
+            <span class="related-label">Depends on</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+          <div class="related-row">
+            <span class="related-label">Required by</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+        </div>
       </section>
 
       <section id="data-model">
-        <h2>Data Model</h2>
-        <p>Logical tables introduced by this block. Types resolve to dialect-specific SQL per the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">canonical logical-type mapping</a>.</p>
+        <div class="section-rule">
+          <span class="section-label">Data model</span>
+          <span class="section-line"></span>
+        </div>
         <div class="tables-grid"><div class="table-card">
           <div class="table-name">reviews</div>
           <div class="table-desc">Per-customer-per-product review with status state machine, server-computed verified_buyer, moderation metadata.</div>
@@ -83,25 +94,37 @@
         </div></div>
       </section>
 
-      <section id="usage">
-        <h2>Use it / Avoid it</h2>
-        <div class="two-col">
-          <div class="use-card yes">
-            <h5>Use when</h5>
-            <ul><li>Mentions &ldquo;reviews&rdquo;, &ldquo;ratings&rdquo;, &ldquo;social proof&rdquo;.</li><li>Product pages need customer feedback enrichment.</li><li>Merchant wants moderation control over UGC.</li></ul>
-          </div>
-          <div class="use-card no">
-            <h5>Avoid when</h5>
-            <ul><li>Q&amp;A on products &mdash; use a different UGC block.</li><li>Site-wide testimonials &mdash; not product-scoped.</li><li>Photo or video-only review &mdash; extend this block with media.</li></ul>
-          </div>
-        </div>
-      </section>
-
       <section id="files">
-        <h2>Spec files</h2>
-        <p>Every file in the <code>ugc/product-reviews/</code> folder. Click any link to open the file on GitHub.</p>
-        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/frontend.md" target="_blank" rel="noopener">frontend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/submit-review.feature" target="_blank" rel="noopener">submit-review.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/moderate-review.feature" target="_blank" rel="noopener">moderate-review.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/display-reviews.feature" target="_blank" rel="noopener">display-reviews.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/fixtures/sample-reviews.json" target="_blank" rel="noopener">fixtures/sample-reviews.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/fixtures/aggregate.json" target="_blank" rel="noopener">fixtures/aggregate.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
-        <p style="margin-top: 20px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/ugc/product-reviews" target="_blank" rel="noopener">Open the folder on GitHub &rarr;</a></p>
+        <div class="section-rule">
+          <span class="section-label">Spec files</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Documentation</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/frontend.md" target="_blank" rel="noopener">frontend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Scenarios</span>
+          <span class="files-section-count">3</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/submit-review.feature" target="_blank" rel="noopener">submit-review.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/moderate-review.feature" target="_blank" rel="noopener">moderate-review.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/display-reviews.feature" target="_blank" rel="noopener">display-reviews.feature<span class="ftype">GHERKIN</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Fixtures</span>
+          <span class="files-section-count">2</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/fixtures/sample-reviews.json" target="_blank" rel="noopener">fixtures/sample-reviews.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/fixtures/aggregate.json" target="_blank" rel="noopener">fixtures/aggregate.json<span class="ftype">JSON</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Acceptance</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+      </div>
+        <p style="margin-top: 24px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/ugc/product-reviews" target="_blank" rel="noopener">Browse <code>ugc/product-reviews/</code> on GitHub &rarr;</a></p>
       </section>
 
 
@@ -116,12 +139,10 @@
 <footer class="site">
   <div class="footer-inner">
     <p>
-      Primitive Block Library &middot;
       <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
     </p>
-    <p style="margin-top: 8px; color: var(--text-dim);">
-      Read the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">Spec Guidelines</a>
-      for the abstraction discipline that every block must pass.
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
     </p>
   </div>
 </footer>
