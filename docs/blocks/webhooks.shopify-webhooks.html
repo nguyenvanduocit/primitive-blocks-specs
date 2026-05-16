@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopify Webhook Management — Primitive Block Library</title>
+<meta name="description" content="Subscribe to Shopify events, verify each delivery with HMAC-SHA256, and process each payload exactly once using the X-Shopify-Webhook-Id idempotency key. The event backbone other blocks (GDPR) depend ">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">P</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#philosophy">Philosophy</a></li>
+      <li><a href="../#consume">Workflow</a></li>
+      <li><a href="../#blocks">Blocks</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="page-grid">
+
+    <aside class="toc">
+      <a class="back" href="../">Back to library</a>
+      <div class="toc-section">On this page</div>
+      <nav class="toc-nav">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#prerequisites">Prerequisites</a>
+        <a href="#data-model">Data model</a>
+        <a href="#usage">Use / Avoid</a>
+        <a href="#files">Spec files</a>
+      </nav>
+      <div class="toc-meta">
+        <div class="meta-row"><span class="label">Category</span><span class="cat-badge webhooks">webhooks</span></div>
+        <div class="meta-row"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+        <div class="meta-row"><span class="label">Effort</span><span>~60 min</span></div>
+        <div class="meta-row"><span class="label">Version</span><code>v1.0.0</code></div>
+      </div>
+    </aside>
+
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../">Library</a>
+        <span class="sep">/</span>
+        <span>webhooks</span>
+        <span class="sep">/</span>
+        <span>Shopify Webhook Management</span>
+      </div>
+      <span class="block-id-large">webhooks.shopify-webhooks</span>
+      <h1>Shopify Webhook Management</h1>
+      <p class="lead">Subscribe to Shopify events, verify each delivery with HMAC-SHA256, and process each payload exactly once using the X-Shopify-Webhook-Id idempotency key. The event backbone other blocks (GDPR) depend on.</p>
+      <div class="block-tags"><span class="tag">shopify</span><span class="tag">webhooks</span><span class="tag">hmac</span><span class="tag">events</span><span class="tag">real-time</span><span class="tag">idempotency</span></div>
+
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>Subscribe to Shopify events, verify each delivery with HMAC-SHA256, and process each payload exactly once using the X-Shopify-Webhook-Id idempotency key. The event backbone other blocks (GDPR) depend on.</p>
+      </section>
+
+      <section id="prerequisites">
+        <h2>Prerequisites</h2>
+        <p>This block depends on the following blocks being implemented first:</p><div class="prereq-list"><a class="prereq" href="auth.shopify-oauth.html">auth.shopify-oauth</a></div>
+      </section>
+
+      <section id="data-model">
+        <h2>Data Model</h2>
+        <p>Logical tables introduced by this block. Types resolve to dialect-specific SQL per the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">canonical logical-type mapping</a>.</p>
+        <div class="tables-grid"><div class="table-card">
+          <div class="table-name">webhook_subscriptions</div>
+          <div class="table-desc">Per-shop topic subscription with callback URL and Shopify GraphQL GID.</div>
+        </div><div class="table-card">
+          <div class="table-name">webhook_deliveries</div>
+          <div class="table-desc">Idempotent delivery log keyed by X-Shopify-Webhook-Id with status state machine and forensic payload hash.</div>
+        </div></div>
+      </section>
+
+      <section id="usage">
+        <h2>Use it / Avoid it</h2>
+        <div class="two-col">
+          <div class="use-card yes">
+            <h5>Use when</h5>
+            <ul><li>App needs to react to Shopify events in real time.</li><li>Mentions &ldquo;webhook&rdquo;, &ldquo;orders create&rdquo;, &ldquo;APP_UNINSTALLED&rdquo;.</li><li>Downstream blocks like <code>compliance.shopify-gdpr</code> require this.</li></ul>
+          </div>
+          <div class="use-card no">
+            <h5>Avoid when</h5>
+            <ul><li>One-time data sync &mdash; use <code>operations.shopify-bulk</code>.</li><li>Storefront data without real-time need &mdash; poll the Admin API.</li><li>Building a Shopify theme.</li></ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="files">
+        <h2>Spec files</h2>
+        <p>Every file in the <code>webhooks/shopify-webhooks/</code> folder. Click any link to open the file on GitHub.</p>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/webhooks/shopify-webhooks/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/webhooks/shopify-webhooks/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/webhooks/shopify-webhooks/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/webhooks/shopify-webhooks/webhook-registration.feature" target="_blank" rel="noopener">webhook-registration.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/webhooks/shopify-webhooks/webhook-receiving.feature" target="_blank" rel="noopener">webhook-receiving.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/webhooks/shopify-webhooks/webhook-idempotency.feature" target="_blank" rel="noopener">webhook-idempotency.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/webhooks/shopify-webhooks/fixtures/webhook-payloads.json" target="_blank" rel="noopener">fixtures/webhook-payloads.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/webhooks/shopify-webhooks/fixtures/webhook-headers.json" target="_blank" rel="noopener">fixtures/webhook-headers.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/webhooks/shopify-webhooks/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+        <p style="margin-top: 20px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/webhooks/shopify-webhooks" target="_blank" rel="noopener">Open the folder on GitHub &rarr;</a></p>
+      </section>
+
+
+        <nav class="prev-next">
+          <a href="ugc.product-reviews.html"><span class="label">← Previous block</span><span class="title">Product Reviews</span></a>
+          <div class="placeholder"></div>
+        </nav>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      Primitive Block Library &middot;
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p style="margin-top: 8px; color: var(--text-dim);">
+      Read the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">Spec Guidelines</a>
+      for the abstraction discipline that every block must pass.
+    </p>
+  </div>
+</footer>
+
+<script>
+// Highlight active TOC link on scroll
+document.addEventListener("DOMContentLoaded", () => {
+  const links = document.querySelectorAll(".toc-nav a");
+  const sections = [...links].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>

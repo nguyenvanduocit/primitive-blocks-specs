@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopify Session Token Verification — Primitive Block Library</title>
+<meta name="description" content="Middleware that verifies the short-lived JWT issued by Shopify App Bridge for every request from the embedded app. Validates signature, claims, and attaches shop context to the request.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">P</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#philosophy">Philosophy</a></li>
+      <li><a href="../#consume">Workflow</a></li>
+      <li><a href="../#blocks">Blocks</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="page-grid">
+
+    <aside class="toc">
+      <a class="back" href="../">Back to library</a>
+      <div class="toc-section">On this page</div>
+      <nav class="toc-nav">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#prerequisites">Prerequisites</a>
+        <a href="#data-model">Data model</a>
+        <a href="#usage">Use / Avoid</a>
+        <a href="#files">Spec files</a>
+      </nav>
+      <div class="toc-meta">
+        <div class="meta-row"><span class="label">Category</span><span class="cat-badge auth">auth</span></div>
+        <div class="meta-row"><span class="label">Complexity</span><span class="complexity low">low</span></div>
+        <div class="meta-row"><span class="label">Effort</span><span>~30 min</span></div>
+        <div class="meta-row"><span class="label">Version</span><code>v1.0.0</code></div>
+      </div>
+    </aside>
+
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../">Library</a>
+        <span class="sep">/</span>
+        <span>auth</span>
+        <span class="sep">/</span>
+        <span>Shopify Session Token Verification</span>
+      </div>
+      <span class="block-id-large">auth.shopify-session-token</span>
+      <h1>Shopify Session Token Verification</h1>
+      <p class="lead">Middleware that verifies the short-lived JWT issued by Shopify App Bridge for every request from the embedded app. Validates signature, claims, and attaches shop context to the request.</p>
+      <div class="block-tags"><span class="tag">shopify</span><span class="tag">session-token</span><span class="tag">jwt</span><span class="tag">app-bridge</span><span class="tag">embedded</span></div>
+
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>Middleware that verifies the short-lived JWT issued by Shopify App Bridge for every request from the embedded app. Validates signature, claims, and attaches shop context to the request.</p>
+      </section>
+
+      <section id="prerequisites">
+        <h2>Prerequisites</h2>
+        <p>This block depends on the following blocks being implemented first:</p><div class="prereq-list"><a class="prereq" href="auth.shopify-oauth.html">auth.shopify-oauth</a></div>
+      </section>
+
+      <section id="data-model">
+        <h2>Data Model</h2>
+        <p>Logical tables introduced by this block. Types resolve to dialect-specific SQL per the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">canonical logical-type mapping</a>.</p>
+        <div class="tables-grid"><div class="table-card shared">
+          <div class="table-name">shops</div>
+          <div class="table-desc">Read-only consumer. Owned by auth.shopify-oauth.</div>
+        </div></div>
+      </section>
+
+      <section id="usage">
+        <h2>Use it / Avoid it</h2>
+        <div class="two-col">
+          <div class="use-card yes">
+            <h5>Use when</h5>
+            <ul><li>Building an embedded Shopify app inside the Admin iframe.</li><li>Any API endpoint called by the embedded frontend.</li><li>Mentions &ldquo;session token&rdquo;, &ldquo;app bridge&rdquo;, &ldquo;jwt verification&rdquo;.</li></ul>
+          </div>
+          <div class="use-card no">
+            <h5>Avoid when</h5>
+            <ul><li>Non-embedded storefronts &mdash; use <code>integration.shopify-app-proxy</code>.</li><li>Webhook handlers &mdash; HMAC body signing, different flow.</li><li>Server-to-server calls when you already hold an offline access token.</li></ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="files">
+        <h2>Spec files</h2>
+        <p>Every file in the <code>auth/shopify-session-token/</code> folder. Click any link to open the file on GitHub.</p>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-session-token/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-session-token/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-session-token/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-session-token/session-token-verification.feature" target="_blank" rel="noopener">session-token-verification.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-session-token/middleware-integration.feature" target="_blank" rel="noopener">middleware-integration.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-session-token/fixtures/session-tokens.json" target="_blank" rel="noopener">fixtures/session-tokens.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-session-token/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+        <p style="margin-top: 20px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/auth/shopify-session-token" target="_blank" rel="noopener">Open the folder on GitHub &rarr;</a></p>
+      </section>
+
+
+        <nav class="prev-next">
+          <a href="auth.shopify-oauth.html"><span class="label">← Previous block</span><span class="title">Shopify App Installation & OAuth</span></a>
+          <a class="next" href="billing.shopify-charges.html"><span class="label">Next block →</span><span class="title">Shopify App Billing & Subscriptions</span></a>
+        </nav>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      Primitive Block Library &middot;
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p style="margin-top: 8px; color: var(--text-dim);">
+      Read the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">Spec Guidelines</a>
+      for the abstraction discipline that every block must pass.
+    </p>
+  </div>
+</footer>
+
+<script>
+// Highlight active TOC link on scroll
+document.addEventListener("DOMContentLoaded", () => {
+  const links = document.querySelectorAll(".toc-nav a");
+  const sections = [...links].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>

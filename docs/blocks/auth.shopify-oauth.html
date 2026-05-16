@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopify App Installation & OAuth — Primitive Block Library</title>
+<meta name="description" content="The OAuth handshake every Shopify app must implement. Merchant approves install, app exchanges authorization code for an offline access token, and the token is persisted for Admin API access.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">P</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#philosophy">Philosophy</a></li>
+      <li><a href="../#consume">Workflow</a></li>
+      <li><a href="../#blocks">Blocks</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="page-grid">
+
+    <aside class="toc">
+      <a class="back" href="../">Back to library</a>
+      <div class="toc-section">On this page</div>
+      <nav class="toc-nav">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#prerequisites">Prerequisites</a>
+        <a href="#data-model">Data model</a>
+        <a href="#usage">Use / Avoid</a>
+        <a href="#files">Spec files</a>
+      </nav>
+      <div class="toc-meta">
+        <div class="meta-row"><span class="label">Category</span><span class="cat-badge auth">auth</span></div>
+        <div class="meta-row"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+        <div class="meta-row"><span class="label">Effort</span><span>~45 min</span></div>
+        <div class="meta-row"><span class="label">Version</span><code>v1.0.0</code></div>
+      </div>
+    </aside>
+
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../">Library</a>
+        <span class="sep">/</span>
+        <span>auth</span>
+        <span class="sep">/</span>
+        <span>Shopify App Installation & OAuth</span>
+      </div>
+      <span class="block-id-large">auth.shopify-oauth</span>
+      <h1>Shopify App Installation & OAuth</h1>
+      <p class="lead">The OAuth handshake every Shopify app must implement. Merchant approves install, app exchanges authorization code for an offline access token, and the token is persisted for Admin API access.</p>
+      <div class="block-tags"><span class="tag">shopify</span><span class="tag">oauth</span><span class="tag">installation</span><span class="tag">access-token</span><span class="tag">embedded-app</span></div>
+
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>The OAuth handshake every Shopify app must implement. Merchant approves install, app exchanges authorization code for an offline access token, and the token is persisted for Admin API access.</p>
+      </section>
+
+      <section id="prerequisites">
+        <h2>Prerequisites</h2>
+        <p>This block has no prerequisites &mdash; it can be implemented standalone.</p>
+      </section>
+
+      <section id="data-model">
+        <h2>Data Model</h2>
+        <p>Logical tables introduced by this block. Types resolve to dialect-specific SQL per the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">canonical logical-type mapping</a>.</p>
+        <div class="tables-grid"><div class="table-card">
+          <div class="table-name">shops</div>
+          <div class="table-desc">Merchant record with encrypted access token, granted scopes, install/uninstall timestamps.</div>
+        </div><div class="table-card">
+          <div class="table-name">oauth_nonces</div>
+          <div class="table-desc">Single-use CSRF tokens for the OAuth callback (5 min TTL).</div>
+        </div></div>
+      </section>
+
+      <section id="usage">
+        <h2>Use it / Avoid it</h2>
+        <div class="two-col">
+          <div class="use-card yes">
+            <h5>Use when</h5>
+            <ul><li>App needs to be installed on a Shopify store.</li><li>Mentions &ldquo;shopify app&rdquo;, &ldquo;install app&rdquo;, &ldquo;oauth&rdquo;, &ldquo;access token&rdquo;.</li><li>App needs to call the Shopify Admin API on behalf of a merchant.</li></ul>
+          </div>
+          <div class="use-card no">
+            <h5>Avoid when</h5>
+            <ul><li>Building a Shopify theme &mdash; no OAuth needed.</li><li>Building a sales channel &mdash; different auth flow.</li><li>Need per-request auth for an embedded app &mdash; use <code>auth.shopify-session-token</code>.</li></ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="files">
+        <h2>Spec files</h2>
+        <p>Every file in the <code>auth/shopify-oauth/</code> folder. Click any link to open the file on GitHub.</p>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/install-flow.feature" target="_blank" rel="noopener">install-flow.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/uninstall.feature" target="_blank" rel="noopener">uninstall.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/security.feature" target="_blank" rel="noopener">security.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/fixtures/oauth-callback.json" target="_blank" rel="noopener">fixtures/oauth-callback.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/fixtures/shop-records.json" target="_blank" rel="noopener">fixtures/shop-records.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/auth/shopify-oauth/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+        <p style="margin-top: 20px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/auth/shopify-oauth" target="_blank" rel="noopener">Open the folder on GitHub &rarr;</a></p>
+      </section>
+
+
+        <nav class="prev-next">
+          <a href="auth.google-login.html"><span class="label">← Previous block</span><span class="title">Login with Google</span></a>
+          <a class="next" href="auth.shopify-session-token.html"><span class="label">Next block →</span><span class="title">Shopify Session Token Verification</span></a>
+        </nav>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      Primitive Block Library &middot;
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p style="margin-top: 8px; color: var(--text-dim);">
+      Read the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">Spec Guidelines</a>
+      for the abstraction discipline that every block must pass.
+    </p>
+  </div>
+</footer>
+
+<script>
+// Highlight active TOC link on scroll
+document.addEventListener("DOMContentLoaded", () => {
+  const links = document.querySelectorAll(".toc-nav a");
+  const sections = [...links].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Primitive Block Library — AI-native feature blueprints</title>
+<meta name="description" content="Complete designs for features. Read by Claude Code, adapted to your stack, implemented into your codebase. Stack-agnostic specs across auth, billing, compliance, data, integration, messaging, operations, UGC, and webhooks.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="./" class="brand">
+      <span class="brand-mark">P</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#philosophy">Philosophy</a></li>
+      <li><a href="#consume">Workflow</a></li>
+      <li><a href="#blocks">Blocks</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <span class="eyebrow">Blueprints for agentic AI</span>
+    <h1>Specs that build themselves.</h1>
+    <p class="tagline">
+      A library of complete feature designs &mdash; data models, sequence flows, security threats,
+      and acceptance criteria. Claude Code reads them, understands your stack, and writes the
+      implementation. Not pre-built code. Not config-driven scaffolds. Living specifications
+      that any agent can compile into any codebase.
+    </p>
+    <div class="ctas">
+      <a class="btn primary" href="#blocks">Browse the library</a>
+      <a class="btn" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">View on GitHub</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="num">11</div><div class="label">Blocks</div></div>
+      <div class="stat"><div class="num">9</div><div class="label">Categories</div></div>
+      <div class="stat"><div class="num">3</div><div class="label">Tested stacks</div></div>
+      <div class="stat"><div class="num">100%</div><div class="label">Stack-agnostic</div></div>
+    </div>
+  </section>
+
+  <section id="philosophy">
+    <div class="section-header">
+      <div class="eyebrow">Philosophy</div>
+      <h2>Don&rsquo;t solve agentic problems with classical tools.</h2>
+      <p>
+        Packaging features as fixed code &mdash; whether you call them &ldquo;primitives&rdquo;,
+        &ldquo;components&rdquo;, or &ldquo;modules&rdquo; &mdash; carries every classical problem
+        forward: customization is limited to predefined config, composition breaks unpredictably,
+        versioning multiplies. When an agent can read filesystems, run commands, and iterate,
+        let it solve the problem directly. A blueprint is knowledge, not code.
+      </p>
+    </div>
+
+    <div class="compare">
+      <div class="card old">
+        <h3>Pre-built code <span class="tag">old paradigm</span></h3>
+        <ul>
+          <li>Rigid &mdash; only customizable through config JSON</li>
+          <li>Fits one fixed runtime; merchant must match it</li>
+          <li>Bugs live inside the pre-built package &mdash; hard to debug</li>
+          <li>New feature requires writing new code from scratch</li>
+          <li>Surface area shrinks as integrations multiply</li>
+          <li>Fixed ceiling: capability equals what was written</li>
+        </ul>
+      </div>
+      <div class="card new">
+        <h3>Blueprint <span class="tag">new paradigm</span></h3>
+        <ul>
+          <li>Flexible &mdash; the agent adapts the entire implementation</li>
+          <li>Fits any stack: SQL family, frameworks, runtimes</li>
+          <li>Bugs are fixed in-place inside the merchant&rsquo;s codebase</li>
+          <li>New feature is a new spec &mdash; markdown, not code</li>
+          <li>Surface area grows with each iteration of the agent</li>
+          <li>No ceiling: better models &times; better specs &times; better tests</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 48px;">Three layers in every spec</h3>
+    <p style="color: var(--text-muted); max-width: 700px; margin: 6px 0 0;">
+      The tension of the blueprint paradigm: too abstract and the agent has no guidance;
+      too concrete and the spec becomes code in markdown. Every spec resolves it with three layers.
+    </p>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-num">L1 &mdash; SEMANTIC</div>
+        <h4>What &amp; Why</h4>
+        <p>Data model, sequence flows, state machines, business invariants, external protocol contracts, threats and mitigations.</p>
+        <span class="verdict">Maximally concrete</span>
+      </div>
+      <div class="layer">
+        <div class="layer-num">L2 &mdash; MECHANISM</div>
+        <h4>How</h4>
+        <p>Framework, ORM, SQL dialect, test runner, error-handling style, file convention. The agent picks all of this.</p>
+        <span class="verdict">Abstract &mdash; agent decides</span>
+      </div>
+      <div class="layer">
+        <div class="layer-num">L3 &mdash; ILLUSTRATIVE</div>
+        <h4>Reference</h4>
+        <p>Code snippets &le;30 lines, each tagged with <code>PATTERN</code> / <code>PURPOSE</code> / <code>REFERENCE</code> / <code>ADAPT</code> markers.</p>
+        <span class="verdict">Concrete but marked</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="consume">
+    <div class="section-header">
+      <div class="eyebrow">Workflow</div>
+      <h2>How an agent consumes a block.</h2>
+      <p>
+        Claude Code &mdash; running in the merchant&rsquo;s workspace with full filesystem access &mdash;
+        treats every block as a reference document. It reads, understands the stack, adapts, and verifies.
+      </p>
+    </div>
+    <div class="flow-steps">
+      <div class="flow-step"><div class="step-num">STEP 01</div><h4>Discover</h4><p>Match the merchant&rsquo;s request against the library by tag, category, and overview.</p></div>
+      <div class="flow-step"><div class="step-num">STEP 02</div><h4>Interview</h4><p>Surface configuration decisions, lock business choices, present scenarios as plain language.</p></div>
+      <div class="flow-step"><div class="step-num">STEP 03</div><h4>Clone &amp; customize</h4><p>Copy the block into the project as a customized blueprint &mdash; the source library stays untouched.</p></div>
+      <div class="flow-step"><div class="step-num">STEP 04</div><h4>Implement</h4><p>Translate the spec into code that follows the merchant&rsquo;s conventions and frameworks.</p></div>
+      <div class="flow-step"><div class="step-num">STEP 05</div><h4>Verify</h4><p>Run the acceptance checklist: migrations, tests, type-check, lint, security mitigations.</p></div>
+    </div>
+  </section>
+
+  <section id="blocks">
+    <div class="section-header">
+      <div class="eyebrow">The library</div>
+      <h2>11 blocks, ready to compile.</h2>
+      <p>Click any block to open its full spec page with data model, prerequisites, use/avoid guidance, and direct links to every file in the spec folder.</p>
+    </div>
+
+    <div class="filter-bar" role="tablist" aria-label="Filter blocks by category"><button class="filter-pill active" data-cat="all">All<span class="count">11</span></button><button class="filter-pill" data-cat="auth">auth<span class="count">3</span></button><button class="filter-pill" data-cat="billing">billing<span class="count">1</span></button><button class="filter-pill" data-cat="compliance">compliance<span class="count">1</span></button><button class="filter-pill" data-cat="data">data<span class="count">1</span></button><button class="filter-pill" data-cat="integration">integration<span class="count">1</span></button><button class="filter-pill" data-cat="messaging">messaging<span class="count">1</span></button><button class="filter-pill" data-cat="operations">operations<span class="count">1</span></button><button class="filter-pill" data-cat="ugc">ugc<span class="count">1</span></button><button class="filter-pill" data-cat="webhooks">webhooks<span class="count">1</span></button></div>
+
+    <div class="block-grid" id="block-grid">
+        <a class="block-card" data-cat="auth" href="blocks/auth.google-login.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="row-1">
+            <span class="block-id">auth.google-login</span>
+            <span class="cat-badge auth">auth</span>
+          </div>
+          <div class="block-name">Login with Google</div>
+          <p class="lead">Google Sign-In for end users. Handles the OAuth handshake, persists sessions, and ships login, session-persistence, protected-route, and logout primitives without password management.</p>
+          <div class="block-tags"><span class="tag">authentication</span><span class="tag">oauth</span><span class="tag">google</span><span class="tag">social-login</span></div>
+          <div class="block-meta">
+            <div class="meta-item"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+            <div class="meta-item"><span class="label">Effort</span><span>~45 min</span></div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="auth" href="blocks/auth.shopify-oauth.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="row-1">
+            <span class="block-id">auth.shopify-oauth</span>
+            <span class="cat-badge auth">auth</span>
+          </div>
+          <div class="block-name">Shopify App Installation & OAuth</div>
+          <p class="lead">The OAuth handshake every Shopify app must implement. Merchant approves install, app exchanges authorization code for an offline access token, and the token is persisted for Admin API access.</p>
+          <div class="block-tags"><span class="tag">shopify</span><span class="tag">oauth</span><span class="tag">installation</span><span class="tag">access-token</span><span class="tag">embedded-app</span></div>
+          <div class="block-meta">
+            <div class="meta-item"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+            <div class="meta-item"><span class="label">Effort</span><span>~45 min</span></div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="auth" href="blocks/auth.shopify-session-token.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="row-1">
+            <span class="block-id">auth.shopify-session-token</span>
+            <span class="cat-badge auth">auth</span>
+          </div>
+          <div class="block-name">Shopify Session Token Verification</div>
+          <p class="lead">Middleware that verifies the short-lived JWT issued by Shopify App Bridge for every request from the embedded app. Validates signature, claims, and attaches shop context to the request.</p>
+          <div class="block-tags"><span class="tag">shopify</span><span class="tag">session-token</span><span class="tag">jwt</span><span class="tag">app-bridge</span><span class="tag">embedded</span></div>
+          <div class="block-meta">
+            <div class="meta-item"><span class="label">Complexity</span><span class="complexity low">low</span></div>
+            <div class="meta-item"><span class="label">Effort</span><span>~30 min</span></div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="billing" href="blocks/billing.shopify-charges.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="row-1">
+            <span class="block-id">billing.shopify-charges</span>
+            <span class="cat-badge billing">billing</span>
+          </div>
+          <div class="block-name">Shopify App Billing & Subscriptions</div>
+          <p class="lead">Recurring subscriptions, one-time charges, and usage-based billing through the Shopify Billing API &mdash; the only allowed channel to monetize a Shopify App Store listing. Handles the approve-activate lifecycle and feature gating.</p>
+          <div class="block-tags"><span class="tag">shopify</span><span class="tag">billing</span><span class="tag">subscriptions</span><span class="tag">charges</span><span class="tag">monetization</span><span class="tag">recurring</span></div>
+          <div class="block-meta">
+            <div class="meta-item"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+            <div class="meta-item"><span class="label">Effort</span><span>~90 min</span></div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="compliance" href="blocks/compliance.shopify-gdpr.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="row-1">
+            <span class="block-id">compliance.shopify-gdpr</span>
+            <span class="cat-badge compliance">compliance</span>
+          </div>
+          <div class="block-name">Shopify GDPR Mandatory Webhooks</div>
+          <p class="lead">The three GDPR webhook endpoints every Shopify App Store submission must implement: customers/data_request, customers/redact, and shop/redact. Missing or wrong implementation = rejected review.</p>
+          <div class="block-tags"><span class="tag">shopify</span><span class="tag">gdpr</span><span class="tag">privacy</span><span class="tag">data-erasure</span><span class="tag">mandatory</span></div>
+          <div class="block-meta">
+            <div class="meta-item"><span class="label">Complexity</span><span class="complexity low">low</span></div>
+            <div class="meta-item"><span class="label">Effort</span><span>~30 min</span></div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="data" href="blocks/data.shopify-metafields.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="row-1">
+            <span class="block-id">data.shopify-metafields</span>
+            <span class="cat-badge data">data</span>
+          </div>
+          <div class="block-name">Shopify Metafields</div>
+          <p class="lead">Attach app-defined custom data to Shopify resources (products, orders, customers, shop). Definitions live locally for validation; values live in Shopify via GraphQL &mdash; the source of truth never diverges.</p>
+          <div class="block-tags"><span class="tag">shopify</span><span class="tag">metafields</span><span class="tag">custom-data</span><span class="tag">graphql</span><span class="tag">embedded-app</span></div>
+          <div class="block-meta">
+            <div class="meta-item"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+            <div class="meta-item"><span class="label">Effort</span><span>~60 min</span></div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="integration" href="blocks/integration.shopify-app-proxy.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="row-1">
+            <span class="block-id">integration.shopify-app-proxy</span>
+            <span class="cat-badge integration">integration</span>
+          </div>
+          <div class="block-name">Shopify App Proxy</div>
+          <p class="lead">Serve app-generated content (HTML, JSON, or Liquid) under the merchant&rsquo;s own storefront domain. Shopify forwards proxied requests &mdash; the app verifies the signature and responds with the appropriate content type.</p>
+          <div class="block-tags"><span class="tag">shopify</span><span class="tag">app-proxy</span><span class="tag">storefront</span><span class="tag">liquid</span></div>
+          <div class="block-meta">
+            <div class="meta-item"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+            <div class="meta-item"><span class="label">Effort</span><span>~45 min</span></div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="messaging" href="blocks/messaging.transactional-email.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="row-1">
+            <span class="block-id">messaging.transactional-email</span>
+            <span class="cat-badge messaging">messaging</span>
+          </div>
+          <div class="block-name">Send Transactional Email</div>
+          <p class="lead">Event-triggered email delivery with Handlebars templates, idempotent send keys, provider retries, suppression list for bounces and complaints, and a full delivery log. Provider-agnostic adapter.</p>
+          <div class="block-tags"><span class="tag">email</span><span class="tag">transactional</span><span class="tag">notifications</span><span class="tag">templates</span><span class="tag">resend</span><span class="tag">sendgrid</span></div>
+          <div class="block-meta">
+            <div class="meta-item"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+            <div class="meta-item"><span class="label">Effort</span><span>~60 min</span></div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="operations" href="blocks/operations.shopify-bulk.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="row-1">
+            <span class="block-id">operations.shopify-bulk</span>
+            <span class="cat-badge operations">operations</span>
+          </div>
+          <div class="block-name">Shopify Bulk Operations</div>
+          <p class="lead">Async bulk query and mutation pipeline. Submit a GraphQL operation to Shopify, listen for the completion webhook, download the JSONL result, and process records with the parent-child convention &mdash; without exhausting rate limits.</p>
+          <div class="block-tags"><span class="tag">shopify</span><span class="tag">bulk</span><span class="tag">graphql</span><span class="tag">async</span><span class="tag">large-datasets</span><span class="tag">jsonl</span></div>
+          <div class="block-meta">
+            <div class="meta-item"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+            <div class="meta-item"><span class="label">Effort</span><span>~75 min</span></div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="ugc" href="blocks/ugc.product-reviews.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="row-1">
+            <span class="block-id">ugc.product-reviews</span>
+            <span class="cat-badge ugc">ugc</span>
+          </div>
+          <div class="block-name">Product Reviews</div>
+          <p class="lead">Shopper-submitted product reviews with rating, optional title and body, verified-buyer attribution, moderation workflow, auto-approve threshold, and a denormalized aggregate for fast PDP rendering.</p>
+          <div class="block-tags"><span class="tag">reviews</span><span class="tag">ugc</span><span class="tag">social-proof</span><span class="tag">moderation</span><span class="tag">ratings</span></div>
+          <div class="block-meta">
+            <div class="meta-item"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+            <div class="meta-item"><span class="label">Effort</span><span>~60 min</span></div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="webhooks" href="blocks/webhooks.shopify-webhooks.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="row-1">
+            <span class="block-id">webhooks.shopify-webhooks</span>
+            <span class="cat-badge webhooks">webhooks</span>
+          </div>
+          <div class="block-name">Shopify Webhook Management</div>
+          <p class="lead">Subscribe to Shopify events, verify each delivery with HMAC-SHA256, and process each payload exactly once using the X-Shopify-Webhook-Id idempotency key. The event backbone other blocks (GDPR) depend on.</p>
+          <div class="block-tags"><span class="tag">shopify</span><span class="tag">webhooks</span><span class="tag">hmac</span><span class="tag">events</span><span class="tag">real-time</span><span class="tag">idempotency</span></div>
+          <div class="block-meta">
+            <div class="meta-item"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+            <div class="meta-item"><span class="label">Effort</span><span>~60 min</span></div>
+          </div>
+        </a>
+    </div>
+    <div class="empty-state hidden" id="empty-state">No blocks match this category yet.</div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      Primitive Block Library &middot;
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p style="margin-top: 8px; color: var(--text-dim);">
+      Read the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">Spec Guidelines</a>
+      for the abstraction discipline that every block must pass.
+    </p>
+  </div>
+</footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".filter-pill").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const cat = btn.dataset.cat;
+      document.querySelectorAll(".filter-pill").forEach(b => b.classList.toggle("active", b.dataset.cat === cat));
+      let visible = 0;
+      document.querySelectorAll(".block-card").forEach(c => {
+        const show = cat === "all" || c.dataset.cat === cat;
+        c.classList.toggle("hidden", !show);
+        if (show) visible++;
+      });
+      document.getElementById("empty-state").classList.toggle("hidden", visible > 0);
+    });
+  });
+});
+</script>
+</body>
+</html>

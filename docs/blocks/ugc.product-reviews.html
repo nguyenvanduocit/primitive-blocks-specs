@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Reviews — Primitive Block Library</title>
+<meta name="description" content="Shopper-submitted product reviews with rating, optional title and body, verified-buyer attribution, moderation workflow, auto-approve threshold, and a denormalized aggregate for fast PDP rendering.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">P</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#philosophy">Philosophy</a></li>
+      <li><a href="../#consume">Workflow</a></li>
+      <li><a href="../#blocks">Blocks</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="page-grid">
+
+    <aside class="toc">
+      <a class="back" href="../">Back to library</a>
+      <div class="toc-section">On this page</div>
+      <nav class="toc-nav">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#prerequisites">Prerequisites</a>
+        <a href="#data-model">Data model</a>
+        <a href="#usage">Use / Avoid</a>
+        <a href="#files">Spec files</a>
+      </nav>
+      <div class="toc-meta">
+        <div class="meta-row"><span class="label">Category</span><span class="cat-badge ugc">ugc</span></div>
+        <div class="meta-row"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+        <div class="meta-row"><span class="label">Effort</span><span>~60 min</span></div>
+        <div class="meta-row"><span class="label">Version</span><code>v1.0.0</code></div>
+      </div>
+    </aside>
+
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../">Library</a>
+        <span class="sep">/</span>
+        <span>ugc</span>
+        <span class="sep">/</span>
+        <span>Product Reviews</span>
+      </div>
+      <span class="block-id-large">ugc.product-reviews</span>
+      <h1>Product Reviews</h1>
+      <p class="lead">Shopper-submitted product reviews with rating, optional title and body, verified-buyer attribution, moderation workflow, auto-approve threshold, and a denormalized aggregate for fast PDP rendering.</p>
+      <div class="block-tags"><span class="tag">reviews</span><span class="tag">ugc</span><span class="tag">social-proof</span><span class="tag">moderation</span><span class="tag">ratings</span></div>
+
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>Shopper-submitted product reviews with rating, optional title and body, verified-buyer attribution, moderation workflow, auto-approve threshold, and a denormalized aggregate for fast PDP rendering.</p>
+      </section>
+
+      <section id="prerequisites">
+        <h2>Prerequisites</h2>
+        <p>This block has no prerequisites &mdash; it can be implemented standalone.</p>
+      </section>
+
+      <section id="data-model">
+        <h2>Data Model</h2>
+        <p>Logical tables introduced by this block. Types resolve to dialect-specific SQL per the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">canonical logical-type mapping</a>.</p>
+        <div class="tables-grid"><div class="table-card">
+          <div class="table-name">reviews</div>
+          <div class="table-desc">Per-customer-per-product review with status state machine, server-computed verified_buyer, moderation metadata.</div>
+        </div><div class="table-card">
+          <div class="table-name">review_aggregates</div>
+          <div class="table-desc">Denormalized rollup updated transactionally on moderation actions. Cheap reads, eventual staleness avoided.</div>
+        </div></div>
+      </section>
+
+      <section id="usage">
+        <h2>Use it / Avoid it</h2>
+        <div class="two-col">
+          <div class="use-card yes">
+            <h5>Use when</h5>
+            <ul><li>Mentions &ldquo;reviews&rdquo;, &ldquo;ratings&rdquo;, &ldquo;social proof&rdquo;.</li><li>Product pages need customer feedback enrichment.</li><li>Merchant wants moderation control over UGC.</li></ul>
+          </div>
+          <div class="use-card no">
+            <h5>Avoid when</h5>
+            <ul><li>Q&amp;A on products &mdash; use a different UGC block.</li><li>Site-wide testimonials &mdash; not product-scoped.</li><li>Photo or video-only review &mdash; extend this block with media.</li></ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="files">
+        <h2>Spec files</h2>
+        <p>Every file in the <code>ugc/product-reviews/</code> folder. Click any link to open the file on GitHub.</p>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/frontend.md" target="_blank" rel="noopener">frontend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/submit-review.feature" target="_blank" rel="noopener">submit-review.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/moderate-review.feature" target="_blank" rel="noopener">moderate-review.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/display-reviews.feature" target="_blank" rel="noopener">display-reviews.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/fixtures/sample-reviews.json" target="_blank" rel="noopener">fixtures/sample-reviews.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/fixtures/aggregate.json" target="_blank" rel="noopener">fixtures/aggregate.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/ugc/product-reviews/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+        <p style="margin-top: 20px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/ugc/product-reviews" target="_blank" rel="noopener">Open the folder on GitHub &rarr;</a></p>
+      </section>
+
+
+        <nav class="prev-next">
+          <a href="operations.shopify-bulk.html"><span class="label">← Previous block</span><span class="title">Shopify Bulk Operations</span></a>
+          <a class="next" href="webhooks.shopify-webhooks.html"><span class="label">Next block →</span><span class="title">Shopify Webhook Management</span></a>
+        </nav>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      Primitive Block Library &middot;
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p style="margin-top: 8px; color: var(--text-dim);">
+      Read the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">Spec Guidelines</a>
+      for the abstraction discipline that every block must pass.
+    </p>
+  </div>
+</footer>
+
+<script>
+// Highlight active TOC link on scroll
+document.addEventListener("DOMContentLoaded", () => {
+  const links = document.querySelectorAll(".toc-nav a");
+  const sections = [...links].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>

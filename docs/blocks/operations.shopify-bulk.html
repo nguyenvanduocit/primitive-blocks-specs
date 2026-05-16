@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopify Bulk Operations — Primitive Block Library</title>
+<meta name="description" content="Async bulk query and mutation pipeline. Submit a GraphQL operation to Shopify, listen for the completion webhook, download the JSONL result, and process records with the parent-child convention &mdash">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">P</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#philosophy">Philosophy</a></li>
+      <li><a href="../#consume">Workflow</a></li>
+      <li><a href="../#blocks">Blocks</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="page-grid">
+
+    <aside class="toc">
+      <a class="back" href="../">Back to library</a>
+      <div class="toc-section">On this page</div>
+      <nav class="toc-nav">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#prerequisites">Prerequisites</a>
+        <a href="#data-model">Data model</a>
+        <a href="#usage">Use / Avoid</a>
+        <a href="#files">Spec files</a>
+      </nav>
+      <div class="toc-meta">
+        <div class="meta-row"><span class="label">Category</span><span class="cat-badge operations">operations</span></div>
+        <div class="meta-row"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+        <div class="meta-row"><span class="label">Effort</span><span>~75 min</span></div>
+        <div class="meta-row"><span class="label">Version</span><code>v1.0.0</code></div>
+      </div>
+    </aside>
+
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../">Library</a>
+        <span class="sep">/</span>
+        <span>operations</span>
+        <span class="sep">/</span>
+        <span>Shopify Bulk Operations</span>
+      </div>
+      <span class="block-id-large">operations.shopify-bulk</span>
+      <h1>Shopify Bulk Operations</h1>
+      <p class="lead">Async bulk query and mutation pipeline. Submit a GraphQL operation to Shopify, listen for the completion webhook, download the JSONL result, and process records with the parent-child convention &mdash; without exhausting rate limits.</p>
+      <div class="block-tags"><span class="tag">shopify</span><span class="tag">bulk</span><span class="tag">graphql</span><span class="tag">async</span><span class="tag">large-datasets</span><span class="tag">jsonl</span></div>
+
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>Async bulk query and mutation pipeline. Submit a GraphQL operation to Shopify, listen for the completion webhook, download the JSONL result, and process records with the parent-child convention &mdash; without exhausting rate limits.</p>
+      </section>
+
+      <section id="prerequisites">
+        <h2>Prerequisites</h2>
+        <p>This block depends on the following blocks being implemented first:</p><div class="prereq-list"><a class="prereq" href="auth.shopify-session-token.html">auth.shopify-session-token</a></div>
+      </section>
+
+      <section id="data-model">
+        <h2>Data Model</h2>
+        <p>Logical tables introduced by this block. Types resolve to dialect-specific SQL per the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">canonical logical-type mapping</a>.</p>
+        <div class="tables-grid"><div class="table-card">
+          <div class="table-name">bulk_operations</div>
+          <div class="table-desc">Lifecycle of every submitted operation: type, status, query_text, result_url, error_code, object_count, file_size.</div>
+        </div></div>
+      </section>
+
+      <section id="usage">
+        <h2>Use it / Avoid it</h2>
+        <div class="two-col">
+          <div class="use-card yes">
+            <h5>Use when</h5>
+            <ul><li>Read or write more than ~200 records at once.</li><li>Mentions &ldquo;bulk export/import&rdquo;, &ldquo;JSONL&rdquo;, &ldquo;bulkOperationRunQuery&rdquo;.</li><li>Need to sync the full Shopify catalog to an external system.</li></ul>
+          </div>
+          <div class="use-card no">
+            <h5>Avoid when</h5>
+            <ul><li>Fewer than ~200 records &mdash; use paginated queries.</li><li>Real-time operations &mdash; bulk ops are async (minutes to hours).</li><li>Per-record error handling &mdash; bulk mutation errors aggregate.</li></ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="files">
+        <h2>Spec files</h2>
+        <p>Every file in the <code>operations/shopify-bulk/</code> folder. Click any link to open the file on GitHub.</p>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/operations/shopify-bulk/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/operations/shopify-bulk/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/operations/shopify-bulk/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/operations/shopify-bulk/bulk-query.feature" target="_blank" rel="noopener">bulk-query.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/operations/shopify-bulk/bulk-mutation.feature" target="_blank" rel="noopener">bulk-mutation.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/operations/shopify-bulk/status-tracking.feature" target="_blank" rel="noopener">status-tracking.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/operations/shopify-bulk/result-processing.feature" target="_blank" rel="noopener">result-processing.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/operations/shopify-bulk/fixtures/bulk-operations.json" target="_blank" rel="noopener">fixtures/bulk-operations.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/operations/shopify-bulk/fixtures/sample-jsonl.json" target="_blank" rel="noopener">fixtures/sample-jsonl.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/operations/shopify-bulk/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+        <p style="margin-top: 20px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/operations/shopify-bulk" target="_blank" rel="noopener">Open the folder on GitHub &rarr;</a></p>
+      </section>
+
+
+        <nav class="prev-next">
+          <a href="messaging.transactional-email.html"><span class="label">← Previous block</span><span class="title">Send Transactional Email</span></a>
+          <a class="next" href="ugc.product-reviews.html"><span class="label">Next block →</span><span class="title">Product Reviews</span></a>
+        </nav>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      Primitive Block Library &middot;
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p style="margin-top: 8px; color: var(--text-dim);">
+      Read the <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">Spec Guidelines</a>
+      for the abstraction discipline that every block must pass.
+    </p>
+  </div>
+</footer>
+
+<script>
+// Highlight active TOC link on scroll
+document.addEventListener("DOMContentLoaded", () => {
+  const links = document.querySelectorAll(".toc-nav a");
+  const sections = [...links].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>
