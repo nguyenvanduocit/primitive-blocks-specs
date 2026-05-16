@@ -71,7 +71,7 @@ Claude Code runs this checklist after implementation, before reporting done.
 
 ## Security
 
-- [ ] HMAC verification uses constant-time comparison (`crypto.timingSafeEqual`)
+- [ ] HMAC verification uses **constant-time comparison** (Node `crypto.timingSafeEqual` / Web Crypto manual XOR-accumulator) — never `===` or `==`
 - [ ] Raw body is read before JSON parsing for HMAC check
 - [ ] No GDPR endpoint processes data before responding 200
 - [ ] Processing errors are logged but never returned in responses (already 200)

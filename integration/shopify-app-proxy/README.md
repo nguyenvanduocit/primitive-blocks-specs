@@ -49,29 +49,49 @@ Shopify apps run in the admin iframe, but merchants often need app-generated con
 
 ## 2. Data Model
 
+> Types dưới đây là **logical types** (canonical mapping ở `docs/SPEC_GUIDELINES.md` mục 5). This block introduces no new tables — it consumes the `shops` table from `auth.shopify-oauth`.
+
 No new tables. This block uses the `shops` table from `auth.shopify-oauth` to look up shop records by the `shop` query parameter Shopify forwards with every proxy request.
 
 ```mermaid
 erDiagram
     shops {
-        uuid id PK "gen_random_uuid()"
+        unique_id id PK
         text shop_domain UK "example.myshopify.com"
-        text access_token "Encrypted at rest"
+        encrypted_text access_token "App encrypts before insert"
         text scopes "Comma-separated granted scopes"
-        timestamptz installed_at
-        timestamptz uninstalled_at "null if active"
-        timestamptz created_at
-        timestamptz updated_at
+        timestamp installed_at
+        timestamp uninstalled_at "null if active"
+        timestamp created_at
+        timestamp updated_at
     }
 ```
 
 ### Shop Lookup
 
-Every proxy request includes `shop=example.myshopify.com` as a query parameter. After signature verification, the handler looks up the shop:
+Every proxy request includes `shop=example.myshopify.com` as a query parameter. After signature verification, the handler looks up the shop. Reference query (Postgres-style placeholders):
 
+<!-- REFERENCE: dialect=postgres -->
+<!-- ADAPT: MySQL/SQLite — placeholder `?` instead of `$1`; column types follow `auth.shopify-oauth` reference migration -->
 ```sql
-SELECT * FROM shops WHERE shop_domain = $1 AND uninstalled_at IS NULL
+SELECT id, shop_domain, scopes
+FROM shops
+WHERE shop_domain = $1 AND uninstalled_at IS NULL;
 ```
+
+### External Contract Reference (Shopify-dictated)
+
+| Item | Concrete value | Why |
+|------|----------------|-----|
+| Query param Shopify appends for HMAC | `signature` (not `hmac`) | App Proxy spec — **differs from OAuth callback (`hmac`) and webhook (header `X-Shopify-Hmac-Sha256`)** |
+| Algorithm | HMAC-SHA256 over the message | Shopify-dictated |
+| Output encoding | lowercase hexadecimal | Shopify-dictated; signature param value is hex string |
+| Message construction | Sort params alphabetically by key (ASCII); concatenate as `key=value` pairs with **no separator** | Shopify-dictated; **differs from OAuth callback** which joins with `&` |
+| Excluded params | `signature` itself MUST be removed before HMAC computation | Including it produces a wrong digest |
+| Forwarded params (always present) | `shop`, `path_prefix`, `timestamp`, `signature` | Shopify always appends these |
+| Shop domain shape | `*.myshopify.com` | Shopify-dictated; reject other values |
+| Response Content-Type values | `application/liquid` (rendered in theme), `application/json` (AJAX), `text/html` (standalone) | Shopify-recognized response modes |
+| Liquid object names available | `shop`, `cart`, `customer`, `linklists`, `request`, `template`, `theme` | Shopify Liquid context for proxy-rendered templates |
 
 ---
 

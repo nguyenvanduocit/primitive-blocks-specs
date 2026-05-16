@@ -7,10 +7,11 @@
 **Impact**: Critical — attacker could trigger data erasure for arbitrary customers or entire shops, destroying app data without a legitimate request.
 
 **Mitigations**:
-- HMAC-SHA256 verification on every incoming request using `SHOPIFY_API_SECRET` (reused from `auth.shopify-oauth`)
-- Raw request body read before any parsing — HMAC covers the entire payload
-- Constant-time comparison via `crypto.timingSafeEqual` prevents timing attacks
-- Rejects any request where `X-Shopify-Hmac-Sha256` header is absent or incorrect
+- **HMAC-SHA256** verification on every incoming request using `SHOPIFY_API_SECRET` (reused from `auth.shopify-oauth`)
+- Raw request body read before any parsing — HMAC covers the entire payload byte-for-byte
+- Expected signature carried in header **`X-Shopify-Hmac-Sha256`** (base64-encoded)
+- **Constant-time comparison** (Node `crypto.timingSafeEqual` / Web Crypto manual XOR-accumulator) prevents timing-based HMAC bypass
+- Rejects any request where `X-Shopify-Hmac-Sha256` header is absent or incorrect (returns 401)
 
 ### 2. Incomplete Data Erasure
 
@@ -54,11 +55,11 @@
 
 | Field | Validation | Error Code |
 |-------|-----------|------------|
-| `X-Shopify-Hmac-Sha256` header | Required, valid HMAC-SHA256 hex of raw body | `hmac_verification_failed` |
+| `X-Shopify-Hmac-Sha256` header | Required, valid **HMAC-SHA256 base64** of raw body | `hmac_verification_failed` |
 | `shop_domain` (payload) | Must match a known shop in `shops` table | Logged warning, processing skipped |
-| `customer.id` (payload) | Bigint, required for `customers_*` types | Processing skipped if missing |
+| `customer.id` (payload) | Integer ID from Shopify (treated as opaque external ID), required for `customers/*` topics | Processing skipped if missing |
 | `shop_id` (payload) | Numeric, informational — shop looked up by `shop_domain` | Not used directly for DB lookup |
-| `orders_requested` / `orders_to_redact` | Array of bigints, nullable | Treated as empty array if absent |
+| `orders_requested` / `orders_to_redact` | List of Shopify order IDs, nullable | Treated as empty list if absent |
 
 ## Secrets Management
 
@@ -67,9 +68,10 @@
 | `SHOPIFY_API_SECRET` | Environment variable | Rotate via Shopify Partner Dashboard — invalidates all existing HMAC verification |
 | `GDPR_NOTIFY_EMAIL` | Environment variable | Update whenever compliance contact changes |
 
-## Compliance Notes
+## Compliance Notes — External Protocol Contract (Shopify-dictated)
 
-- Shopify requires a response within **5 seconds** — always respond 200 before processing
-- Shopify expects erasure to be **complete within 30 days** of a redact request (best practice: implement immediate erasure, use `GDPR_DATA_RETENTION_DAYS=0`)
-- The `customers/data_request` webhook does **not** require the app to return data to Shopify — it requires the app to be aware of and able to provide the data. Notification to the store owner via `GDPR_NOTIFY_EMAIL` is the standard compliance pattern
+- HTTP response **required within 5 seconds** — always respond 200 before processing
+- Erasure for `customers/redact` and `shop/redact` must **complete within 30 days** — best practice: immediate erasure with `GDPR_DATA_RETENTION_DAYS=0`
+- The `customers/data_request` webhook does **not** require the app to return data to Shopify in the HTTP response — it requires the app to be aware of and able to provide the data. Notification to the store owner via `GDPR_NOTIFY_EMAIL` is the standard compliance pattern
 - `shop/redact` is sent **48 hours after uninstall** — not immediately. The app may still receive other webhooks in that window
+- HMAC algorithm is **HMAC-SHA256** over raw body, **base64-encoded** in header `X-Shopify-Hmac-Sha256` (identical to other Shopify webhooks)

@@ -93,5 +93,5 @@ Feature: Shop Redact
   @security
   Scenario: Shop redact uses constant-time HMAC comparison
     When POST /api/gdpr/shop-redact is called with any HMAC value
-    Then HMAC comparison uses crypto.timingSafeEqual (not string equality)
+    Then HMAC comparison uses constant-time comparison (not string equality)
     And the comparison time does not vary based on how many bytes match

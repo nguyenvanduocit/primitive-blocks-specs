@@ -7,9 +7,12 @@
 **Impact**: High — attacker could trigger app logic, scrape data, or spam the proxy endpoint without going through Shopify's storefront.
 
 **Mitigations**:
-- HMAC-SHA256 signature verification on every request (mandatory, first check before any processing)
-- Signature covers all query params (shop, path_prefix, timestamp, plus any forwarded params) — tampering any param invalidates the signature
-- Constant-time comparison (`crypto.timingSafeEqual`) prevents timing oracle attacks
+- **HMAC-SHA256** signature verification on every request (mandatory, first check before any processing) — algorithm is dictated by Shopify, do not substitute
+- Signature parameter name is `signature` (App Proxy contract — **not** `hmac` which is the OAuth callback name) — implementers must remove **only** `signature` from the param map before HMAC computation
+- Canonical message: sort remaining params alphabetically by key and concatenate `key=value` pairs **with no separator** — App Proxy contract, differs from OAuth callback which joins with `&`
+- Signature output encoding is **lowercase hex**
+- Compare with **constant-time** primitive (`crypto.timingSafeEqual` on Node, `subtle.timingSafeEqual` polyfill / XOR-accumulator on edge runtimes) — never `===`/string equality
+- Signature covers all query params (`shop`, `path_prefix`, `timestamp`, plus any forwarded params) — tampering any param invalidates the signature
 - Optional: timestamp freshness check (reject requests older than 5 minutes) narrows replay window
 
 ### 2. Sensitive Data in Public Responses
