@@ -622,7 +622,18 @@ code {
   border: 1px solid var(--rule);
   color: var(--ink);
 }
-pre code { background: transparent; padding: 0; border: 0; }
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--rule-2);
+  padding: 20px 24px;
+  overflow-x: auto;
+  line-height: 1.55;
+  font-size: 0.84rem;
+  color: var(--ink);
+  margin: 0;
+  white-space: pre;
+}
+pre code { background: transparent; padding: 0; border: 0; font-size: inherit; }
 
 h1, h2, h3, h4 {
   font-family: var(--display);
@@ -971,6 +982,260 @@ section {
 }
 .example-text a:hover code { background: var(--cobalt); color: var(--paper); }
 .example-stats { box-shadow: 4px 4px 0 var(--ink); }
+
+/* ====================== HERO VARIANTS ====================== */
+.hero.hero-short {
+  padding: 64px 0 56px;
+}
+.hero.hero-short h1 {
+  font-size: clamp(2.6rem, 5.6vw, 4.4rem);
+}
+
+/* ====================== FILE CONTRACTS (Anatomy) ====================== */
+.file-contracts {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+.file-contracts > div {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 28px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--rule);
+  align-items: baseline;
+}
+.file-contracts > div:first-child { padding-top: 0; }
+.file-contracts > div:last-child { border-bottom: 0; }
+.file-contracts dt { margin: 0; }
+.file-contracts dt code {
+  font-size: 0.88rem;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+.file-contracts dd {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.94rem;
+  line-height: 1.6;
+}
+.file-contracts dd em {
+  font-style: italic;
+  font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+  color: var(--ink);
+}
+@media (max-width: 700px) {
+  .file-contracts > div { grid-template-columns: 1fr; gap: 6px; }
+}
+
+/* ====================== SPEC TABLE (Authoring) ====================== */
+.spec-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin: 0;
+}
+.spec-table th, .spec-table td {
+  text-align: left;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.spec-table thead th {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+  border-bottom: 1.5px solid var(--ink);
+  padding-bottom: 12px;
+  background: var(--paper-2);
+}
+.spec-table tbody tr:last-child td { border-bottom: 1.5px solid var(--ink); }
+.spec-table tbody td:first-child {
+  white-space: nowrap;
+}
+.spec-table code {
+  font-size: 0.82rem;
+  padding: 1px 5px;
+}
+.spec-table strong { font-weight: 600; }
+@media (max-width: 700px) {
+  .spec-table { font-size: 0.82rem; }
+  .spec-table th, .spec-table td { padding: 10px 10px; }
+}
+
+/* ====================== ANTI-PATTERNS GRID ====================== */
+.anti-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 700px) { .anti-grid { grid-template-columns: 1fr; } }
+.anti-card {
+  border: 1px solid var(--rule-2);
+  border-left-width: 4px;
+  border-left-color: var(--oxide);
+  background: var(--paper);
+  padding: 22px 24px 20px;
+}
+.anti-card h4 {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  font-weight: 500;
+  font-variation-settings: "opsz" 144, "SOFT" 60, "WONK" 0;
+  letter-spacing: -0.015em;
+  color: var(--oxide);
+  margin: 0 0 12px;
+  line-height: 1.2;
+}
+.anti-card p {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  margin: 0 0 12px;
+  line-height: 1.55;
+}
+.anti-card p:last-child { margin-bottom: 0; }
+.anti-card p em {
+  font-style: italic;
+  font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+  color: var(--ink);
+}
+.anti-card .anti-fix {
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+  color: var(--ink);
+}
+.anti-card .anti-fix strong { color: var(--verdict); }
+
+/* ====================== PRINCIPLES (Manifesto cards) ====================== */
+.principles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 800px) { .principles { grid-template-columns: 1fr; gap: 18px; } }
+.principle {
+  position: relative;
+  padding: 32px 28px 28px;
+  border: 1px solid var(--rule-2);
+  background: var(--paper);
+}
+.principle .principle-num {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--cobalt);
+  letter-spacing: 0.12em;
+  display: block;
+  margin-bottom: 14px;
+}
+.principle .principle-title {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 500;
+  font-variation-settings: "opsz" 144, "SOFT" 60, "WONK" 0;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0 0 12px;
+  color: var(--ink);
+}
+.principle p {
+  font-size: 0.95rem;
+  color: var(--ink-2);
+  line-height: 1.6;
+  margin: 0;
+}
+.principle p strong { color: var(--ink); font-weight: 600; }
+.principle p em {
+  font-style: italic;
+  font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+  color: var(--cobalt);
+}
+.principle code {
+  font-size: 0.84em;
+  padding: 1px 5px;
+}
+
+/* ====================== CTA GRID (links to anatomy / authoring) ====================== */
+.cta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 700px) { .cta-grid { grid-template-columns: 1fr; } }
+.cta-card {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 24px;
+  align-items: start;
+  padding: 28px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  text-decoration: none;
+  color: var(--ink);
+  transition: all 0.18s ease;
+}
+.cta-card:hover {
+  background: var(--ink);
+  color: var(--paper);
+  text-decoration: none;
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--cobalt);
+}
+.cta-card:hover .cta-num { color: var(--paper); border-color: var(--paper); }
+.cta-card:hover .cta-link { color: var(--paper); }
+.cta-card:hover .cta-body p { color: var(--paper); opacity: 0.8; }
+.cta-card .cta-num {
+  font-family: var(--display);
+  font-size: 2rem;
+  font-weight: 500;
+  font-variation-settings: "opsz" 144, "SOFT" 40, "WONK" 0;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--cobalt);
+  border: 1.5px solid var(--cobalt);
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  transition: all 0.18s ease;
+}
+.cta-card .cta-body h3 {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  font-weight: 500;
+  font-variation-settings: "opsz" 144, "SOFT" 60, "WONK" 0;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+  color: inherit;
+  line-height: 1.15;
+}
+.cta-card .cta-body p {
+  font-size: 0.92rem;
+  color: var(--ink-2);
+  line-height: 1.55;
+  margin: 0 0 14px;
+}
+.cta-card .cta-link {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--cobalt);
+}
 
 /* ====================== COMPARE CARDS ====================== */
 .compare {
@@ -2192,10 +2457,10 @@ function siteHeader(rootPath = "") {
       <span>Primitive Block Library</span>
     </a>
     <ul class="nav-links">
-      <li><a href="${rootPath}#example">Example</a></li>
-      <li><a href="${rootPath}#philosophy">Why</a></li>
-      <li><a href="${rootPath}#consume">Workflow</a></li>
-      <li><a href="${rootPath}#blocks">Blocks</a></li>
+      <li><a href="${rootPath}#principles">Manifesto</a></li>
+      <li><a href="${rootPath}anatomy.html">Anatomy</a></li>
+      <li><a href="${rootPath}authoring.html">Authoring</a></li>
+      <li><a href="${rootPath}#blocks">Examples</a></li>
       <li><a class="github" href="${REPO_HTTPS}" target="_blank" rel="noopener">GitHub ↗</a></li>
     </ul>
   </nav>
@@ -2270,15 +2535,15 @@ ${siteHeader("")}
   <section class="hero">
     <div class="hero-grid">
       <div class="hero-text">
-        <span class="hero-tag">Feature blueprints for Shopify apps &amp; primitives</span>
-        <h1>Skip the boilerplate.<br/><em>Ship</em> the feature.</h1>
+        <span class="hero-tag">A manifesto for spec-driven agentic development</span>
+        <h1>A spec is a complete feature.<br/><em>Agents</em> are how it ships.</h1>
         <p class="tagline">
-          Each blueprint is the complete spec of one feature &mdash; data model, flows,
-          security threats, acceptance checks. Claude Code reads the spec, adapts it to
-          your stack, writes the code, runs the checks. You review the diff and ship.
+          A package locks in choices the author made &mdash; framework, ORM, dialect,
+          runtime. A spec describes what the feature does and lets the agent decide
+          how. Fitting your stack, not fighting it.
         </p>
         <div class="ctas">
-          <a class="btn primary" href="#blocks">Browse ${BLOCKS.length} blocks</a>
+          <a class="btn primary" href="#principles">Read the manifesto</a>
           <a class="btn" href="${REPO_HTTPS}" target="_blank" rel="noopener">View on GitHub</a>
         </div>
       </div>
@@ -2303,105 +2568,132 @@ ${siteHeader("")}
     </div>
   </section>
 
-  <section id="example">
+  <section id="principles">
     <div class="section-rule">
-      <span class="section-label">Example</span>
-      <span class="section-line"></span>
-    </div>
-    <div class="example-spread">
-      <div class="example-text">
-        <h2>One block, one feature.</h2>
-        <p>
-          Take <a href="blocks/auth.shopify-oauth.html"><code>auth.shopify-oauth</code></a> &mdash;
-          the install handshake every Shopify app must implement. Drop the spec on Claude Code.
-          It picks your SQL dialect, your framework, your secrets vault. Writes the install
-          handler, callback, nonce store, token encryption, uninstall hook. Runs the
-          acceptance checks until green.
-        </p>
-        <p style="margin-top: 16px;">
-          <strong>~45 minutes from spec to merged PR.</strong>
-        </p>
-      </div>
-      <aside class="title-block example-stats" aria-label="auth.shopify-oauth at a glance">
-        <div class="tb-row"><span class="tb-label">Files</span><span class="tb-value">9</span></div>
-        <div class="tb-row"><span class="tb-label">Tables</span><span class="tb-value">2</span></div>
-        <div class="tb-row"><span class="tb-label">Scenarios</span><span class="tb-value">19</span></div>
-        <div class="tb-row"><span class="tb-label">Threats</span><span class="tb-value">5</span></div>
-        <div class="tb-row"><span class="tb-label">Checks</span><span class="tb-value">36</span></div>
-      </aside>
-    </div>
-  </section>
-
-  <section id="philosophy">
-    <div class="section-rule">
-      <span class="section-label">Why a spec, not a library</span>
+      <span class="section-label">The Manifesto</span>
       <span class="section-line"></span>
     </div>
     <div class="section-header">
-      <h2>Ship the <em>spec</em>, not the lib.</h2>
-      <p>
-        A code library locks in your framework, your ORM, your auth choice. The minute the
-        stack diverges &mdash; fork, patch, maintain. Now agents can read your codebase,
-        run your build, and write code that fits. So ship knowledge, not code.
-      </p>
+      <h2>Six principles.</h2>
+      <p>What spec-driven agentic development actually requires &mdash; not aspirations, working discipline.</p>
     </div>
 
-    <div class="compare">
+    <ol class="principles">
+      <li class="principle">
+        <span class="principle-num">01</span>
+        <h3 class="principle-title">Knowledge, not code.</h3>
+        <p>A library locks framework, ORM, dialect, runtime. A spec describes only what is invariant &mdash; data model, flows, threats, acceptance. The agent decides the rest. When your stack changes, the spec doesn&rsquo;t.</p>
+      </li>
+      <li class="principle">
+        <span class="principle-num">02</span>
+        <h3 class="principle-title">Stack-agnostic by discipline.</h3>
+        <p>Every spec is structured in three layers: <strong>semantic</strong> (what + why, concrete), <strong>mechanism</strong> (how, abstract &mdash; agent decides), <strong>illustrative</strong> (reference snippets, concrete but marked). A spec passes when it implements correctly on three different SQL-family stacks without spec changes.</p>
+      </li>
+      <li class="principle">
+        <span class="principle-num">03</span>
+        <h3 class="principle-title">Carve-outs where the world dictates.</h3>
+        <p>External protocols &mdash; Shopify HMAC, JWT claim names, callback parameter ordering &mdash; are concrete in the spec because the merchant doesn&rsquo;t get to choose them. Everything else stays abstract. The discriminator is simple: <em>who decides?</em></p>
+      </li>
+      <li class="principle">
+        <span class="principle-num">04</span>
+        <h3 class="principle-title">Verifiable, not trustworthy.</h3>
+        <p>Every block ships an <code>acceptance.md</code> checklist the agent runs after implementation. Correctness comes from passing the checks, not from the spec author being clever. Trust the test, not the author.</p>
+      </li>
+      <li class="principle">
+        <span class="principle-num">05</span>
+        <h3 class="principle-title">Composable through prerequisites.</h3>
+        <p>Blocks declare what they depend on, and reverse-lookup tells what depends on them. Composition becomes a graph the agent can plan around &mdash; not a configuration puzzle the developer has to solve at integration time.</p>
+      </li>
+      <li class="principle">
+        <span class="principle-num">06</span>
+        <h3 class="principle-title">Living, no versioning.</h3>
+        <p>The spec is markdown, not a package. Every iteration improves it &mdash; sharper threats, better fixtures, tighter acceptance. No semver. No deprecation. The agent re-reads the latest each time it implements.</p>
+      </li>
+    </ol>
+
+    <div class="compare" style="margin-top: 64px;">
       <div class="card old">
-        <h3>Pre-built code <span class="tag">old paradigm</span></h3>
+        <h3>The package <span class="tag">workaround</span></h3>
         <ul>
-          <li>Rigid &mdash; only customizable through config JSON</li>
-          <li>Fits one fixed runtime; merchant must match it</li>
-          <li>Bugs live inside the pre-built package &mdash; hard to debug</li>
-          <li>New feature requires writing new code from scratch</li>
-          <li>Surface area shrinks as integrations multiply</li>
-          <li>Fixed ceiling: capability equals what was written</li>
+          <li>Locks framework, ORM, runtime &mdash; fits one stack</li>
+          <li>Customization only through config the author imagined</li>
+          <li>Bugs live inside the dependency &mdash; fork or wait</li>
+          <li>New feature = write new code from scratch</li>
+          <li>Ceiling = what was already written</li>
         </ul>
       </div>
       <div class="card new">
-        <h3>Blueprint <span class="tag">new paradigm</span></h3>
+        <h3>The spec <span class="tag">paradigm</span></h3>
         <ul>
-          <li>Flexible &mdash; the agent adapts the entire implementation</li>
-          <li>Fits any stack: SQL family, frameworks, runtimes</li>
-          <li>Bugs are fixed in-place inside the merchant&rsquo;s codebase</li>
-          <li>New feature is a new spec &mdash; markdown, not code</li>
-          <li>Surface area grows with each iteration of the agent</li>
+          <li>Agent adapts the implementation to any SQL-family stack</li>
+          <li>Customization through interview &mdash; plain-language decisions</li>
+          <li>Bugs fixed in-place, in your codebase, by you or the agent</li>
+          <li>New feature = a new markdown file</li>
           <li>No ceiling: better models &times; better specs &times; better tests</li>
         </ul>
       </div>
     </div>
-
   </section>
 
-  <section id="consume">
+  <section id="why-now">
     <div class="section-rule">
-      <span class="section-label">Workflow</span>
+      <span class="section-label">Why now</span>
       <span class="section-line"></span>
     </div>
     <div class="section-header">
-      <h2>How a block <em>becomes</em> code.</h2>
+      <h2>Agents changed the cost equation.</h2>
       <p>
-        Claude Code runs in your project with full filesystem access. It treats every block
-        as a reference &mdash; reads it, understands your stack, adapts, implements, verifies.
+        For forty years we shipped code packages because that&rsquo;s what tooling allowed:
+        install, configure, hope it fits. The work of <em>translating a feature into code
+        that fits your stack</em> was expensive human work, so we cached it inside packages.
+      </p>
+      <p style="margin-top: 16px;">
+        Claude Code reads your filesystem, runs your build, follows your conventions,
+        iterates until tests pass. Translation is now cheap machine work. So the human job
+        moves up the stack: write the spec, let the agent translate. The package was always
+        a workaround for tools that couldn&rsquo;t read code. We have those tools now.
       </p>
     </div>
-    <div class="flow-steps">
-      <div class="flow-step"><div class="step-num">STEP 01</div><h4>Discover</h4><p>Match your request against the library by tag, category, and overview.</p></div>
-      <div class="flow-step"><div class="step-num">STEP 02</div><h4>Configure</h4><p>Ask the few business decisions that change behavior &mdash; currency, plan tiers, scopes. You answer in plain language.</p></div>
-      <div class="flow-step"><div class="step-num">STEP 03</div><h4>Clone</h4><p>Copy the block into your project as a customized blueprint &mdash; the source library stays untouched.</p></div>
-      <div class="flow-step"><div class="step-num">STEP 04</div><h4>Implement</h4><p>Translate the spec into code that follows your conventions and framework choices.</p></div>
-      <div class="flow-step"><div class="step-num">STEP 05</div><h4>Verify</h4><p>Run the acceptance checklist: migrations, tests, type-check, lint, security mitigations.</p></div>
+  </section>
+
+  <section id="explore">
+    <div class="section-rule">
+      <span class="section-label">The discipline</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="section-header">
+      <h2>Want to write your own?</h2>
+      <p>Two pages cover what a block looks like and how to author one that survives the 3-stack test.</p>
+    </div>
+
+    <div class="cta-grid">
+      <a class="cta-card" href="anatomy.html">
+        <span class="cta-num">A</span>
+        <div class="cta-body">
+          <h3>Anatomy of a block</h3>
+          <p>The folder layout, file contracts, and how Claude Code consumes a block end-to-end.</p>
+          <span class="cta-link">Read &rarr;</span>
+        </div>
+      </a>
+      <a class="cta-card" href="authoring.html">
+        <span class="cta-num">B</span>
+        <div class="cta-body">
+          <h3>Authoring discipline</h3>
+          <p>The 3-layer abstraction rule, logical types for SQL portability, external-protocol carve-outs, anti-patterns.</p>
+          <span class="cta-link">Read &rarr;</span>
+        </div>
+      </a>
     </div>
   </section>
 
   <section id="blocks">
     <div class="section-rule">
-      <span class="section-label">The library</span>
+      <span class="section-label">Examples in the wild</span>
       <span class="section-line"></span>
     </div>
     <div class="section-header">
-      <h2>${BLOCKS.length} blocks. <em>Ready to ship.</em></h2>
-      <p>Click any block to open its spec page: problem, dependencies, data model, and direct links to every file.</p>
+      <h2>${BLOCKS.length} blocks demonstrate the discipline.</h2>
+      <p>Reference implementations &mdash; not a closed catalog. Each one is the complete spec of a real feature, written to pass the 3-stack test.</p>
     </div>
 
     <div class="filter-bar" role="tablist" aria-label="Filter blocks by category">${filterPills}</div>
@@ -2411,42 +2703,7 @@ ${siteHeader("")}
     <div class="empty-state hidden" id="empty-state">No blocks match this category yet.</div>
   </section>
 
-  <section id="layers">
-    <div class="section-rule">
-      <span class="section-label">For block authors</span>
-      <span class="section-line"></span>
-    </div>
-    <div class="section-header">
-      <h2>Three layers in every spec.</h2>
-      <p>
-        Writing a new block? Every spec follows a 3-layer abstraction discipline so it stays stack-agnostic &mdash;
-        the agent can implement it on any SQL family, any framework, any runtime, without spec changes.
-      </p>
-    </div>
-    <div class="layers">
-      <div class="layer">
-        <div class="layer-num">L1 &mdash; SEMANTIC</div>
-        <h4>What &amp; Why</h4>
-        <p>Data model, sequence flows, state machines, business invariants, external protocol contracts, threats and mitigations.</p>
-        <span class="verdict">Maximally concrete</span>
-      </div>
-      <div class="layer">
-        <div class="layer-num">L2 &mdash; MECHANISM</div>
-        <h4>How</h4>
-        <p>Framework, ORM, SQL dialect, test runner, error-handling style, file convention. The agent picks all of this.</p>
-        <span class="verdict">Abstract &mdash; agent decides</span>
-      </div>
-      <div class="layer">
-        <div class="layer-num">L3 &mdash; ILLUSTRATIVE</div>
-        <h4>Reference</h4>
-        <p>Code snippets &le;30 lines, each tagged with <code>PATTERN</code> / <code>PURPOSE</code> / <code>REFERENCE</code> / <code>ADAPT</code> markers.</p>
-        <span class="verdict">Concrete but marked</span>
-      </div>
-    </div>
-    <p style="margin-top: 24px;">
-      Full authoring rules: <a href="${REPO_BLOB}/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md &rarr;</a>
-    </p>
-  </section>
+
 </main>
 
 ${siteFooter()}
@@ -2627,7 +2884,7 @@ ${siteHeader("../")}
   <div class="page-grid">
 
     <aside class="toc">
-      <a class="back" href="../">Back to library</a>
+      <a class="back" href="../#blocks">Back to examples</a>
       <div class="toc-section">On this page</div>
       <nav class="toc-nav">${tocNavHtml}</nav>
       <div class="toc-meta">
@@ -2640,7 +2897,7 @@ ${siteHeader("../")}
 
     <article class="page-content">
       <div class="breadcrumb">
-        <a href="../">Library</a>
+        <a href="../#blocks">Examples</a>
         <span class="sep">/</span>
         <span>${b.category}</span>
       </div>
@@ -2720,6 +2977,371 @@ document.addEventListener("DOMContentLoaded", () => {
 }
 
 // ============================================================================
+// ANATOMY PAGE — what a block looks like
+// ============================================================================
+function renderAnatomy() {
+  const description = "A block is a folder. Inside: README, security threats, Gherkin scenarios, fixtures, acceptance checklist. The conventions that keep specs portable across stacks.";
+  return `${headTags(
+    "Anatomy of a block — Primitive Block Library",
+    description,
+    { cssPath: "assets/style.css" }
+  )}
+
+${siteHeader("")}
+
+<main>
+  <section class="hero hero-short">
+    <div class="hero-text">
+      <span class="hero-tag">Page A &middot; Block structure</span>
+      <h1>A block is<br/>a <em>folder.</em></h1>
+      <p class="tagline">
+        Inside: a README defining the feature, one or more Gherkin scenarios, a security
+        threat model, an acceptance checklist, optional fixtures. Conventions are loose;
+        contracts are real &mdash; Claude Code reads each file for a different purpose.
+      </p>
+    </div>
+  </section>
+
+  <section id="tree">
+    <div class="section-rule">
+      <span class="section-label">Folder layout</span>
+      <span class="section-line"></span>
+    </div>
+    <pre><code>primitive-blocks-specs/
+├── INTERFACE.md                       block interface (what counts as a block)
+└── {category}/
+    └── {feature-name}/                each block = one folder
+        ├── README.md                  identity, overview, data model
+        ├── frontend.md                optional: frontend guide
+        ├── backend.md                 optional: backend guide
+        ├── security.md                threat model + mitigations
+        ├── *.feature                  Gherkin scenarios (BDD)
+        ├── fixtures/                  test data, mock responses
+        │   └── *.json
+        └── acceptance.md              verification checklist</code></pre>
+  </section>
+
+  <section id="contracts">
+    <div class="section-rule">
+      <span class="section-label">File contracts</span>
+      <span class="section-line"></span>
+    </div>
+    <dl class="file-contracts">
+      <div>
+        <dt><code>README.md</code></dt>
+        <dd>Identity (id, name, version, category, tags), overview (problem statement, user stories), and the data model &mdash; logical tables and their semantics. The first file the agent reads.</dd>
+      </div>
+      <div>
+        <dt><code>backend.md</code> &middot; <code>frontend.md</code></dt>
+        <dd>Per-side implementation guides &mdash; patterns, sequence flows, integration points. Optional but recommended for non-trivial blocks.</dd>
+      </div>
+      <div>
+        <dt><code>security.md</code></dt>
+        <dd>Threats catalogued as <code>### N. Name</code> with an <code>**Impact**</code> severity line and mitigation <em>logic</em> &mdash; not code. The agent translates mitigations into your stack.</dd>
+      </div>
+      <div>
+        <dt><code>*.feature</code></dt>
+        <dd>Gherkin scenarios &mdash; happy paths, errors, edges. Each scenario is one acceptance behavior in plain English. Tags (<code>@happy</code>, <code>@error</code>, <code>@edge</code>) classify intent.</dd>
+      </div>
+      <div>
+        <dt><code>fixtures/</code></dt>
+        <dd>Seed data, mocked external responses, sample payloads. JSON files referenced by scenarios.</dd>
+      </div>
+      <div>
+        <dt><code>acceptance.md</code></dt>
+        <dd>The done-checklist. Sections grouped by concern (Database, API, Security, &hellip;) each with <code>- [ ]</code> items. The agent runs every check after implementation.</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section id="workflow">
+    <div class="section-rule">
+      <span class="section-label">How a block becomes code</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="section-header">
+      <p>Claude Code runs in your project with full filesystem access. Five steps from spec to merged PR.</p>
+    </div>
+    <div class="flow-steps">
+      <div class="flow-step"><div class="step-num">STEP 01</div><h4>Discover</h4><p>Match your request against the library by tag, category, and overview.</p></div>
+      <div class="flow-step"><div class="step-num">STEP 02</div><h4>Configure</h4><p>Ask the few business decisions that change behavior &mdash; currency, plan tiers, scopes. You answer in plain language.</p></div>
+      <div class="flow-step"><div class="step-num">STEP 03</div><h4>Clone</h4><p>Copy the block into your project as a customized blueprint &mdash; the source stays untouched.</p></div>
+      <div class="flow-step"><div class="step-num">STEP 04</div><h4>Implement</h4><p>Translate the spec into code that follows your conventions and framework choices.</p></div>
+      <div class="flow-step"><div class="step-num">STEP 05</div><h4>Verify</h4><p>Run the acceptance checklist: migrations, tests, type-check, lint, security mitigations.</p></div>
+    </div>
+  </section>
+
+  <section id="walk">
+    <div class="section-rule">
+      <span class="section-label">A real block</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="section-header">
+      <h2>auth.shopify-oauth, opened.</h2>
+      <p>The install-handshake block every Shopify app must implement. Nine files; each does one thing.</p>
+    </div>
+    <pre><code>auth/shopify-oauth/
+├── README.md                       shops + oauth_nonces tables, install flow
+├── backend.md                      Express/Hono/Fastify-agnostic handler patterns
+├── security.md                     5 threats: CSRF, shop spoofing, code reuse, …
+├── install-flow.feature            scenarios for install
+├── uninstall.feature               scenarios for app/shop uninstall webhook
+├── security.feature                attack scenarios with expected rejections
+├── fixtures/
+│   ├── oauth-callback.json
+│   └── shop-records.json
+└── acceptance.md                   36 checks: Database, Install, Uninstall, Security, …</code></pre>
+    <p style="margin-top:24px;">Drop the block on Claude Code &rarr; it picks your SQL dialect, your framework, writes the install handler, callback, nonce store, token encryption, uninstall hook. Runs the 36 checks until green. <strong>~45 minutes from spec to merged PR.</strong></p>
+    <p style="margin-top:12px;">Read the full <a href="blocks/auth.shopify-oauth.html">auth.shopify-oauth spec &rarr;</a></p>
+  </section>
+
+  <section id="next">
+    <div class="section-rule">
+      <span class="section-label">Next</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="cta-grid">
+      <a class="cta-card" href="authoring.html">
+        <span class="cta-num">B</span>
+        <div class="cta-body">
+          <h3>Authoring discipline</h3>
+          <p>The 3-layer rule, logical types, external-protocol carve-outs, anti-patterns. How to write a block that survives the 3-stack test.</p>
+          <span class="cta-link">Read &rarr;</span>
+        </div>
+      </a>
+      <a class="cta-card" href="./#blocks">
+        <span class="cta-num">&rarr;</span>
+        <div class="cta-body">
+          <h3>Browse the examples</h3>
+          <p>${BLOCKS.length} reference blocks demonstrating the discipline &mdash; Shopify OAuth, billing, GDPR, transactional email, product reviews.</p>
+          <span class="cta-link">Examples &rarr;</span>
+        </div>
+      </a>
+    </div>
+  </section>
+</main>
+
+${siteFooter()}
+</body>
+</html>`;
+}
+
+// ============================================================================
+// AUTHORING PAGE — discipline for writing blocks
+// ============================================================================
+function renderAuthoring() {
+  const description = "Three layers in every spec. Logical types for SQL portability. External-protocol carve-outs. The 3-stack adaptability test. How to write a block that survives.";
+  return `${headTags(
+    "Authoring discipline — Primitive Block Library",
+    description,
+    { cssPath: "assets/style.css" }
+  )}
+
+${siteHeader("")}
+
+<main>
+  <section class="hero hero-short">
+    <div class="hero-text">
+      <span class="hero-tag">Page B &middot; Spec discipline</span>
+      <h1>Three layers,<br/>one <em>test.</em></h1>
+      <p class="tagline">
+        A spec describes <strong>what</strong> and <strong>why</strong>, not <strong>how</strong>.
+        The agent picks the how. A spec is at the right level of abstraction when Claude Code can
+        implement it correctly on three different SQL-family stacks without spec changes.
+      </p>
+    </div>
+  </section>
+
+  <section id="core">
+    <div class="section-rule">
+      <span class="section-label">Core principle</span>
+      <span class="section-line"></span>
+    </div>
+    <table class="spec-table">
+      <thead>
+        <tr><th>Category</th><th>Definition</th><th>Who decides?</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>WHAT</strong></td>
+          <td>Behavior, contract, invariant &mdash; what must be true regardless of stack.</td>
+          <td>Domain + external party</td>
+        </tr>
+        <tr>
+          <td><strong>WHY</strong></td>
+          <td>Reason the constraint exists &mdash; threat model, business rule.</td>
+          <td>Spec author</td>
+        </tr>
+        <tr>
+          <td><strong>HOW</strong></td>
+          <td>Framework, syntax, ORM, file structure.</td>
+          <td>Merchant project (through Claude Code)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin-top:20px;"><strong>Self-test:</strong> read a paragraph of spec and ask &mdash; <em>does this prescribe behavior, or does it prescribe how to write code?</em> If the latter, it&rsquo;s too HOW. Abstract it up.</p>
+  </section>
+
+  <section id="layers">
+    <div class="section-rule">
+      <span class="section-label">Three layers</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-num">L1 &mdash; SEMANTIC</div>
+        <h4>What &amp; Why</h4>
+        <p>Data model with logical types, sequence flows, state machines, business invariants, external protocol contracts, threats and mitigation <em>logic</em>, acceptance criteria.</p>
+        <span class="verdict">Maximally concrete</span>
+      </div>
+      <div class="layer">
+        <div class="layer-num">L2 &mdash; MECHANISM</div>
+        <h4>How</h4>
+        <p>Framework, ORM, SQL dialect, test runner, error-handling style, file convention, naming convention at code level. The agent picks all of this from your project context.</p>
+        <span class="verdict">Abstract &mdash; agent decides</span>
+      </div>
+      <div class="layer">
+        <div class="layer-num">L3 &mdash; ILLUSTRATIVE</div>
+        <h4>Reference</h4>
+        <p>Code snippets &le;30 lines, each tagged with <code>PATTERN</code> / <code>PURPOSE</code> / <code>REFERENCE</code> / <code>ADAPT</code> markers. Pattern not copy-paste.</p>
+        <span class="verdict">Concrete but marked</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="carveouts">
+    <div class="section-rule">
+      <span class="section-label">External protocol carve-outs</span>
+      <span class="section-line"></span>
+    </div>
+    <p style="margin-bottom:20px;">Things dictated by an external party must be <strong>concrete</strong>, because the merchant doesn&rsquo;t get to choose them. The discriminator: <em>who decides?</em></p>
+    <table class="spec-table">
+      <thead>
+        <tr><th>Kind</th><th>Example</th><th>Spec must be</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Crypto algorithm dictated by protocol</td><td><code>HMAC-SHA256</code> for Shopify webhook</td><td><strong>Concrete</strong> (Shopify decides)</td></tr>
+        <tr><td>Crypto algorithm freely chosen</td><td>&ldquo;encrypt token at rest&rdquo;</td><td>Abstract (merchant picks AES-GCM vs ChaCha20)</td></tr>
+        <tr><td>JWT claim names</td><td><code>iss</code>, <code>dest</code>, <code>aud</code> from App Bridge</td><td><strong>Concrete</strong> (Shopify decides)</td></tr>
+        <tr><td>JWT verification library</td><td><code>jose</code> vs <code>jsonwebtoken</code></td><td>Abstract (merchant picks)</td></tr>
+        <tr><td>HTTP header names</td><td><code>X-Shopify-Hmac-Sha256</code> (case-sensitive)</td><td><strong>Concrete</strong> (Shopify decides)</td></tr>
+        <tr><td>OAuth callback param ordering</td><td>&ldquo;sort params alphabetically before HMAC&rdquo;</td><td><strong>Concrete</strong> (Shopify rule)</td></tr>
+        <tr><td>Internal job queue</td><td>BullMQ vs Inngest vs PgQueue</td><td>Abstract (merchant picks)</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:20px;"><strong>Anti-pattern:</strong> writing &ldquo;verify webhook using a cryptographic hash&rdquo; &mdash; too abstract; Claude Code could pick SHA-1 or MD5 and break the contract. <strong>Correct:</strong> &ldquo;verify webhook using HMAC-SHA256 over the raw body, compare base64 against header <code>X-Shopify-Hmac-Sha256</code> using constant-time comparison.&rdquo;</p>
+  </section>
+
+  <section id="types">
+    <div class="section-rule">
+      <span class="section-label">Logical types</span>
+      <span class="section-line"></span>
+    </div>
+    <p style="margin-bottom:20px;">Data-model columns use <strong>logical types</strong>, not dialect-specific SQL. Claude Code resolves them to native types per the merchant&rsquo;s database (Postgres, MySQL, SQLite). A small sample:</p>
+    <table class="spec-table">
+      <thead>
+        <tr><th>Logical type</th><th>Postgres</th><th>MySQL</th><th>SQLite</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>id</code></td><td><code>UUID PRIMARY KEY</code></td><td><code>CHAR(36) PRIMARY KEY</code></td><td><code>TEXT PRIMARY KEY</code></td></tr>
+        <tr><td><code>text</code></td><td><code>TEXT</code></td><td><code>TEXT</code></td><td><code>TEXT</code></td></tr>
+        <tr><td><code>text(N)</code></td><td><code>VARCHAR(N)</code></td><td><code>VARCHAR(N)</code></td><td><code>TEXT</code></td></tr>
+        <tr><td><code>int</code></td><td><code>INTEGER</code></td><td><code>INT</code></td><td><code>INTEGER</code></td></tr>
+        <tr><td><code>bigint</code></td><td><code>BIGINT</code></td><td><code>BIGINT</code></td><td><code>INTEGER</code></td></tr>
+        <tr><td><code>decimal(p,s)</code></td><td><code>NUMERIC(p,s)</code></td><td><code>DECIMAL(p,s)</code></td><td><code>NUMERIC(p,s)</code></td></tr>
+        <tr><td><code>bool</code></td><td><code>BOOLEAN</code></td><td><code>TINYINT(1)</code></td><td><code>INTEGER</code></td></tr>
+        <tr><td><code>json</code></td><td><code>JSONB</code></td><td><code>JSON</code></td><td><code>TEXT</code> (json-encoded)</td></tr>
+        <tr><td><code>timestamp</code></td><td><code>TIMESTAMPTZ</code></td><td><code>DATETIME</code></td><td><code>TEXT</code> (ISO 8601)</td></tr>
+        <tr><td><code>enum&lt;a|b|c&gt;</code></td><td><code>TEXT CHECK (col IN (...))</code></td><td><code>ENUM(...)</code></td><td><code>TEXT CHECK (col IN (...))</code></td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:20px;">Full mapping in <a href="${REPO_BLOB}/docs/SPEC_GUIDELINES.md#5-logical-types-table-canonical" target="_blank" rel="noopener">SPEC_GUIDELINES &sect; 5</a>.</p>
+  </section>
+
+  <section id="stack-test">
+    <div class="section-rule">
+      <span class="section-label">The 3-stack test</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="section-header">
+      <h2>One spec, three stacks, no changes.</h2>
+      <p>A spec is at the right abstraction level when Claude Code implements it correctly &mdash; passes the full <code>acceptance.md</code> &mdash; on three different SQL-family stacks <strong>without spec changes</strong>.</p>
+    </div>
+    <table class="spec-table">
+      <thead>
+        <tr><th>Stack</th><th>Runtime</th><th>Framework</th><th>DB</th><th>ORM</th><th>Test</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>A</strong></td><td>Node 20</td><td>Express</td><td>Postgres 16</td><td>Drizzle</td><td>Vitest</td></tr>
+        <tr><td><strong>B</strong></td><td>Bun 1.x</td><td>Hono</td><td>SQLite</td><td>raw SQL</td><td>Bun test</td></tr>
+        <tr><td><strong>C</strong></td><td>Deno 2.x</td><td>Oak</td><td>Postgres 16</td><td>Prisma</td><td>Deno test</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:20px;">NoSQL (Mongo, DynamoDB, Firestore) is explicit non-goal &mdash; documents and SQL diverge too much to derive from a single logical-types table.</p>
+  </section>
+
+  <section id="anti-patterns">
+    <div class="section-rule">
+      <span class="section-label">Anti-patterns</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="anti-grid">
+      <div class="anti-card bad">
+        <h4>&times; Prescribing the framework</h4>
+        <p><em>&ldquo;Add an Express middleware that&hellip;&rdquo;</em> &mdash; binds the spec to one framework.</p>
+        <p class="anti-fix"><strong>Instead:</strong> describe the behavior. <em>&ldquo;Verify HMAC before the handler reads the body. Reject with 401 on mismatch.&rdquo;</em></p>
+      </div>
+      <div class="anti-card bad">
+        <h4>&times; Vague crypto</h4>
+        <p><em>&ldquo;Verify the webhook with a cryptographic hash.&rdquo;</em> &mdash; agent could pick MD5.</p>
+        <p class="anti-fix"><strong>Instead:</strong> name the algorithm. <em>&ldquo;HMAC-SHA256 over the raw body, base64-compared against <code>X-Shopify-Hmac-Sha256</code> with constant-time comparison.&rdquo;</em></p>
+      </div>
+      <div class="anti-card bad">
+        <h4>&times; Dialect-specific SQL</h4>
+        <p><em>&ldquo;<code>shop_domain VARCHAR(255) UNIQUE</code>&rdquo;</em> &mdash; MySQL-flavored, breaks on SQLite.</p>
+        <p class="anti-fix"><strong>Instead:</strong> use logical types. <em>&ldquo;<code>shop_domain: text UNIQUE</code> (resolves to VARCHAR/TEXT per dialect).&rdquo;</em></p>
+      </div>
+      <div class="anti-card bad">
+        <h4>&times; Implementation snippets without markers</h4>
+        <p>A 60-line TypeScript code block dropped in the spec with no <code>ADAPT</code> guidance.</p>
+        <p class="anti-fix"><strong>Instead:</strong> &le;30 lines with all 4 markers (<code>PATTERN</code> / <code>PURPOSE</code> / <code>REFERENCE</code> / <code>ADAPT</code>) &mdash; explicit what to adapt per stack.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="next">
+    <div class="section-rule">
+      <span class="section-label">Next</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="cta-grid">
+      <a class="cta-card" href="anatomy.html">
+        <span class="cta-num">A</span>
+        <div class="cta-body">
+          <h3>Anatomy of a block</h3>
+          <p>The folder layout, file contracts, and how Claude Code consumes a block end-to-end.</p>
+          <span class="cta-link">Read &rarr;</span>
+        </div>
+      </a>
+      <a class="cta-card" href="./#blocks">
+        <span class="cta-num">&rarr;</span>
+        <div class="cta-body">
+          <h3>Browse the examples</h3>
+          <p>${BLOCKS.length} reference blocks &mdash; each passes the 3-stack test.</p>
+          <span class="cta-link">Examples &rarr;</span>
+        </div>
+      </a>
+    </div>
+    <p style="margin-top:32px;">Full authoring rules &mdash; the complete spec discipline, side-by-side examples, migration guide: <a href="${REPO_BLOB}/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md &rarr;</a></p>
+  </section>
+</main>
+
+${siteFooter()}
+</body>
+</html>`;
+}
+
+// ============================================================================
 // MAIN
 // ============================================================================
 function emit(path, content) {
@@ -2733,6 +3355,8 @@ function main() {
   const written = [];
   written.push(emit("assets/style.css", CSS));
   written.push(emit("index.html", renderLanding()));
+  written.push(emit("anatomy.html", renderAnatomy()));
+  written.push(emit("authoring.html", renderAuthoring()));
   BLOCKS.forEach((b, i) => {
     const prev = i > 0 ? BLOCKS[i - 1] : null;
     const next = i < BLOCKS.length - 1 ? BLOCKS[i + 1] : null;

@@ -19,10 +19,10 @@
       <span>Primitive Block Library</span>
     </a>
     <ul class="nav-links">
-      <li><a href="#example">Example</a></li>
-      <li><a href="#philosophy">Why</a></li>
-      <li><a href="#consume">Workflow</a></li>
-      <li><a href="#blocks">Blocks</a></li>
+      <li><a href="#principles">Manifesto</a></li>
+      <li><a href="anatomy.html">Anatomy</a></li>
+      <li><a href="authoring.html">Authoring</a></li>
+      <li><a href="#blocks">Examples</a></li>
       <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
     </ul>
   </nav>
@@ -32,15 +32,15 @@
   <section class="hero">
     <div class="hero-grid">
       <div class="hero-text">
-        <span class="hero-tag">Feature blueprints for Shopify apps &amp; primitives</span>
-        <h1>Skip the boilerplate.<br/><em>Ship</em> the feature.</h1>
+        <span class="hero-tag">A manifesto for spec-driven agentic development</span>
+        <h1>A spec is a complete feature.<br/><em>Agents</em> are how it ships.</h1>
         <p class="tagline">
-          Each blueprint is the complete spec of one feature &mdash; data model, flows,
-          security threats, acceptance checks. Claude Code reads the spec, adapts it to
-          your stack, writes the code, runs the checks. You review the diff and ship.
+          A package locks in choices the author made &mdash; framework, ORM, dialect,
+          runtime. A spec describes what the feature does and lets the agent decide
+          how. Fitting your stack, not fighting it.
         </p>
         <div class="ctas">
-          <a class="btn primary" href="#blocks">Browse 11 blocks</a>
+          <a class="btn primary" href="#principles">Read the manifesto</a>
           <a class="btn" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">View on GitHub</a>
         </div>
       </div>
@@ -65,105 +65,132 @@
     </div>
   </section>
 
-  <section id="example">
+  <section id="principles">
     <div class="section-rule">
-      <span class="section-label">Example</span>
-      <span class="section-line"></span>
-    </div>
-    <div class="example-spread">
-      <div class="example-text">
-        <h2>One block, one feature.</h2>
-        <p>
-          Take <a href="blocks/auth.shopify-oauth.html"><code>auth.shopify-oauth</code></a> &mdash;
-          the install handshake every Shopify app must implement. Drop the spec on Claude Code.
-          It picks your SQL dialect, your framework, your secrets vault. Writes the install
-          handler, callback, nonce store, token encryption, uninstall hook. Runs the
-          acceptance checks until green.
-        </p>
-        <p style="margin-top: 16px;">
-          <strong>~45 minutes from spec to merged PR.</strong>
-        </p>
-      </div>
-      <aside class="title-block example-stats" aria-label="auth.shopify-oauth at a glance">
-        <div class="tb-row"><span class="tb-label">Files</span><span class="tb-value">9</span></div>
-        <div class="tb-row"><span class="tb-label">Tables</span><span class="tb-value">2</span></div>
-        <div class="tb-row"><span class="tb-label">Scenarios</span><span class="tb-value">19</span></div>
-        <div class="tb-row"><span class="tb-label">Threats</span><span class="tb-value">5</span></div>
-        <div class="tb-row"><span class="tb-label">Checks</span><span class="tb-value">36</span></div>
-      </aside>
-    </div>
-  </section>
-
-  <section id="philosophy">
-    <div class="section-rule">
-      <span class="section-label">Why a spec, not a library</span>
+      <span class="section-label">The Manifesto</span>
       <span class="section-line"></span>
     </div>
     <div class="section-header">
-      <h2>Ship the <em>spec</em>, not the lib.</h2>
-      <p>
-        A code library locks in your framework, your ORM, your auth choice. The minute the
-        stack diverges &mdash; fork, patch, maintain. Now agents can read your codebase,
-        run your build, and write code that fits. So ship knowledge, not code.
-      </p>
+      <h2>Six principles.</h2>
+      <p>What spec-driven agentic development actually requires &mdash; not aspirations, working discipline.</p>
     </div>
 
-    <div class="compare">
+    <ol class="principles">
+      <li class="principle">
+        <span class="principle-num">01</span>
+        <h3 class="principle-title">Knowledge, not code.</h3>
+        <p>A library locks framework, ORM, dialect, runtime. A spec describes only what is invariant &mdash; data model, flows, threats, acceptance. The agent decides the rest. When your stack changes, the spec doesn&rsquo;t.</p>
+      </li>
+      <li class="principle">
+        <span class="principle-num">02</span>
+        <h3 class="principle-title">Stack-agnostic by discipline.</h3>
+        <p>Every spec is structured in three layers: <strong>semantic</strong> (what + why, concrete), <strong>mechanism</strong> (how, abstract &mdash; agent decides), <strong>illustrative</strong> (reference snippets, concrete but marked). A spec passes when it implements correctly on three different SQL-family stacks without spec changes.</p>
+      </li>
+      <li class="principle">
+        <span class="principle-num">03</span>
+        <h3 class="principle-title">Carve-outs where the world dictates.</h3>
+        <p>External protocols &mdash; Shopify HMAC, JWT claim names, callback parameter ordering &mdash; are concrete in the spec because the merchant doesn&rsquo;t get to choose them. Everything else stays abstract. The discriminator is simple: <em>who decides?</em></p>
+      </li>
+      <li class="principle">
+        <span class="principle-num">04</span>
+        <h3 class="principle-title">Verifiable, not trustworthy.</h3>
+        <p>Every block ships an <code>acceptance.md</code> checklist the agent runs after implementation. Correctness comes from passing the checks, not from the spec author being clever. Trust the test, not the author.</p>
+      </li>
+      <li class="principle">
+        <span class="principle-num">05</span>
+        <h3 class="principle-title">Composable through prerequisites.</h3>
+        <p>Blocks declare what they depend on, and reverse-lookup tells what depends on them. Composition becomes a graph the agent can plan around &mdash; not a configuration puzzle the developer has to solve at integration time.</p>
+      </li>
+      <li class="principle">
+        <span class="principle-num">06</span>
+        <h3 class="principle-title">Living, no versioning.</h3>
+        <p>The spec is markdown, not a package. Every iteration improves it &mdash; sharper threats, better fixtures, tighter acceptance. No semver. No deprecation. The agent re-reads the latest each time it implements.</p>
+      </li>
+    </ol>
+
+    <div class="compare" style="margin-top: 64px;">
       <div class="card old">
-        <h3>Pre-built code <span class="tag">old paradigm</span></h3>
+        <h3>The package <span class="tag">workaround</span></h3>
         <ul>
-          <li>Rigid &mdash; only customizable through config JSON</li>
-          <li>Fits one fixed runtime; merchant must match it</li>
-          <li>Bugs live inside the pre-built package &mdash; hard to debug</li>
-          <li>New feature requires writing new code from scratch</li>
-          <li>Surface area shrinks as integrations multiply</li>
-          <li>Fixed ceiling: capability equals what was written</li>
+          <li>Locks framework, ORM, runtime &mdash; fits one stack</li>
+          <li>Customization only through config the author imagined</li>
+          <li>Bugs live inside the dependency &mdash; fork or wait</li>
+          <li>New feature = write new code from scratch</li>
+          <li>Ceiling = what was already written</li>
         </ul>
       </div>
       <div class="card new">
-        <h3>Blueprint <span class="tag">new paradigm</span></h3>
+        <h3>The spec <span class="tag">paradigm</span></h3>
         <ul>
-          <li>Flexible &mdash; the agent adapts the entire implementation</li>
-          <li>Fits any stack: SQL family, frameworks, runtimes</li>
-          <li>Bugs are fixed in-place inside the merchant&rsquo;s codebase</li>
-          <li>New feature is a new spec &mdash; markdown, not code</li>
-          <li>Surface area grows with each iteration of the agent</li>
+          <li>Agent adapts the implementation to any SQL-family stack</li>
+          <li>Customization through interview &mdash; plain-language decisions</li>
+          <li>Bugs fixed in-place, in your codebase, by you or the agent</li>
+          <li>New feature = a new markdown file</li>
           <li>No ceiling: better models &times; better specs &times; better tests</li>
         </ul>
       </div>
     </div>
-
   </section>
 
-  <section id="consume">
+  <section id="why-now">
     <div class="section-rule">
-      <span class="section-label">Workflow</span>
+      <span class="section-label">Why now</span>
       <span class="section-line"></span>
     </div>
     <div class="section-header">
-      <h2>How a block <em>becomes</em> code.</h2>
+      <h2>Agents changed the cost equation.</h2>
       <p>
-        Claude Code runs in your project with full filesystem access. It treats every block
-        as a reference &mdash; reads it, understands your stack, adapts, implements, verifies.
+        For forty years we shipped code packages because that&rsquo;s what tooling allowed:
+        install, configure, hope it fits. The work of <em>translating a feature into code
+        that fits your stack</em> was expensive human work, so we cached it inside packages.
+      </p>
+      <p style="margin-top: 16px;">
+        Claude Code reads your filesystem, runs your build, follows your conventions,
+        iterates until tests pass. Translation is now cheap machine work. So the human job
+        moves up the stack: write the spec, let the agent translate. The package was always
+        a workaround for tools that couldn&rsquo;t read code. We have those tools now.
       </p>
     </div>
-    <div class="flow-steps">
-      <div class="flow-step"><div class="step-num">STEP 01</div><h4>Discover</h4><p>Match your request against the library by tag, category, and overview.</p></div>
-      <div class="flow-step"><div class="step-num">STEP 02</div><h4>Configure</h4><p>Ask the few business decisions that change behavior &mdash; currency, plan tiers, scopes. You answer in plain language.</p></div>
-      <div class="flow-step"><div class="step-num">STEP 03</div><h4>Clone</h4><p>Copy the block into your project as a customized blueprint &mdash; the source library stays untouched.</p></div>
-      <div class="flow-step"><div class="step-num">STEP 04</div><h4>Implement</h4><p>Translate the spec into code that follows your conventions and framework choices.</p></div>
-      <div class="flow-step"><div class="step-num">STEP 05</div><h4>Verify</h4><p>Run the acceptance checklist: migrations, tests, type-check, lint, security mitigations.</p></div>
+  </section>
+
+  <section id="explore">
+    <div class="section-rule">
+      <span class="section-label">The discipline</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="section-header">
+      <h2>Want to write your own?</h2>
+      <p>Two pages cover what a block looks like and how to author one that survives the 3-stack test.</p>
+    </div>
+
+    <div class="cta-grid">
+      <a class="cta-card" href="anatomy.html">
+        <span class="cta-num">A</span>
+        <div class="cta-body">
+          <h3>Anatomy of a block</h3>
+          <p>The folder layout, file contracts, and how Claude Code consumes a block end-to-end.</p>
+          <span class="cta-link">Read &rarr;</span>
+        </div>
+      </a>
+      <a class="cta-card" href="authoring.html">
+        <span class="cta-num">B</span>
+        <div class="cta-body">
+          <h3>Authoring discipline</h3>
+          <p>The 3-layer abstraction rule, logical types for SQL portability, external-protocol carve-outs, anti-patterns.</p>
+          <span class="cta-link">Read &rarr;</span>
+        </div>
+      </a>
     </div>
   </section>
 
   <section id="blocks">
     <div class="section-rule">
-      <span class="section-label">The library</span>
+      <span class="section-label">Examples in the wild</span>
       <span class="section-line"></span>
     </div>
     <div class="section-header">
-      <h2>11 blocks. <em>Ready to ship.</em></h2>
-      <p>Click any block to open its spec page: problem, dependencies, data model, and direct links to every file.</p>
+      <h2>11 blocks demonstrate the discipline.</h2>
+      <p>Reference implementations &mdash; not a closed catalog. Each one is the complete spec of a real feature, written to pass the 3-stack test.</p>
     </div>
 
     <div class="filter-bar" role="tablist" aria-label="Filter blocks by category"><button class="filter-pill active" data-cat="all">All<span class="count">11</span></button><button class="filter-pill" data-cat="auth">auth<span class="count">3</span></button><button class="filter-pill" data-cat="billing">billing<span class="count">1</span></button><button class="filter-pill" data-cat="compliance">compliance<span class="count">1</span></button><button class="filter-pill" data-cat="data">data<span class="count">1</span></button><button class="filter-pill" data-cat="integration">integration<span class="count">1</span></button><button class="filter-pill" data-cat="messaging">messaging<span class="count">1</span></button><button class="filter-pill" data-cat="operations">operations<span class="count">1</span></button><button class="filter-pill" data-cat="ugc">ugc<span class="count">1</span></button><button class="filter-pill" data-cat="webhooks">webhooks<span class="count">1</span></button></div>
@@ -404,42 +431,7 @@
     <div class="empty-state hidden" id="empty-state">No blocks match this category yet.</div>
   </section>
 
-  <section id="layers">
-    <div class="section-rule">
-      <span class="section-label">For block authors</span>
-      <span class="section-line"></span>
-    </div>
-    <div class="section-header">
-      <h2>Three layers in every spec.</h2>
-      <p>
-        Writing a new block? Every spec follows a 3-layer abstraction discipline so it stays stack-agnostic &mdash;
-        the agent can implement it on any SQL family, any framework, any runtime, without spec changes.
-      </p>
-    </div>
-    <div class="layers">
-      <div class="layer">
-        <div class="layer-num">L1 &mdash; SEMANTIC</div>
-        <h4>What &amp; Why</h4>
-        <p>Data model, sequence flows, state machines, business invariants, external protocol contracts, threats and mitigations.</p>
-        <span class="verdict">Maximally concrete</span>
-      </div>
-      <div class="layer">
-        <div class="layer-num">L2 &mdash; MECHANISM</div>
-        <h4>How</h4>
-        <p>Framework, ORM, SQL dialect, test runner, error-handling style, file convention. The agent picks all of this.</p>
-        <span class="verdict">Abstract &mdash; agent decides</span>
-      </div>
-      <div class="layer">
-        <div class="layer-num">L3 &mdash; ILLUSTRATIVE</div>
-        <h4>Reference</h4>
-        <p>Code snippets &le;30 lines, each tagged with <code>PATTERN</code> / <code>PURPOSE</code> / <code>REFERENCE</code> / <code>ADAPT</code> markers.</p>
-        <span class="verdict">Concrete but marked</span>
-      </div>
-    </div>
-    <p style="margin-top: 24px;">
-      Full authoring rules: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md &rarr;</a>
-    </p>
-  </section>
+
 </main>
 
 <footer class="site">

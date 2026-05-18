@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anatomy of a block — Primitive Block Library</title>
+<meta name="description" content="A block is a folder. Inside: README, security threats, Gherkin scenarios, fixtures, acceptance checklist. The conventions that keep specs portable across stacks.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="./" class="brand">
+      <span class="brand-mark">§</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#principles">Manifesto</a></li>
+      <li><a href="anatomy.html">Anatomy</a></li>
+      <li><a href="authoring.html">Authoring</a></li>
+      <li><a href="#blocks">Examples</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <section class="hero hero-short">
+    <div class="hero-text">
+      <span class="hero-tag">Page A &middot; Block structure</span>
+      <h1>A block is<br/>a <em>folder.</em></h1>
+      <p class="tagline">
+        Inside: a README defining the feature, one or more Gherkin scenarios, a security
+        threat model, an acceptance checklist, optional fixtures. Conventions are loose;
+        contracts are real &mdash; Claude Code reads each file for a different purpose.
+      </p>
+    </div>
+  </section>
+
+  <section id="tree">
+    <div class="section-rule">
+      <span class="section-label">Folder layout</span>
+      <span class="section-line"></span>
+    </div>
+    <pre><code>primitive-blocks-specs/
+├── INTERFACE.md                       block interface (what counts as a block)
+└── {category}/
+    └── {feature-name}/                each block = one folder
+        ├── README.md                  identity, overview, data model
+        ├── frontend.md                optional: frontend guide
+        ├── backend.md                 optional: backend guide
+        ├── security.md                threat model + mitigations
+        ├── *.feature                  Gherkin scenarios (BDD)
+        ├── fixtures/                  test data, mock responses
+        │   └── *.json
+        └── acceptance.md              verification checklist</code></pre>
+  </section>
+
+  <section id="contracts">
+    <div class="section-rule">
+      <span class="section-label">File contracts</span>
+      <span class="section-line"></span>
+    </div>
+    <dl class="file-contracts">
+      <div>
+        <dt><code>README.md</code></dt>
+        <dd>Identity (id, name, version, category, tags), overview (problem statement, user stories), and the data model &mdash; logical tables and their semantics. The first file the agent reads.</dd>
+      </div>
+      <div>
+        <dt><code>backend.md</code> &middot; <code>frontend.md</code></dt>
+        <dd>Per-side implementation guides &mdash; patterns, sequence flows, integration points. Optional but recommended for non-trivial blocks.</dd>
+      </div>
+      <div>
+        <dt><code>security.md</code></dt>
+        <dd>Threats catalogued as <code>### N. Name</code> with an <code>**Impact**</code> severity line and mitigation <em>logic</em> &mdash; not code. The agent translates mitigations into your stack.</dd>
+      </div>
+      <div>
+        <dt><code>*.feature</code></dt>
+        <dd>Gherkin scenarios &mdash; happy paths, errors, edges. Each scenario is one acceptance behavior in plain English. Tags (<code>@happy</code>, <code>@error</code>, <code>@edge</code>) classify intent.</dd>
+      </div>
+      <div>
+        <dt><code>fixtures/</code></dt>
+        <dd>Seed data, mocked external responses, sample payloads. JSON files referenced by scenarios.</dd>
+      </div>
+      <div>
+        <dt><code>acceptance.md</code></dt>
+        <dd>The done-checklist. Sections grouped by concern (Database, API, Security, &hellip;) each with <code>- [ ]</code> items. The agent runs every check after implementation.</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section id="workflow">
+    <div class="section-rule">
+      <span class="section-label">How a block becomes code</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="section-header">
+      <p>Claude Code runs in your project with full filesystem access. Five steps from spec to merged PR.</p>
+    </div>
+    <div class="flow-steps">
+      <div class="flow-step"><div class="step-num">STEP 01</div><h4>Discover</h4><p>Match your request against the library by tag, category, and overview.</p></div>
+      <div class="flow-step"><div class="step-num">STEP 02</div><h4>Configure</h4><p>Ask the few business decisions that change behavior &mdash; currency, plan tiers, scopes. You answer in plain language.</p></div>
+      <div class="flow-step"><div class="step-num">STEP 03</div><h4>Clone</h4><p>Copy the block into your project as a customized blueprint &mdash; the source stays untouched.</p></div>
+      <div class="flow-step"><div class="step-num">STEP 04</div><h4>Implement</h4><p>Translate the spec into code that follows your conventions and framework choices.</p></div>
+      <div class="flow-step"><div class="step-num">STEP 05</div><h4>Verify</h4><p>Run the acceptance checklist: migrations, tests, type-check, lint, security mitigations.</p></div>
+    </div>
+  </section>
+
+  <section id="walk">
+    <div class="section-rule">
+      <span class="section-label">A real block</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="section-header">
+      <h2>auth.shopify-oauth, opened.</h2>
+      <p>The install-handshake block every Shopify app must implement. Nine files; each does one thing.</p>
+    </div>
+    <pre><code>auth/shopify-oauth/
+├── README.md                       shops + oauth_nonces tables, install flow
+├── backend.md                      Express/Hono/Fastify-agnostic handler patterns
+├── security.md                     5 threats: CSRF, shop spoofing, code reuse, …
+├── install-flow.feature            scenarios for install
+├── uninstall.feature               scenarios for app/shop uninstall webhook
+├── security.feature                attack scenarios with expected rejections
+├── fixtures/
+│   ├── oauth-callback.json
+│   └── shop-records.json
+└── acceptance.md                   36 checks: Database, Install, Uninstall, Security, …</code></pre>
+    <p style="margin-top:24px;">Drop the block on Claude Code &rarr; it picks your SQL dialect, your framework, writes the install handler, callback, nonce store, token encryption, uninstall hook. Runs the 36 checks until green. <strong>~45 minutes from spec to merged PR.</strong></p>
+    <p style="margin-top:12px;">Read the full <a href="blocks/auth.shopify-oauth.html">auth.shopify-oauth spec &rarr;</a></p>
+  </section>
+
+  <section id="next">
+    <div class="section-rule">
+      <span class="section-label">Next</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="cta-grid">
+      <a class="cta-card" href="authoring.html">
+        <span class="cta-num">B</span>
+        <div class="cta-body">
+          <h3>Authoring discipline</h3>
+          <p>The 3-layer rule, logical types, external-protocol carve-outs, anti-patterns. How to write a block that survives the 3-stack test.</p>
+          <span class="cta-link">Read &rarr;</span>
+        </div>
+      </a>
+      <a class="cta-card" href="./#blocks">
+        <span class="cta-num">&rarr;</span>
+        <div class="cta-body">
+          <h3>Browse the examples</h3>
+          <p>11 reference blocks demonstrating the discipline &mdash; Shopify OAuth, billing, GDPR, transactional email, product reviews.</p>
+          <span class="cta-link">Examples &rarr;</span>
+        </div>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
+    </p>
+  </div>
+</footer>
+</body>
+</html>

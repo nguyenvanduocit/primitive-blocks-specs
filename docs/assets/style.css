@@ -104,7 +104,18 @@ code {
   border: 1px solid var(--rule);
   color: var(--ink);
 }
-pre code { background: transparent; padding: 0; border: 0; }
+pre {
+  background: var(--paper-2);
+  border: 1px solid var(--rule-2);
+  padding: 20px 24px;
+  overflow-x: auto;
+  line-height: 1.55;
+  font-size: 0.84rem;
+  color: var(--ink);
+  margin: 0;
+  white-space: pre;
+}
+pre code { background: transparent; padding: 0; border: 0; font-size: inherit; }
 
 h1, h2, h3, h4 {
   font-family: var(--display);
@@ -453,6 +464,260 @@ section {
 }
 .example-text a:hover code { background: var(--cobalt); color: var(--paper); }
 .example-stats { box-shadow: 4px 4px 0 var(--ink); }
+
+/* ====================== HERO VARIANTS ====================== */
+.hero.hero-short {
+  padding: 64px 0 56px;
+}
+.hero.hero-short h1 {
+  font-size: clamp(2.6rem, 5.6vw, 4.4rem);
+}
+
+/* ====================== FILE CONTRACTS (Anatomy) ====================== */
+.file-contracts {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+.file-contracts > div {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 28px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--rule);
+  align-items: baseline;
+}
+.file-contracts > div:first-child { padding-top: 0; }
+.file-contracts > div:last-child { border-bottom: 0; }
+.file-contracts dt { margin: 0; }
+.file-contracts dt code {
+  font-size: 0.88rem;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+.file-contracts dd {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.94rem;
+  line-height: 1.6;
+}
+.file-contracts dd em {
+  font-style: italic;
+  font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+  color: var(--ink);
+}
+@media (max-width: 700px) {
+  .file-contracts > div { grid-template-columns: 1fr; gap: 6px; }
+}
+
+/* ====================== SPEC TABLE (Authoring) ====================== */
+.spec-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin: 0;
+}
+.spec-table th, .spec-table td {
+  text-align: left;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.spec-table thead th {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+  border-bottom: 1.5px solid var(--ink);
+  padding-bottom: 12px;
+  background: var(--paper-2);
+}
+.spec-table tbody tr:last-child td { border-bottom: 1.5px solid var(--ink); }
+.spec-table tbody td:first-child {
+  white-space: nowrap;
+}
+.spec-table code {
+  font-size: 0.82rem;
+  padding: 1px 5px;
+}
+.spec-table strong { font-weight: 600; }
+@media (max-width: 700px) {
+  .spec-table { font-size: 0.82rem; }
+  .spec-table th, .spec-table td { padding: 10px 10px; }
+}
+
+/* ====================== ANTI-PATTERNS GRID ====================== */
+.anti-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 700px) { .anti-grid { grid-template-columns: 1fr; } }
+.anti-card {
+  border: 1px solid var(--rule-2);
+  border-left-width: 4px;
+  border-left-color: var(--oxide);
+  background: var(--paper);
+  padding: 22px 24px 20px;
+}
+.anti-card h4 {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  font-weight: 500;
+  font-variation-settings: "opsz" 144, "SOFT" 60, "WONK" 0;
+  letter-spacing: -0.015em;
+  color: var(--oxide);
+  margin: 0 0 12px;
+  line-height: 1.2;
+}
+.anti-card p {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  margin: 0 0 12px;
+  line-height: 1.55;
+}
+.anti-card p:last-child { margin-bottom: 0; }
+.anti-card p em {
+  font-style: italic;
+  font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+  color: var(--ink);
+}
+.anti-card .anti-fix {
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+  color: var(--ink);
+}
+.anti-card .anti-fix strong { color: var(--verdict); }
+
+/* ====================== PRINCIPLES (Manifesto cards) ====================== */
+.principles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 800px) { .principles { grid-template-columns: 1fr; gap: 18px; } }
+.principle {
+  position: relative;
+  padding: 32px 28px 28px;
+  border: 1px solid var(--rule-2);
+  background: var(--paper);
+}
+.principle .principle-num {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--cobalt);
+  letter-spacing: 0.12em;
+  display: block;
+  margin-bottom: 14px;
+}
+.principle .principle-title {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 500;
+  font-variation-settings: "opsz" 144, "SOFT" 60, "WONK" 0;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0 0 12px;
+  color: var(--ink);
+}
+.principle p {
+  font-size: 0.95rem;
+  color: var(--ink-2);
+  line-height: 1.6;
+  margin: 0;
+}
+.principle p strong { color: var(--ink); font-weight: 600; }
+.principle p em {
+  font-style: italic;
+  font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+  color: var(--cobalt);
+}
+.principle code {
+  font-size: 0.84em;
+  padding: 1px 5px;
+}
+
+/* ====================== CTA GRID (links to anatomy / authoring) ====================== */
+.cta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 700px) { .cta-grid { grid-template-columns: 1fr; } }
+.cta-card {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 24px;
+  align-items: start;
+  padding: 28px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  text-decoration: none;
+  color: var(--ink);
+  transition: all 0.18s ease;
+}
+.cta-card:hover {
+  background: var(--ink);
+  color: var(--paper);
+  text-decoration: none;
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--cobalt);
+}
+.cta-card:hover .cta-num { color: var(--paper); border-color: var(--paper); }
+.cta-card:hover .cta-link { color: var(--paper); }
+.cta-card:hover .cta-body p { color: var(--paper); opacity: 0.8; }
+.cta-card .cta-num {
+  font-family: var(--display);
+  font-size: 2rem;
+  font-weight: 500;
+  font-variation-settings: "opsz" 144, "SOFT" 40, "WONK" 0;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--cobalt);
+  border: 1.5px solid var(--cobalt);
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  transition: all 0.18s ease;
+}
+.cta-card .cta-body h3 {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  font-weight: 500;
+  font-variation-settings: "opsz" 144, "SOFT" 60, "WONK" 0;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+  color: inherit;
+  line-height: 1.15;
+}
+.cta-card .cta-body p {
+  font-size: 0.92rem;
+  color: var(--ink-2);
+  line-height: 1.55;
+  margin: 0 0 14px;
+}
+.cta-card .cta-link {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--cobalt);
+}
 
 /* ====================== COMPARE CARDS ====================== */
 .compare {

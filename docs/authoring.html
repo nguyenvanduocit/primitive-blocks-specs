@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Authoring discipline — Primitive Block Library</title>
+<meta name="description" content="Three layers in every spec. Logical types for SQL portability. External-protocol carve-outs. The 3-stack adaptability test. How to write a block that survives.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="./" class="brand">
+      <span class="brand-mark">§</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#principles">Manifesto</a></li>
+      <li><a href="anatomy.html">Anatomy</a></li>
+      <li><a href="authoring.html">Authoring</a></li>
+      <li><a href="#blocks">Examples</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <section class="hero hero-short">
+    <div class="hero-text">
+      <span class="hero-tag">Page B &middot; Spec discipline</span>
+      <h1>Three layers,<br/>one <em>test.</em></h1>
+      <p class="tagline">
+        A spec describes <strong>what</strong> and <strong>why</strong>, not <strong>how</strong>.
+        The agent picks the how. A spec is at the right level of abstraction when Claude Code can
+        implement it correctly on three different SQL-family stacks without spec changes.
+      </p>
+    </div>
+  </section>
+
+  <section id="core">
+    <div class="section-rule">
+      <span class="section-label">Core principle</span>
+      <span class="section-line"></span>
+    </div>
+    <table class="spec-table">
+      <thead>
+        <tr><th>Category</th><th>Definition</th><th>Who decides?</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>WHAT</strong></td>
+          <td>Behavior, contract, invariant &mdash; what must be true regardless of stack.</td>
+          <td>Domain + external party</td>
+        </tr>
+        <tr>
+          <td><strong>WHY</strong></td>
+          <td>Reason the constraint exists &mdash; threat model, business rule.</td>
+          <td>Spec author</td>
+        </tr>
+        <tr>
+          <td><strong>HOW</strong></td>
+          <td>Framework, syntax, ORM, file structure.</td>
+          <td>Merchant project (through Claude Code)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin-top:20px;"><strong>Self-test:</strong> read a paragraph of spec and ask &mdash; <em>does this prescribe behavior, or does it prescribe how to write code?</em> If the latter, it&rsquo;s too HOW. Abstract it up.</p>
+  </section>
+
+  <section id="layers">
+    <div class="section-rule">
+      <span class="section-label">Three layers</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-num">L1 &mdash; SEMANTIC</div>
+        <h4>What &amp; Why</h4>
+        <p>Data model with logical types, sequence flows, state machines, business invariants, external protocol contracts, threats and mitigation <em>logic</em>, acceptance criteria.</p>
+        <span class="verdict">Maximally concrete</span>
+      </div>
+      <div class="layer">
+        <div class="layer-num">L2 &mdash; MECHANISM</div>
+        <h4>How</h4>
+        <p>Framework, ORM, SQL dialect, test runner, error-handling style, file convention, naming convention at code level. The agent picks all of this from your project context.</p>
+        <span class="verdict">Abstract &mdash; agent decides</span>
+      </div>
+      <div class="layer">
+        <div class="layer-num">L3 &mdash; ILLUSTRATIVE</div>
+        <h4>Reference</h4>
+        <p>Code snippets &le;30 lines, each tagged with <code>PATTERN</code> / <code>PURPOSE</code> / <code>REFERENCE</code> / <code>ADAPT</code> markers. Pattern not copy-paste.</p>
+        <span class="verdict">Concrete but marked</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="carveouts">
+    <div class="section-rule">
+      <span class="section-label">External protocol carve-outs</span>
+      <span class="section-line"></span>
+    </div>
+    <p style="margin-bottom:20px;">Things dictated by an external party must be <strong>concrete</strong>, because the merchant doesn&rsquo;t get to choose them. The discriminator: <em>who decides?</em></p>
+    <table class="spec-table">
+      <thead>
+        <tr><th>Kind</th><th>Example</th><th>Spec must be</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Crypto algorithm dictated by protocol</td><td><code>HMAC-SHA256</code> for Shopify webhook</td><td><strong>Concrete</strong> (Shopify decides)</td></tr>
+        <tr><td>Crypto algorithm freely chosen</td><td>&ldquo;encrypt token at rest&rdquo;</td><td>Abstract (merchant picks AES-GCM vs ChaCha20)</td></tr>
+        <tr><td>JWT claim names</td><td><code>iss</code>, <code>dest</code>, <code>aud</code> from App Bridge</td><td><strong>Concrete</strong> (Shopify decides)</td></tr>
+        <tr><td>JWT verification library</td><td><code>jose</code> vs <code>jsonwebtoken</code></td><td>Abstract (merchant picks)</td></tr>
+        <tr><td>HTTP header names</td><td><code>X-Shopify-Hmac-Sha256</code> (case-sensitive)</td><td><strong>Concrete</strong> (Shopify decides)</td></tr>
+        <tr><td>OAuth callback param ordering</td><td>&ldquo;sort params alphabetically before HMAC&rdquo;</td><td><strong>Concrete</strong> (Shopify rule)</td></tr>
+        <tr><td>Internal job queue</td><td>BullMQ vs Inngest vs PgQueue</td><td>Abstract (merchant picks)</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:20px;"><strong>Anti-pattern:</strong> writing &ldquo;verify webhook using a cryptographic hash&rdquo; &mdash; too abstract; Claude Code could pick SHA-1 or MD5 and break the contract. <strong>Correct:</strong> &ldquo;verify webhook using HMAC-SHA256 over the raw body, compare base64 against header <code>X-Shopify-Hmac-Sha256</code> using constant-time comparison.&rdquo;</p>
+  </section>
+
+  <section id="types">
+    <div class="section-rule">
+      <span class="section-label">Logical types</span>
+      <span class="section-line"></span>
+    </div>
+    <p style="margin-bottom:20px;">Data-model columns use <strong>logical types</strong>, not dialect-specific SQL. Claude Code resolves them to native types per the merchant&rsquo;s database (Postgres, MySQL, SQLite). A small sample:</p>
+    <table class="spec-table">
+      <thead>
+        <tr><th>Logical type</th><th>Postgres</th><th>MySQL</th><th>SQLite</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>id</code></td><td><code>UUID PRIMARY KEY</code></td><td><code>CHAR(36) PRIMARY KEY</code></td><td><code>TEXT PRIMARY KEY</code></td></tr>
+        <tr><td><code>text</code></td><td><code>TEXT</code></td><td><code>TEXT</code></td><td><code>TEXT</code></td></tr>
+        <tr><td><code>text(N)</code></td><td><code>VARCHAR(N)</code></td><td><code>VARCHAR(N)</code></td><td><code>TEXT</code></td></tr>
+        <tr><td><code>int</code></td><td><code>INTEGER</code></td><td><code>INT</code></td><td><code>INTEGER</code></td></tr>
+        <tr><td><code>bigint</code></td><td><code>BIGINT</code></td><td><code>BIGINT</code></td><td><code>INTEGER</code></td></tr>
+        <tr><td><code>decimal(p,s)</code></td><td><code>NUMERIC(p,s)</code></td><td><code>DECIMAL(p,s)</code></td><td><code>NUMERIC(p,s)</code></td></tr>
+        <tr><td><code>bool</code></td><td><code>BOOLEAN</code></td><td><code>TINYINT(1)</code></td><td><code>INTEGER</code></td></tr>
+        <tr><td><code>json</code></td><td><code>JSONB</code></td><td><code>JSON</code></td><td><code>TEXT</code> (json-encoded)</td></tr>
+        <tr><td><code>timestamp</code></td><td><code>TIMESTAMPTZ</code></td><td><code>DATETIME</code></td><td><code>TEXT</code> (ISO 8601)</td></tr>
+        <tr><td><code>enum&lt;a|b|c&gt;</code></td><td><code>TEXT CHECK (col IN (...))</code></td><td><code>ENUM(...)</code></td><td><code>TEXT CHECK (col IN (...))</code></td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:20px;">Full mapping in <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md#5-logical-types-table-canonical" target="_blank" rel="noopener">SPEC_GUIDELINES &sect; 5</a>.</p>
+  </section>
+
+  <section id="stack-test">
+    <div class="section-rule">
+      <span class="section-label">The 3-stack test</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="section-header">
+      <h2>One spec, three stacks, no changes.</h2>
+      <p>A spec is at the right abstraction level when Claude Code implements it correctly &mdash; passes the full <code>acceptance.md</code> &mdash; on three different SQL-family stacks <strong>without spec changes</strong>.</p>
+    </div>
+    <table class="spec-table">
+      <thead>
+        <tr><th>Stack</th><th>Runtime</th><th>Framework</th><th>DB</th><th>ORM</th><th>Test</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>A</strong></td><td>Node 20</td><td>Express</td><td>Postgres 16</td><td>Drizzle</td><td>Vitest</td></tr>
+        <tr><td><strong>B</strong></td><td>Bun 1.x</td><td>Hono</td><td>SQLite</td><td>raw SQL</td><td>Bun test</td></tr>
+        <tr><td><strong>C</strong></td><td>Deno 2.x</td><td>Oak</td><td>Postgres 16</td><td>Prisma</td><td>Deno test</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:20px;">NoSQL (Mongo, DynamoDB, Firestore) is explicit non-goal &mdash; documents and SQL diverge too much to derive from a single logical-types table.</p>
+  </section>
+
+  <section id="anti-patterns">
+    <div class="section-rule">
+      <span class="section-label">Anti-patterns</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="anti-grid">
+      <div class="anti-card bad">
+        <h4>&times; Prescribing the framework</h4>
+        <p><em>&ldquo;Add an Express middleware that&hellip;&rdquo;</em> &mdash; binds the spec to one framework.</p>
+        <p class="anti-fix"><strong>Instead:</strong> describe the behavior. <em>&ldquo;Verify HMAC before the handler reads the body. Reject with 401 on mismatch.&rdquo;</em></p>
+      </div>
+      <div class="anti-card bad">
+        <h4>&times; Vague crypto</h4>
+        <p><em>&ldquo;Verify the webhook with a cryptographic hash.&rdquo;</em> &mdash; agent could pick MD5.</p>
+        <p class="anti-fix"><strong>Instead:</strong> name the algorithm. <em>&ldquo;HMAC-SHA256 over the raw body, base64-compared against <code>X-Shopify-Hmac-Sha256</code> with constant-time comparison.&rdquo;</em></p>
+      </div>
+      <div class="anti-card bad">
+        <h4>&times; Dialect-specific SQL</h4>
+        <p><em>&ldquo;<code>shop_domain VARCHAR(255) UNIQUE</code>&rdquo;</em> &mdash; MySQL-flavored, breaks on SQLite.</p>
+        <p class="anti-fix"><strong>Instead:</strong> use logical types. <em>&ldquo;<code>shop_domain: text UNIQUE</code> (resolves to VARCHAR/TEXT per dialect).&rdquo;</em></p>
+      </div>
+      <div class="anti-card bad">
+        <h4>&times; Implementation snippets without markers</h4>
+        <p>A 60-line TypeScript code block dropped in the spec with no <code>ADAPT</code> guidance.</p>
+        <p class="anti-fix"><strong>Instead:</strong> &le;30 lines with all 4 markers (<code>PATTERN</code> / <code>PURPOSE</code> / <code>REFERENCE</code> / <code>ADAPT</code>) &mdash; explicit what to adapt per stack.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="next">
+    <div class="section-rule">
+      <span class="section-label">Next</span>
+      <span class="section-line"></span>
+    </div>
+    <div class="cta-grid">
+      <a class="cta-card" href="anatomy.html">
+        <span class="cta-num">A</span>
+        <div class="cta-body">
+          <h3>Anatomy of a block</h3>
+          <p>The folder layout, file contracts, and how Claude Code consumes a block end-to-end.</p>
+          <span class="cta-link">Read &rarr;</span>
+        </div>
+      </a>
+      <a class="cta-card" href="./#blocks">
+        <span class="cta-num">&rarr;</span>
+        <div class="cta-body">
+          <h3>Browse the examples</h3>
+          <p>11 reference blocks &mdash; each passes the 3-stack test.</p>
+          <span class="cta-link">Examples &rarr;</span>
+        </div>
+      </a>
+    </div>
+    <p style="margin-top:32px;">Full authoring rules &mdash; the complete spec discipline, side-by-side examples, migration guide: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md &rarr;</a></p>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
+    </p>
+  </div>
+</footer>
+</body>
+</html>
