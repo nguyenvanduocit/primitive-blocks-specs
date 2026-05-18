@@ -912,43 +912,20 @@ section {
 
 /* ====================== SECTION RULE / HEADERS ====================== */
 .section-rule {
-  display: flex;
-  align-items: baseline;
-  gap: 18px;
-  padding-top: 22px;
-  border-top: 1.5px solid var(--ink);
-  margin-bottom: 44px;
-  flex-wrap: wrap;
-}
-.section-rule .section-num {
-  font-family: var(--mono);
-  font-weight: 600;
-  font-size: 0.82rem;
-  color: var(--ink);
-  letter-spacing: 0.06em;
+  margin-bottom: 28px;
 }
 .section-rule .section-label {
   font-family: var(--mono);
   font-weight: 600;
-  font-size: 0.7rem;
-  color: var(--ink-2);
-  letter-spacing: 0.2em;
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  letter-spacing: 0.22em;
   text-transform: uppercase;
 }
-.section-rule .section-line {
-  flex: 1;
-  min-width: 32px;
-  height: 1px;
-  background: var(--rule);
-  align-self: center;
-  margin-top: 2px;
-}
+.section-rule .section-line,
+.section-rule .section-num,
 .section-rule .section-sheet {
-  font-family: var(--mono);
-  font-size: 0.66rem;
-  color: var(--ink-4);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  display: none;
 }
 
 .section-header { margin-bottom: 56px; max-width: 820px; }
