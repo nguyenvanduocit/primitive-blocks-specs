@@ -1,0 +1,53 @@
+{
+  "_comment": "Seed data for the erasure tests: one user with data in every category of the erasure inventory, one bystander whose data must survive. All names, emails and ids are fictional.",
+  "_usage": "Use in delete-account.feature, partial-failure.feature and the registry completeness test. Table names are examples; map them to your schema.",
+
+  "seeded_user": {
+    "user": {
+      "id": "user-001",
+      "email": "alice@example.com",
+      "name": "Alice Johnson",
+      "google_id": "google-uid-112233"
+    },
+    "profile": {
+      "display_name": "Alice",
+      "friend_code": "ABCD2345",
+      "public_board": true,
+      "xp": 4200,
+      "level": 7,
+      "streak_days": 5,
+      "week_xp": 310
+    },
+    "study_snapshot": { "version": 1, "data": "{\"answers\":[],\"notes\":{}}" },
+    "friendships_owned": ["user-002"],
+    "friend_code_registry": [{ "code": "ABCD2345", "owner": "user-001" }],
+    "sessions": 2
+  },
+
+  "other_user": {
+    "_comment": "Bystander. Must be unchanged after user-001 is deleted, except that user-001 disappears from this user's friend list.",
+    "user": { "id": "user-002", "email": "bob@example.com", "name": "Bob Lee", "google_id": "google-uid-778899" },
+    "profile": { "display_name": "Bob", "friend_code": "WXYZ6789", "public_board": true, "xp": 900 },
+    "friendships_owned": ["user-001", "user-003"],
+    "friend_code_registry": [{ "code": "WXYZ6789", "owner": "user-002" }]
+  },
+
+  "friend_code_owned_by_someone_else": {
+    "_comment": "Corrupted-profile case: user-001's profile points at a code that belongs to user-002. The eraser must NOT delete it.",
+    "profile_friend_code": "WXYZ6789",
+    "registry_entry": { "code": "WXYZ6789", "owner": "user-002" }
+  },
+
+  "post_deletion_expectations": {
+    "_comment": "State after a completed deletion of user-001.",
+    "rows_owned_by_user_001": 0,
+    "users_row_exists": false,
+    "account_deletions_row_exists": false,
+    "leaderboard_contains_user_001": false,
+    "profile_by_id_user_001": "not_found",
+    "friend_code_lookup_ABCD2345": "not_found",
+    "user_002_friendships_owned": ["user-003"],
+    "user_002_profile_unchanged": true,
+    "retained_by_decision": ["on_device_content (default)", "purchase_processor_record", "backups_and_logs (period unknown)"]
+  }
+}

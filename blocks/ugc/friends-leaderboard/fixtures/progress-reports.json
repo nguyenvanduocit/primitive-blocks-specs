@@ -1,0 +1,61 @@
+{
+  "_comment": "Progress report fold vectors. Fixed clock now = 2026-10-21T12:00:00Z, current week_start_day 20745. Constants: BURST_XP 500, XP_PER_HOUR 2000, MAX_XP 1000000. cap = 500 + floor(hours since previous updated_at * 2000); credit = min(xp gain, cap); first report (stored xp 0 and answered 0) credits 0; a previous week_start_day starts the week base at 0.",
+  "now": "2026-10-21T12:00:00Z",
+  "current_week_start_day": 20745,
+  "valid": [
+    {
+      "name": "first-report-baseline",
+      "_comment": "History earned before signing in is not a week's work",
+      "prev": { "xp": 0, "level": 1, "answered": 0, "week_xp": 0, "week_start_day": 20745, "updated_at": "2026-10-20T12:00:00Z" },
+      "report": { "xp": 3000, "level": 4, "streak_days": 2, "answered": 60, "accuracy": 80 },
+      "after": { "xp": 3000, "level": 4, "answered": 60, "streak_days": 2, "accuracy": 80, "week_xp": 0, "week_start_day": 20745 }
+    },
+    {
+      "name": "gain-below-cap",
+      "_comment": "0.5 h since last write: cap = 500 + 1000 = 1500; gain 400 is credited in full",
+      "prev": { "xp": 1000, "level": 3, "answered": 20, "week_xp": 100, "week_start_day": 20745, "updated_at": "2026-10-21T11:30:00Z" },
+      "report": { "xp": 1400, "level": 3, "streak_days": 4, "answered": 28, "accuracy": 85 },
+      "after": { "xp": 1400, "level": 3, "answered": 28, "streak_days": 4, "accuracy": 85, "week_xp": 500, "week_start_day": 20745 }
+    },
+    {
+      "name": "gain-above-cap",
+      "_comment": "Gain 4000 but cap 1500: all-time XP takes the whole jump, the week gets the cap. No error.",
+      "prev": { "xp": 1000, "level": 3, "answered": 20, "week_xp": 0, "week_start_day": 20745, "updated_at": "2026-10-21T11:30:00Z" },
+      "report": { "xp": 5000, "level": 6, "streak_days": 4, "answered": 80, "accuracy": 85 },
+      "after": { "xp": 5000, "level": 6, "answered": 80, "streak_days": 4, "accuracy": 85, "week_xp": 1500, "week_start_day": 20745 }
+    },
+    {
+      "name": "one-minute-old-write",
+      "_comment": "1 minute: cap = 500 + floor(33.3) = 533",
+      "prev": { "xp": 2000, "level": 5, "answered": 40, "week_xp": 0, "week_start_day": 20745, "updated_at": "2026-10-21T11:59:00Z" },
+      "report": { "xp": 3000, "level": 5, "streak_days": 1, "answered": 50, "accuracy": 70 },
+      "after": { "xp": 3000, "level": 5, "answered": 50, "streak_days": 1, "accuracy": 70, "week_xp": 533, "week_start_day": 20745 }
+    },
+    {
+      "name": "lower-totals-are-ignored",
+      "_comment": "An older import reports less than the stored totals: xp, level, answered keep the stored value, credit is 0, streak and accuracy follow the report",
+      "prev": { "xp": 5000, "level": 6, "answered": 100, "week_xp": 700, "week_start_day": 20745, "updated_at": "2026-10-21T10:00:00Z" },
+      "report": { "xp": 4000, "level": 5, "streak_days": 2, "answered": 90, "accuracy": 60 },
+      "after": { "xp": 5000, "level": 6, "answered": 100, "streak_days": 2, "accuracy": 60, "week_xp": 700, "week_start_day": 20745 }
+    },
+    {
+      "name": "new-week-no-carry-over",
+      "_comment": "Previous write was in the week of day 20738 with week_xp 1500: base resets to 0 on the first report of the new week; 24 h elapsed so cap = 500 + 48000; gain 100",
+      "prev": { "xp": 8000, "level": 9, "answered": 150, "week_xp": 1500, "week_start_day": 20738, "updated_at": "2026-10-20T12:00:00Z" },
+      "report": { "xp": 8100, "level": 9, "streak_days": 10, "answered": 155, "accuracy": 90 },
+      "after": { "xp": 8100, "level": 9, "answered": 155, "streak_days": 10, "accuracy": 90, "week_xp": 100, "week_start_day": 20745 }
+    }
+  ],
+  "invalid": [
+    { "name": "negative-xp", "report": { "xp": -1, "level": 1, "streak_days": 0, "answered": 0, "accuracy": 0 }, "error": "invalid_stats" },
+    { "name": "xp-over-max", "report": { "xp": 1000001, "level": 1, "streak_days": 0, "answered": 0, "accuracy": 0 }, "error": "invalid_stats" },
+    { "name": "level-zero", "report": { "xp": 10, "level": 0, "streak_days": 0, "answered": 1, "accuracy": 50 }, "error": "invalid_stats" },
+    { "name": "level-over-max", "report": { "xp": 10, "level": 101, "streak_days": 0, "answered": 1, "accuracy": 50 }, "error": "invalid_stats" },
+    { "name": "streak-over-max", "report": { "xp": 10, "level": 1, "streak_days": 3651, "answered": 1, "accuracy": 50 }, "error": "invalid_stats" },
+    { "name": "accuracy-over-100", "report": { "xp": 10, "level": 1, "streak_days": 0, "answered": 1, "accuracy": 101 }, "error": "invalid_stats" },
+    { "name": "fractional-xp", "report": { "xp": 12.5, "level": 1, "streak_days": 0, "answered": 1, "accuracy": 50 }, "error": "invalid_stats" },
+    { "name": "string-xp", "report": { "xp": "100", "level": 1, "streak_days": 0, "answered": 1, "accuracy": 50 }, "error": "invalid_stats" },
+    { "name": "client-sent-week-xp", "_comment": "Weekly XP is never accepted from the client", "report": { "xp": 10, "level": 1, "streak_days": 0, "answered": 1, "accuracy": 50, "week_xp": 5000 }, "error": "invalid_stats" },
+    { "name": "client-sent-account-id", "report": { "xp": 10, "level": 1, "streak_days": 0, "answered": 1, "accuracy": 50, "account_id": "acc-other" }, "error": "invalid_stats" }
+  ]
+}

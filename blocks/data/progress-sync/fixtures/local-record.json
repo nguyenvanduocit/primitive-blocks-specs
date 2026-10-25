@@ -1,0 +1,101 @@
+{
+  "_comment": "A valid Local Store Record (reference schema, README section 2). Base for invalid-imports.json and load-repair-cases.json. `_answer_key` is test-harness input, not part of the record: it maps each known ref to its correct value, so `ok` can be recomputed. Includes per-device sections (cache, session, cloud) and an unknown top-level key that must survive load/export/import. Time values are epoch milliseconds.",
+  "_answer_key": {
+    "q-001": "B",
+    "q-002": "D",
+    "q-003": "A",
+    "q-004": "C",
+    "q-005": "E"
+  },
+  "history": {
+    "seq": 3,
+    "entries": [
+      {
+        "seq": 1,
+        "ref": "q-001",
+        "value": "B",
+        "ok": true,
+        "ms": 1200,
+        "at": 1790000000000
+      },
+      {
+        "seq": 2,
+        "ref": "q-002",
+        "value": "C",
+        "ok": false,
+        "ms": 3400,
+        "at": 1790000060000
+      },
+      {
+        "seq": 3,
+        "ref": "q-003",
+        "value": "A",
+        "ok": true,
+        "ms": 900,
+        "at": 1790000120000
+      }
+    ]
+  },
+  "marks": [
+    "q-002"
+  ],
+  "collection": [
+    {
+      "key": "Quotient",
+      "meaning": "result of a division",
+      "savedAt": 1790000000000,
+      "sources": [
+        "glossary"
+      ],
+      "example": "The quotient of 12 and 4 is 3."
+    },
+    {
+      "key": "Ratio",
+      "meaning": "comparison of two quantities",
+      "savedAt": 1790000001000,
+      "sources": []
+    }
+  ],
+  "settings": {
+    "reviewInterval": 20
+  },
+  "prefs": {
+    "lang": "en"
+  },
+  "notes": {
+    "q-002": "Check the sign before dividing."
+  },
+  "milestones": {
+    "v": 1,
+    "level": 2,
+    "badges": [
+      "first-star"
+    ]
+  },
+  "edits": {
+    "marks": {
+      "q-002": {
+        "at": 1790000090000,
+        "on": true
+      }
+    },
+    "settings": 1790000000500
+  },
+  "cache": {
+    "lookup:quotient": "cached text, rebuildable, never synced"
+  },
+  "session": {
+    "v": 1,
+    "refs": [
+      "q-004",
+      "q-005"
+    ],
+    "index": 0
+  },
+  "cloud": {
+    "uid": "acct-0001"
+  },
+  "feature_x": {
+    "opened": true
+  }
+}

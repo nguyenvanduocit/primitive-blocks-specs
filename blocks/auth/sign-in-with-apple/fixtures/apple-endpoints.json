@@ -1,0 +1,106 @@
+{
+  "_comment": "Mock request and response shapes for Apple's endpoints and for the web form_post return. Use to stub Apple in unit and integration tests. All values are invented; no real keys, ids or codes.",
+  "_usage": "Serve `jwks` from a stub of the signing-key endpoint; assert outgoing requests against `token_request`, `revoke_request`, `client_secret_*`; post `callback_form_*` to the web callback.",
+  "_provenance": "Endpoint paths, field names and error codes are from Apple documentation as the block author knows it (MEDIUM, confirm). Not captured from real traffic.",
+
+  "endpoints": {
+    "signing_keys": "https://appleid.apple.com/auth/keys",
+    "authorize": "https://appleid.apple.com/auth/authorize",
+    "token": "https://appleid.apple.com/auth/token",
+    "revoke": "https://appleid.apple.com/auth/revoke"
+  },
+
+  "jwks": {
+    "_comment": "Shape of the signing-keys response. Replace n with the modulus of the test RS256 key.",
+    "keys": [
+      { "kty": "RSA", "kid": "mock-kid-0001", "use": "sig", "alg": "RS256", "n": "mock-modulus-base64url", "e": "AQAB" }
+    ]
+  },
+
+  "authorize_redirect_params": {
+    "_comment": "Query parameters the start endpoint must put on the authorize redirect. state and nonce are per-attempt random values; nonce is the hex SHA-256 of the raw nonce held in the pre-auth cookie.",
+    "client_id": "com.example.myapp.web",
+    "redirect_uri": "https://myapp.example.com/auth/apple/callback",
+    "response_type": "code id_token",
+    "response_mode": "form_post",
+    "scope": "name email",
+    "state": "state-aaa",
+    "nonce": "e9af532a30289a38de89eed25ba389596abc68d8c9b9a7b882c7395eaae2319b"
+  },
+
+  "callback_form_first_authorization": {
+    "_comment": "application/x-www-form-urlencoded fields Apple posts on a user's first authorization of the app. The user field is a JSON string.",
+    "code": "mock-authorization-code-0001",
+    "id_token": "<signed web_valid payload from apple-identity-token.json>",
+    "state": "state-aaa",
+    "user": "{\"name\":{\"firstName\":\"Carol\",\"lastName\":\"Diaz\"},\"email\":\"carol@example.com\"}"
+  },
+
+  "callback_form_returning": {
+    "_comment": "Later authorizations carry no user field.",
+    "code": "mock-authorization-code-0002",
+    "id_token": "<signed web_valid payload>",
+    "state": "state-aaa"
+  },
+
+  "callback_form_cancelled": {
+    "_comment": "Posted when the user cancels on Apple's page.",
+    "error": "user_cancelled_authorize",
+    "state": "state-aaa"
+  },
+
+  "callback_form_bad_user_field": {
+    "_comment": "user is not valid JSON. Sign-in must still succeed with a null name.",
+    "code": "mock-authorization-code-0003",
+    "id_token": "<signed web_valid payload>",
+    "state": "state-aaa",
+    "user": "{not json"
+  },
+
+  "client_secret_header": { "alg": "ES256", "kid": "MOCKKEYID1" },
+  "client_secret_claims": {
+    "_comment": "Claims of the ES256 client secret the revoke flow mints. Team id and key id are placeholders.",
+    "iss": "MOCKTEAMID",
+    "sub": "com.example.myapp",
+    "aud": "https://appleid.apple.com",
+    "iat": 1700000000,
+    "exp": 1700000600
+  },
+
+  "token_request": {
+    "_comment": "Form fields the backend sends to the token endpoint to exchange a fresh authorization code. client_id is the bundle id for native, the Services ID for web.",
+    "client_id": "com.example.myapp",
+    "client_secret": "<ES256 JWT>",
+    "code": "mock-authorization-code-0001",
+    "grant_type": "authorization_code"
+  },
+  "token_response_ok": {
+    "access_token": "mock-access-token",
+    "token_type": "Bearer",
+    "expires_in": 3600,
+    "refresh_token": "mock-refresh-token-0001",
+    "id_token": "<signed payload>"
+  },
+  "token_response_invalid_grant": {
+    "_comment": "Code expired, already used, or issued for another client id.",
+    "error": "invalid_grant"
+  },
+
+  "revoke_request": {
+    "client_id": "com.example.myapp",
+    "client_secret": "<ES256 JWT>",
+    "token": "mock-refresh-token-0001",
+    "token_type_hint": "refresh_token"
+  },
+  "revoke_response_error": {
+    "_comment": "Simulates a failed revoke: status 400 with this body. The deletion flow still proceeds.",
+    "error": "invalid_client"
+  },
+
+  "seed_users": {
+    "_comment": "Seed rows for linking and revocation scenarios. Columns not listed take their defaults.",
+    "google_only": { "id": "user-001", "email": "alice@example.com", "name": "Alice Johnson", "google_id": "google-uid-112233", "apple_id": null, "domain": "example.com", "role": "user" },
+    "apple_linked_elsewhere": { "id": "user-002", "email": null, "name": null, "google_id": null, "apple_id": "000111.mock-subject.0005", "email_is_private": false, "domain": null, "role": "user" },
+    "apple_only": { "id": "user-003", "email": "mock-relay-0002@privaterelay.appleid.com", "name": null, "google_id": null, "apple_id": "000111.mock-subject.0002", "email_is_private": true, "domain": null, "role": "user" }
+  }
+}

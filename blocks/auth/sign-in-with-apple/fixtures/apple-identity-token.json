@@ -1,0 +1,133 @@
+{
+  "_comment": "Decoded Apple identity token payloads (claims only, no real signatures). Tests that need a signed JWT sign these payloads with a test RS256 key and serve the matching public key as the JWKS. Values are mock; sub, emails and ids are invented.",
+  "_usage": "Use in tests of token verification, user resolution, relay email handling and nonce binding. Every payload's `nonce` is the lowercase hex SHA-256 of raw_nonce unless stated otherwise. Timestamps are fixed; tests freeze the clock at 1700000100.",
+  "_provenance": "Claim names, issuer, boolean-or-string flags and the nonce encoding are from Apple documentation as the block author knows it (MEDIUM, confirm). Not captured from a real Apple response.",
+
+  "raw_nonce": "test-raw-nonce-0001",
+  "raw_nonce_sha256_hex": "e9af532a30289a38de89eed25ba389596abc68d8c9b9a7b882c7395eaae2319b",
+
+  "native_valid_with_email": {
+    "_comment": "New or returning iOS user with a real email. aud is the iOS bundle id.",
+    "iss": "https://appleid.apple.com",
+    "aud": "com.example.myapp",
+    "sub": "000111.mock-subject.0001",
+    "iat": 1700000000,
+    "exp": 1700003600,
+    "nonce": "e9af532a30289a38de89eed25ba389596abc68d8c9b9a7b882c7395eaae2319b",
+    "nonce_supported": true,
+    "email": "alice@example.com",
+    "email_verified": true,
+    "is_private_email": false
+  },
+
+  "native_valid_private_relay_string_flags": {
+    "_comment": "User chose to hide their email. Flags arrive as the string \"true\" here to cover Apple's boolean-or-string behavior.",
+    "iss": "https://appleid.apple.com",
+    "aud": "com.example.myapp",
+    "sub": "000111.mock-subject.0002",
+    "iat": 1700000000,
+    "exp": 1700003600,
+    "nonce": "e9af532a30289a38de89eed25ba389596abc68d8c9b9a7b882c7395eaae2319b",
+    "email": "mock-relay-0002@privaterelay.appleid.com",
+    "email_verified": "true",
+    "is_private_email": "true"
+  },
+
+  "native_valid_no_email": {
+    "_comment": "No email claim at all. The user is created with email, name and domain null.",
+    "iss": "https://appleid.apple.com",
+    "aud": "com.example.myapp",
+    "sub": "000111.mock-subject.0003",
+    "iat": 1700000000,
+    "exp": 1700003600,
+    "nonce": "e9af532a30289a38de89eed25ba389596abc68d8c9b9a7b882c7395eaae2319b"
+  },
+
+  "web_valid": {
+    "_comment": "Web flow token. aud is the Services ID.",
+    "iss": "https://appleid.apple.com",
+    "aud": "com.example.myapp.web",
+    "sub": "000111.mock-subject.0004",
+    "iat": 1700000000,
+    "exp": 1700003600,
+    "nonce": "e9af532a30289a38de89eed25ba389596abc68d8c9b9a7b882c7395eaae2319b",
+    "email": "carol@example.com",
+    "email_verified": true,
+    "is_private_email": false
+  },
+
+  "collision_email_of_google_user": {
+    "_comment": "Valid token whose email equals an existing Google-only user (alice@example.com). Expect 409 account_exists_with_different_provider.",
+    "iss": "https://appleid.apple.com",
+    "aud": "com.example.myapp",
+    "sub": "000111.mock-subject.0005",
+    "iat": 1700000000,
+    "exp": 1700003600,
+    "nonce": "e9af532a30289a38de89eed25ba389596abc68d8c9b9a7b882c7395eaae2319b",
+    "email": "alice@example.com",
+    "email_verified": true,
+    "is_private_email": false
+  },
+
+  "invalid_wrong_audience": {
+    "_comment": "Valid signature, token issued for a different app. Expect 401 apple_auth_failed.",
+    "iss": "https://appleid.apple.com",
+    "aud": "com.example.otherapp",
+    "sub": "000111.mock-subject.0001",
+    "iat": 1700000000,
+    "exp": 1700003600,
+    "nonce": "e9af532a30289a38de89eed25ba389596abc68d8c9b9a7b882c7395eaae2319b",
+    "email": "alice@example.com",
+    "email_verified": true
+  },
+
+  "invalid_wrong_issuer": {
+    "_comment": "Issuer is not Apple. Expect 401 apple_auth_failed.",
+    "iss": "https://accounts.example.invalid",
+    "aud": "com.example.myapp",
+    "sub": "000111.mock-subject.0001",
+    "iat": 1700000000,
+    "exp": 1700003600,
+    "nonce": "e9af532a30289a38de89eed25ba389596abc68d8c9b9a7b882c7395eaae2319b"
+  },
+
+  "invalid_expired": {
+    "_comment": "exp is before the frozen clock (1700000100) by more than the 5 s skew. Expect 401 apple_auth_failed.",
+    "iss": "https://appleid.apple.com",
+    "aud": "com.example.myapp",
+    "sub": "000111.mock-subject.0001",
+    "iat": 1699990000,
+    "exp": 1699993600,
+    "nonce": "e9af532a30289a38de89eed25ba389596abc68d8c9b9a7b882c7395eaae2319b"
+  },
+
+  "invalid_email_not_verified": {
+    "_comment": "Email present but email_verified is false. Expect 401 apple_auth_failed.",
+    "iss": "https://appleid.apple.com",
+    "aud": "com.example.myapp",
+    "sub": "000111.mock-subject.0001",
+    "iat": 1700000000,
+    "exp": 1700003600,
+    "nonce": "e9af532a30289a38de89eed25ba389596abc68d8c9b9a7b882c7395eaae2319b",
+    "email": "unverified@example.com",
+    "email_verified": false
+  },
+
+  "invalid_nonce_mismatch": {
+    "_comment": "nonce claim is the digest of \"nonce-aaa\"; send raw_nonce \"nonce-bbb\". Expect 401 apple_auth_failed.",
+    "iss": "https://appleid.apple.com",
+    "aud": "com.example.myapp",
+    "sub": "000111.mock-subject.0001",
+    "iat": 1700000000,
+    "exp": 1700003600,
+    "nonce": "2652949cc5381e7c927169a14f9e13b0143a192cf59faa9eef84d6d5abaf7c9d"
+  },
+
+  "jwt_headers": {
+    "_comment": "Header variants to sign with. Only the first must verify.",
+    "valid": { "alg": "RS256", "kid": "mock-kid-0001", "typ": "JWT" },
+    "alg_none": { "alg": "none", "typ": "JWT" },
+    "alg_hs256": { "alg": "HS256", "kid": "mock-kid-0001", "typ": "JWT" },
+    "unknown_kid": { "alg": "RS256", "kid": "mock-kid-unknown", "typ": "JWT" }
+  }
+}

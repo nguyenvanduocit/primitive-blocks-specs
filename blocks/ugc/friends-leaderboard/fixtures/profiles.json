@@ -1,0 +1,77 @@
+{
+  "_comment": "Seed profiles for board, friends and privacy tests. Fixed clock: now = 2026-10-21T12:00:00Z (a Wednesday). Day number 20747, current week_start_day 20745 (Monday 2026-10-19), start of yesterday (UTC) = 2026-10-20T00:00:00Z. All values are synthetic; ids and names are placeholders.",
+  "tenant_id": "tenant-001",
+  "now": "2026-10-21T12:00:00Z",
+  "current_week_start_day": 20745,
+  "yesterday_start": "2026-10-20T00:00:00Z",
+  "profiles": [
+    {
+      "_comment": "Listed, active streak, ties with Ben on weekly XP but has the longer streak, so she sorts first and both share rank 1",
+      "id": "prof-ann", "account_id": "acc-ann", "display_name": "Ann", "friend_code": "K7MQ2XAD",
+      "public_board": true, "xp": 12000, "level": 12, "streak_days": 5, "answered": 240, "accuracy": 82,
+      "week_xp": 900, "week_start_day": 20745, "updated_at": "2026-10-21T09:00:00Z"
+    },
+    {
+      "_comment": "Listed, updated 2026-10-20T23:00Z which is after the start of yesterday, so the streak of 3 is still alive; top of the all-time board",
+      "id": "prof-ben", "account_id": "acc-ben", "display_name": "Ben", "friend_code": "H3TZ9WPC",
+      "public_board": true, "xp": 15000, "level": 14, "streak_days": 3, "answered": 300, "accuracy": 75,
+      "week_xp": 900, "week_start_day": 20745, "updated_at": "2026-10-20T23:00:00Z"
+    },
+    {
+      "_comment": "Listed but stale: last report was in last week (week_start_day 20738) and before yesterday. Effective week XP = 0 (absent from the weekly board), effective streak = 0 although 9 is stored; still on the all-time board",
+      "id": "prof-cara", "account_id": "acc-cara", "display_name": "Cara", "friend_code": "R4VNE6YB",
+      "public_board": true, "xp": 8000, "level": 9, "streak_days": 9, "answered": 150, "accuracy": 90,
+      "week_xp": 1500, "week_start_day": 20738, "updated_at": "2026-10-18T08:00:00Z"
+    },
+    {
+      "_comment": "Hidden from the board (public_board false) but has the most XP: must never appear in any board query or count; still resolvable by code and visible to someone who added her as a friend",
+      "id": "prof-dan", "account_id": "acc-dan", "display_name": "Dan", "friend_code": "S8JFG5XK",
+      "public_board": false, "xp": 20000, "level": 18, "streak_days": 11, "answered": 500, "accuracy": 88,
+      "week_xp": 2000, "week_start_day": 20745, "updated_at": "2026-10-21T08:00:00Z"
+    },
+    {
+      "_comment": "Listed, only 4 answers: accuracy 100 is stored but must be returned as null (threshold MIN_ANSWERED_FOR_ACCURACY = 10)",
+      "id": "prof-eve", "account_id": "acc-eve", "display_name": "Eve", "friend_code": "N2DPW9QT",
+      "public_board": true, "xp": 300, "level": 2, "streak_days": 1, "answered": 4, "accuracy": 100,
+      "week_xp": 300, "week_start_day": 20745, "updated_at": "2026-10-21T10:00:00Z"
+    },
+    {
+      "_comment": "Opted in but 0 XP: not listed on either board (listed requires period XP > 0)",
+      "id": "prof-fay", "account_id": "acc-fay", "display_name": "Fay", "friend_code": "T9BKX4VE",
+      "public_board": true, "xp": 0, "level": 1, "streak_days": 0, "answered": 0, "accuracy": null,
+      "week_xp": 0, "week_start_day": 20745, "updated_at": "2026-10-21T07:00:00Z"
+    },
+    {
+      "_comment": "Listed, mid table; the last row that fits when BOARD_SIZE is 3 is Gus on the weekly board",
+      "id": "prof-gus", "account_id": "acc-gus", "display_name": "Gus", "friend_code": "C6YHA3ZM",
+      "public_board": true, "xp": 5000, "level": 7, "streak_days": 2, "answered": 90, "accuracy": 70,
+      "week_xp": 400, "week_start_day": 20745, "updated_at": "2026-10-21T11:00:00Z"
+    }
+  ],
+  "expected": {
+    "_comment": "Results of the reference queries at the fixed clock. rank = 1 + listed learners with strictly more XP. Hidden (Dan), zero-XP (Fay) and stale-week (Cara, weekly only) learners are absent from the boards.",
+    "week_board": [
+      { "id": "prof-ann", "rank": 1, "xp": 900, "streak_days": 5, "accuracy": 82 },
+      { "id": "prof-ben", "rank": 1, "xp": 900, "streak_days": 3, "accuracy": 75 },
+      { "id": "prof-gus", "rank": 3, "xp": 400, "streak_days": 2, "accuracy": 70 },
+      { "id": "prof-eve", "rank": 4, "xp": 300, "streak_days": 1, "accuracy": null }
+    ],
+    "all_board": [
+      { "id": "prof-ben", "rank": 1, "xp": 15000 },
+      { "id": "prof-ann", "rank": 2, "xp": 12000 },
+      { "id": "prof-cara", "rank": 3, "xp": 8000, "streak_days": 0 },
+      { "id": "prof-gus", "rank": 4, "xp": 5000 },
+      { "id": "prof-eve", "rank": 5, "xp": 300 }
+    ],
+    "friends_of_eve_week": {
+      "_comment": "Eve's own friends: Ann, Dan (hidden from the board but linked), Cara. Ranked together with Eve on effective week XP. Gap for Eve = Ann.xp - Eve.xp + 1 = 601.",
+      "rows": [
+        { "id": "prof-dan", "rank": 1, "xp": 2000 },
+        { "id": "prof-ann", "rank": 2, "xp": 900 },
+        { "id": "prof-eve", "rank": 3, "xp": 300, "me": true },
+        { "id": "prof-cara", "rank": 4, "xp": 0 }
+      ],
+      "gap": { "display_name": "Ann", "xp": 601 }
+    }
+  }
+}

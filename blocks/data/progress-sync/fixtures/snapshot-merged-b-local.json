@@ -1,0 +1,123 @@
+{
+  "_comment": "Expected result of merge(local = snapshot-device-b.json, remote = snapshot-device-a.json). Same sets as snapshot-merged-a-local.json; the differences are by design: order of `marks` and `collection`, order of `sources`, and the q-001 note (local wins a single-valued clash).",
+  "history": {
+    "seq": 6,
+    "entries": [
+      {
+        "seq": 1,
+        "ref": "q-009",
+        "value": "A",
+        "ok": true,
+        "ms": 700
+      },
+      {
+        "seq": 2,
+        "ref": "q-001",
+        "value": "B",
+        "ok": true,
+        "ms": 1200,
+        "at": 1000
+      },
+      {
+        "seq": 3,
+        "ref": "q-002",
+        "value": "C",
+        "ok": false,
+        "ms": 3000,
+        "at": 2000
+      },
+      {
+        "seq": 4,
+        "ref": "q-004",
+        "value": "D",
+        "ok": true,
+        "ms": 1500,
+        "at": 3000
+      },
+      {
+        "seq": 5,
+        "ref": "q-003",
+        "value": "A",
+        "ok": true,
+        "ms": 900,
+        "at": 4000
+      },
+      {
+        "seq": 6,
+        "ref": "q-005",
+        "value": "E",
+        "ok": false,
+        "ms": 2500,
+        "at": 5000
+      }
+    ]
+  },
+  "marks": [
+    "q-004",
+    "q-002",
+    "q-003"
+  ],
+  "collection": [
+    {
+      "key": "ratio",
+      "meaning": "tỉ số",
+      "savedAt": 3000,
+      "sources": [
+        "api",
+        "glossary"
+      ]
+    },
+    {
+      "key": "Quotient",
+      "meaning": "result of a division",
+      "savedAt": 1000,
+      "sources": [
+        "glossary"
+      ]
+    }
+  ],
+  "settings": {
+    "reviewInterval": 10
+  },
+  "prefs": {
+    "lang": "vi"
+  },
+  "notes": {
+    "q-001": "note written on B",
+    "q-002": "only on A",
+    "q-004": "only on B"
+  },
+  "milestones": {
+    "v": 1,
+    "level": 3,
+    "badges": [
+      "first-star",
+      "streak-3"
+    ]
+  },
+  "edits": {
+    "marks": {
+      "q-001": {
+        "at": 3000,
+        "on": false
+      },
+      "q-002": {
+        "at": 1500,
+        "on": true
+      },
+      "q-003": {
+        "at": 4100,
+        "on": true
+      },
+      "q-004": {
+        "at": 3200,
+        "on": true
+      }
+    },
+    "collection": {
+      "median": 3500
+    },
+    "settings": 5000,
+    "prefs": 2500
+  }
+}

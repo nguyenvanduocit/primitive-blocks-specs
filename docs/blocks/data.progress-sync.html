@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progress Sync (local-first user progress) — Primitive Block Library</title>
+<meta name="description" content="A versioned local store with strict validation, safe import and export, merge-before-write across tabs, and a cloud snapshot with a deterministic merge across devices. Merge rules and fixtures are ver">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">§</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#principles">Manifesto</a></li>
+      <li><a href="../anatomy.html">Anatomy</a></li>
+      <li><a href="../authoring.html">Authoring</a></li>
+      <li><a href="../#blocks">Examples</a></li>
+      <li><a href="../kits.html">Kits</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="page-grid">
+
+    <aside class="toc">
+      <a class="back" href="../#blocks">Back to examples</a>
+      <div class="toc-section">On this page</div>
+      <nav class="toc-nav"><a href="#problem" class="active">Problem</a><a href="#prerequisites">Dependencies</a><a href="#data-model">Data model</a><a href="#files">Spec files</a></nav>
+      <div class="toc-meta">
+        <div class="meta-row"><span class="label">Category</span><span class="cat-badge data">data</span></div>
+        <div class="meta-row"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+        <div class="meta-row"><span class="label">Effort</span><span>~3 hours</span></div>
+        <div class="meta-row"><span class="label">Version</span><code>v0.1.0</code></div>
+      </div>
+    </aside>
+
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../#blocks">Examples</a>
+        <span class="sep">/</span>
+        <span>data</span>
+      </div>
+      <span class="block-id-large">data.progress-sync</span>
+      <h1>Progress Sync (local-first user progress)</h1>
+      <p class="lead">A versioned local store with strict validation, safe import and export, merge-before-write across tabs, and a cloud snapshot with a deterministic merge across devices. Merge rules and fixtures are verified against the production code; the SQL transport is extrapolated.</p>
+      <div class="block-tags"><span class="tag">local-first</span><span class="tag">offline</span><span class="tag">persistence</span><span class="tag">import-export</span><span class="tag">sync</span><span class="tag">merge</span><span class="tag">mobile</span></div>
+
+      
+      <section id="problem">
+        <div class="section-rule">
+          <span class="section-label">Problem</span>
+          <span class="section-line"></span>
+        </div>
+        <p class="problem-callout">An app that records what a user has done (answers, bookmarks, saved items, settings, milestones) must keep working with no account and no network, must survive corrupted storage and hostile import files, and must not lose data when the same person uses two browser tabs or two devices. This block is the data layer for that: a <strong>versioned local store</strong> with strict validation, a <strong>safe import/export</strong>, and an optional <strong>cloud snapshot</strong> that merges two copies of the progress without a server-side conflict resolver.</p>
+      </section>
+
+      <section id="prerequisites">
+        <div class="section-rule">
+          <span class="section-label">Dependencies</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="related-blocks">
+          <div class="related-row">
+            <span class="related-label">Depends on</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+          <div class="related-row">
+            <span class="related-label">Required by</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="data-model">
+        <div class="section-rule">
+          <span class="section-label">Data model</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="tables-grid"><div class="table-card">
+          <div class="table-name">progress_snapshots</div>
+          <div class="table-desc">One validated snapshot per account with a revision for compare-and-swap and a size cap.</div>
+        </div></div>
+      </section>
+
+      <section id="files">
+        <div class="section-rule">
+          <span class="section-label">Spec files</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Documentation</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/frontend.md" target="_blank" rel="noopener">frontend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Scenarios</span>
+          <span class="files-section-count">6</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/local-store.feature" target="_blank" rel="noopener">local-store.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/import-export.feature" target="_blank" rel="noopener">import-export.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/multi-tab.feature" target="_blank" rel="noopener">multi-tab.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/snapshot-merge.feature" target="_blank" rel="noopener">snapshot-merge.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/cloud-sync.feature" target="_blank" rel="noopener">cloud-sync.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/account-switch.feature" target="_blank" rel="noopener">account-switch.feature<span class="ftype">GHERKIN</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Fixtures</span>
+          <span class="files-section-count">8</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/fixtures/local-record.json" target="_blank" rel="noopener">fixtures/local-record.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/fixtures/invalid-imports.json" target="_blank" rel="noopener">fixtures/invalid-imports.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/fixtures/load-repair-cases.json" target="_blank" rel="noopener">fixtures/load-repair-cases.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/fixtures/snapshot-device-a.json" target="_blank" rel="noopener">fixtures/snapshot-device-a.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/fixtures/snapshot-device-b.json" target="_blank" rel="noopener">fixtures/snapshot-device-b.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/fixtures/snapshot-merged-a-local.json" target="_blank" rel="noopener">fixtures/snapshot-merged-a-local.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/fixtures/snapshot-merged-b-local.json" target="_blank" rel="noopener">fixtures/snapshot-merged-b-local.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/fixtures/api-cases.json" target="_blank" rel="noopener">fixtures/api-cases.json<span class="ftype">JSON</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Acceptance</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/data/progress-sync/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+      </div>
+        <p style="margin-top: 24px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/blocks/data/progress-sync" target="_blank" rel="noopener">Browse <code>blocks/data/progress-sync/</code> on GitHub &rarr;</a></p>
+      </section>
+
+
+        <nav class="prev-next">
+          <a href="data.shopify-metafields.html"><span class="label">← Previous block</span><span class="title">Shopify Metafields</span></a>
+          <a class="next" href="integration.shopify-app-proxy.html"><span class="label">Next block →</span><span class="title">Shopify App Proxy</span></a>
+        </nav>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+// Highlight active TOC link on scroll
+document.addEventListener("DOMContentLoaded", () => {
+  const links = document.querySelectorAll(".toc-nav a");
+  const sections = [...links].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>

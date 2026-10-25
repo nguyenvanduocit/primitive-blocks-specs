@@ -23,6 +23,7 @@
       <li><a href="anatomy.html">Anatomy</a></li>
       <li><a href="authoring.html">Authoring</a></li>
       <li><a href="#blocks">Examples</a></li>
+      <li><a href="kits.html">Kits</a></li>
       <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
     </ul>
   </nav>
@@ -47,7 +48,7 @@
       <aside class="title-block" aria-label="Library at a glance">
         <div class="tb-row">
           <span class="tb-label">Blocks</span>
-          <span class="tb-value">11</span>
+          <span class="tb-value">16</span>
         </div>
         <div class="tb-row">
           <span class="tb-label">Categories</span>
@@ -160,7 +161,7 @@
     </div>
     <div class="section-header">
       <h2>Want to write your own?</h2>
-      <p>Two pages cover what a block looks like and how to author one that survives the 3-stack test.</p>
+      <p>Two pages cover what a block looks like and how to author one that survives the 3-stack test. Kits bundle blocks with guides and tools for a full journey.</p>
     </div>
 
     <div class="cta-grid">
@@ -180,6 +181,14 @@
           <span class="cta-link">Read &rarr;</span>
         </div>
       </a>
+      <a class="cta-card" href="kits.html">
+        <span class="cta-num">C</span>
+        <div class="cta-body">
+          <h3>Kits</h3>
+          <p>A whole journey in one folder: ordered guides, the blocks it uses, and the tools that do the jobs reading cannot.</p>
+          <span class="cta-link">Browse &rarr;</span>
+        </div>
+      </a>
     </div>
   </section>
 
@@ -189,11 +198,11 @@
       <span class="section-line"></span>
     </div>
     <div class="section-header">
-      <h2>11 blocks demonstrate the discipline.</h2>
+      <h2>16 blocks demonstrate the discipline.</h2>
       <p>Reference implementations &mdash; not a closed catalog. Each one is the complete spec of a real feature, written to pass the 3-stack test.</p>
     </div>
 
-    <div class="filter-bar" role="tablist" aria-label="Filter blocks by category"><button class="filter-pill active" data-cat="all">All<span class="count">11</span></button><button class="filter-pill" data-cat="auth">auth<span class="count">3</span></button><button class="filter-pill" data-cat="billing">billing<span class="count">1</span></button><button class="filter-pill" data-cat="compliance">compliance<span class="count">1</span></button><button class="filter-pill" data-cat="data">data<span class="count">1</span></button><button class="filter-pill" data-cat="integration">integration<span class="count">1</span></button><button class="filter-pill" data-cat="messaging">messaging<span class="count">1</span></button><button class="filter-pill" data-cat="operations">operations<span class="count">1</span></button><button class="filter-pill" data-cat="ugc">ugc<span class="count">1</span></button><button class="filter-pill" data-cat="webhooks">webhooks<span class="count">1</span></button></div>
+    <div class="filter-bar" role="tablist" aria-label="Filter blocks by category"><button class="filter-pill active" data-cat="all">All<span class="count">16</span></button><button class="filter-pill" data-cat="auth">auth<span class="count">4</span></button><button class="filter-pill" data-cat="billing">billing<span class="count">2</span></button><button class="filter-pill" data-cat="compliance">compliance<span class="count">2</span></button><button class="filter-pill" data-cat="data">data<span class="count">2</span></button><button class="filter-pill" data-cat="integration">integration<span class="count">1</span></button><button class="filter-pill" data-cat="messaging">messaging<span class="count">1</span></button><button class="filter-pill" data-cat="operations">operations<span class="count">1</span></button><button class="filter-pill" data-cat="ugc">ugc<span class="count">2</span></button><button class="filter-pill" data-cat="webhooks">webhooks<span class="count">1</span></button></div>
 
     <div class="block-grid" id="block-grid">
         <a class="block-card" data-cat="auth" href="blocks/auth.google-login.html">
@@ -201,7 +210,7 @@
           <div class="card-num">
             <span class="num-main">01</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">11</span>
+            <span class="num-total">16</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -222,7 +231,7 @@
           <div class="card-num">
             <span class="num-main">02</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">11</span>
+            <span class="num-total">16</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -243,7 +252,7 @@
           <div class="card-num">
             <span class="num-main">03</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">11</span>
+            <span class="num-total">16</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -259,12 +268,33 @@
             </div>
           </div>
         </a>
-        <a class="block-card" data-cat="billing" href="blocks/billing.shopify-charges.html">
+        <a class="block-card" data-cat="auth" href="blocks/auth.sign-in-with-apple.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
             <span class="num-main">04</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">11</span>
+            <span class="num-total">16</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">auth.sign-in-with-apple</span>
+              <span class="cat-badge auth">auth</span>
+            </div>
+            <div class="block-name">Sign in with Apple</div>
+            <p class="lead">Add Sign in with Apple next to Google login: native iOS sheet and an optional web flow, nonce-bound identity-token verification, first-login-only name capture, private-relay emails, account linking, and token revocation on deletion. Derived from an iOS-only production implementation; the server-side verification is extrapolated.</p>
+            <div class="block-tags"><span class="tag">authentication</span><span class="tag">apple</span><span class="tag">sign-in-with-apple</span><span class="tag">oauth</span><span class="tag">social-login</span><span class="tag">ios</span><span class="tag">capacitor</span><span class="tag">account-linking</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~60 min</span></div>
+            </div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="billing" href="blocks/billing.shopify-charges.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">05</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">16</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -280,12 +310,33 @@
             </div>
           </div>
         </a>
+        <a class="block-card" data-cat="billing" href="blocks/billing.in-app-purchase.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">06</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">16</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">billing.in-app-purchase</span>
+              <span class="cat-badge billing">billing</span>
+            </div>
+            <div class="block-name">In-App Purchase: One-Time Unlock</div>
+            <p class="lead">A permanent &ldquo;unlock all&rdquo; sold through App Store and Google Play billing via RevenueCat: coverage-gated free slice, one gate for every session, inert-by-default without store keys, restore, and reviewer access. Client-side gate proven in production; the server-side entitlement mirror is optional and unverified.</p>
+            <div class="block-tags"><span class="tag">billing</span><span class="tag">in-app-purchase</span><span class="tag">revenuecat</span><span class="tag">paywall</span><span class="tag">one-time-purchase</span><span class="tag">entitlement</span><span class="tag">mobile</span><span class="tag">storekit</span><span class="tag">play-billing</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~60 min + store setup</span></div>
+            </div>
+          </div>
+        </a>
         <a class="block-card" data-cat="compliance" href="blocks/compliance.shopify-gdpr.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">05</span>
+            <span class="num-main">07</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">11</span>
+            <span class="num-total">16</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -301,12 +352,33 @@
             </div>
           </div>
         </a>
+        <a class="block-card" data-cat="compliance" href="blocks/compliance.account-deletion.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">08</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">16</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">compliance.account-deletion</span>
+              <span class="cat-badge compliance">compliance</span>
+            </div>
+            <div class="block-name">In-App Account Deletion</div>
+            <p class="lead">Delete an account from inside the app: confirm intent, re-authenticate, erase everything the user owns including public presence, revoke provider tokens, and survive partial failure. Store review asks to see this flow.</p>
+            <div class="block-tags"><span class="tag">account-deletion</span><span class="tag">app-store</span><span class="tag">google-play</span><span class="tag">privacy</span><span class="tag">reauthentication</span><span class="tag">mobile</span><span class="tag">erasure</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~60 min</span></div>
+            </div>
+          </div>
+        </a>
         <a class="block-card" data-cat="data" href="blocks/data.shopify-metafields.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">06</span>
+            <span class="num-main">09</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">11</span>
+            <span class="num-total">16</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -322,12 +394,33 @@
             </div>
           </div>
         </a>
+        <a class="block-card" data-cat="data" href="blocks/data.progress-sync.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">10</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">16</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">data.progress-sync</span>
+              <span class="cat-badge data">data</span>
+            </div>
+            <div class="block-name">Progress Sync (local-first user progress)</div>
+            <p class="lead">A versioned local store with strict validation, safe import and export, merge-before-write across tabs, and a cloud snapshot with a deterministic merge across devices. Merge rules and fixtures are verified against the production code; the SQL transport is extrapolated.</p>
+            <div class="block-tags"><span class="tag">local-first</span><span class="tag">offline</span><span class="tag">persistence</span><span class="tag">import-export</span><span class="tag">sync</span><span class="tag">merge</span><span class="tag">mobile</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~3 hours</span></div>
+            </div>
+          </div>
+        </a>
         <a class="block-card" data-cat="integration" href="blocks/integration.shopify-app-proxy.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">07</span>
+            <span class="num-main">11</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">11</span>
+            <span class="num-total">16</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -346,9 +439,9 @@
         <a class="block-card" data-cat="messaging" href="blocks/messaging.transactional-email.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">08</span>
+            <span class="num-main">12</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">11</span>
+            <span class="num-total">16</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -367,9 +460,9 @@
         <a class="block-card" data-cat="operations" href="blocks/operations.shopify-bulk.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">09</span>
+            <span class="num-main">13</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">11</span>
+            <span class="num-total">16</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -388,9 +481,9 @@
         <a class="block-card" data-cat="ugc" href="blocks/ugc.product-reviews.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">10</span>
+            <span class="num-main">14</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">11</span>
+            <span class="num-total">16</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -406,12 +499,33 @@
             </div>
           </div>
         </a>
+        <a class="block-card" data-cat="ugc" href="blocks/ugc.friends-leaderboard.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">15</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">16</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">ugc.friends-leaderboard</span>
+              <span class="cat-badge ugc">ugc</span>
+            </div>
+            <div class="block-name">Friends & Leaderboard</div>
+            <p class="lead">Weekly and all-time leaderboard with an opt-in public board, plus a private circle of friends added by a shareable code. The code is the capability, only whitelisted fields are exposed, and progress reports are bounded. Verified on the emulator, not live.</p>
+            <div class="block-tags"><span class="tag">leaderboard</span><span class="tag">friends</span><span class="tag">friend-code</span><span class="tag">community</span><span class="tag">privacy</span><span class="tag">opt-in</span><span class="tag">weekly-ranking</span><span class="tag">gamification</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~90 min</span></div>
+            </div>
+          </div>
+        </a>
         <a class="block-card" data-cat="webhooks" href="blocks/webhooks.shopify-webhooks.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">11</span>
+            <span class="num-main">16</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">11</span>
+            <span class="num-total">16</span>
           </div>
           <div class="card-body">
             <div class="row-1">

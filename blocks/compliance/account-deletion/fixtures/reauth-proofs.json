@@ -1,0 +1,94 @@
+{
+  "_comment": "Re-authentication proofs for POST /api/account/deletion and the challenge they must carry. Tokens are placeholders: tests mock the ID-token verifier and feed it the decoded claims below. No real subjects, emails or keys.",
+  "_usage": "Use in delete-account.feature and partial-failure.feature. 'now' is the test clock; ages are seconds before now.",
+
+  "challenge": {
+    "_comment": "Response of POST /api/account/deletion/challenge, issued to the session of user-001.",
+    "nonce": "nonce-abc",
+    "expires_in_seconds": 300
+  },
+
+  "google_valid": {
+    "_comment": "Fresh sign-in by the account owner; carries the issued nonce.",
+    "request": {
+      "provider": "google",
+      "id_token": "mock.google.id-token.valid",
+      "nonce": "nonce-abc"
+    },
+    "decoded_claims": {
+      "iss": "https://accounts.google.com",
+      "aud": "test-client-id.apps.googleusercontent.com",
+      "sub": "google-uid-112233",
+      "nonce": "nonce-abc",
+      "age_seconds": 12
+    }
+  },
+
+  "google_other_subject": {
+    "_comment": "Valid token for a different Google account than the signed-in user: expect 403 wrong_account.",
+    "request": {
+      "provider": "google",
+      "id_token": "mock.google.id-token.other",
+      "nonce": "nonce-abc"
+    },
+    "decoded_claims": {
+      "iss": "https://accounts.google.com",
+      "aud": "test-client-id.apps.googleusercontent.com",
+      "sub": "google-uid-999999",
+      "nonce": "nonce-abc",
+      "age_seconds": 12
+    }
+  },
+
+  "google_stale": {
+    "_comment": "Same subject, but older than ACCOUNT_DELETION_REAUTH_MAX_AGE_SECONDS (300): expect 401 reauth_required.",
+    "request": {
+      "provider": "google",
+      "id_token": "mock.google.id-token.stale",
+      "nonce": "nonce-abc"
+    },
+    "decoded_claims": {
+      "iss": "https://accounts.google.com",
+      "aud": "test-client-id.apps.googleusercontent.com",
+      "sub": "google-uid-112233",
+      "nonce": "nonce-abc",
+      "age_seconds": 1200
+    }
+  },
+
+  "apple_valid_with_code": {
+    "_comment": "Fresh Apple sign-in including the one-time authorization code used for token revocation. The issuer value is Apple's documented one; verify it against current Apple documentation.",
+    "request": {
+      "provider": "apple",
+      "id_token": "mock.apple.id-token.valid",
+      "nonce": "nonce-abc",
+      "authorization_code": "mock-apple-authorization-code"
+    },
+    "decoded_claims": {
+      "iss": "https://appleid.apple.com",
+      "aud": "test.bundle.id",
+      "sub": "apple-uid-445566",
+      "nonce": "nonce-abc",
+      "age_seconds": 9
+    }
+  },
+
+  "revoke_request_identity_toolkit": {
+    "_comment": "Shape of the revocation call the origin app sends for an Apple account (Firebase Identity Toolkit). Method POST, URL https://identitytoolkit.googleapis.com/v2/accounts:revokeToken with the project web API key as query parameter 'key' (omitted here).",
+    "body": {
+      "providerId": "apple.com",
+      "tokenType": "3",
+      "token": "mock-apple-authorization-code",
+      "idToken": "mock.firebase.id-token"
+    }
+  },
+
+  "expected_errors": {
+    "no_session": { "status": 401, "error": "no_session" },
+    "reauth_required": { "status": 401, "error": "reauth_required" },
+    "wrong_account": { "status": 403, "error": "wrong_account" },
+    "deletion_in_progress": { "status": 409, "error": "deletion_in_progress" },
+    "deletion_incomplete": { "status": 500, "error": "deletion_incomplete" },
+    "rate_limited": { "status": 429, "error": "rate_limited" }
+  }
+}

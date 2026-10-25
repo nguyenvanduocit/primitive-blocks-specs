@@ -1,0 +1,28 @@
+{
+  "_comment": "Friend-code normalization vectors. Alphabet has 30 symbols: A B C D E F G H J K M N P Q R S T V W X Y Z and 2 3 4 5 6 7 8 9 (no 0 O 1 I L U). Length 8. Normalization: remove every whitespace character and '-', then upper-case, then match ^[ALPHABET]{8}$.",
+  "alphabet": "ABCDEFGHJKMNPQRSTVWXYZ23456789",
+  "alphabet_size": 30,
+  "length": 8,
+  "code_space": 656100000000,
+  "accepted": [
+    { "input": "K7MQ2XAD", "normalized": "K7MQ2XAD" },
+    { "input": "k7mq-2xad", "normalized": "K7MQ2XAD", "_comment": "lower case with a dash" },
+    { "input": "  k7mq 2xad  ", "normalized": "K7MQ2XAD", "_comment": "surrounding and inner spaces" },
+    { "input": "K7MQ--2XAD", "normalized": "K7MQ2XAD", "_comment": "repeated dashes" }
+  ],
+  "rejected": [
+    { "input": "", "reason": "empty" },
+    { "input": "K7MQ2XA", "reason": "7 characters" },
+    { "input": "K7MQ2XAD9", "reason": "9 characters" },
+    { "input": "K7MQ2XA0", "reason": "digit 0 is not in the alphabet" },
+    { "input": "K7MQ2XA1", "reason": "digit 1 is not in the alphabet" },
+    { "input": "K7MQ2XAO", "reason": "letter O is not in the alphabet" },
+    { "input": "K7MQ2XAI", "reason": "letter I is not in the alphabet" },
+    { "input": "K7MQ2XAL", "reason": "letter L is not in the alphabet" },
+    { "input": "K7MQ2XAU", "reason": "letter U is not in the alphabet" },
+    { "input": "K7MQ_2XA", "reason": "underscore is not stripped and is not in the alphabet" }
+  ],
+  "unknown_but_valid": [
+    { "input": "Y5EGD7PA", "_comment": "well-formed code that no seeded profile owns: lookup returns friend_not_found" }
+  ]
+}

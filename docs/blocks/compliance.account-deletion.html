@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>In-App Account Deletion — Primitive Block Library</title>
+<meta name="description" content="Delete an account from inside the app: confirm intent, re-authenticate, erase everything the user owns including public presence, revoke provider tokens, and survive partial failure. Store review asks">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">§</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#principles">Manifesto</a></li>
+      <li><a href="../anatomy.html">Anatomy</a></li>
+      <li><a href="../authoring.html">Authoring</a></li>
+      <li><a href="../#blocks">Examples</a></li>
+      <li><a href="../kits.html">Kits</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="page-grid">
+
+    <aside class="toc">
+      <a class="back" href="../#blocks">Back to examples</a>
+      <div class="toc-section">On this page</div>
+      <nav class="toc-nav"><a href="#problem" class="active">Problem</a><a href="#prerequisites">Dependencies</a><a href="#data-model">Data model</a><a href="#files">Spec files</a></nav>
+      <div class="toc-meta">
+        <div class="meta-row"><span class="label">Category</span><span class="cat-badge compliance">compliance</span></div>
+        <div class="meta-row"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+        <div class="meta-row"><span class="label">Effort</span><span>~60 min</span></div>
+        <div class="meta-row"><span class="label">Version</span><code>v1.0.0</code></div>
+      </div>
+    </aside>
+
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../#blocks">Examples</a>
+        <span class="sep">/</span>
+        <span>compliance</span>
+      </div>
+      <span class="block-id-large">compliance.account-deletion</span>
+      <h1>In-App Account Deletion</h1>
+      <p class="lead">Delete an account from inside the app: confirm intent, re-authenticate, erase everything the user owns including public presence, revoke provider tokens, and survive partial failure. Store review asks to see this flow.</p>
+      <div class="block-tags"><span class="tag">account-deletion</span><span class="tag">app-store</span><span class="tag">google-play</span><span class="tag">privacy</span><span class="tag">reauthentication</span><span class="tag">mobile</span><span class="tag">erasure</span></div>
+
+      
+      <section id="problem">
+        <div class="section-rule">
+          <span class="section-label">Problem</span>
+          <span class="section-line"></span>
+        </div>
+        <p class="problem-callout">An app that lets users create an account must let them delete that account from inside the app. A &quot;write us an email&quot; path is not enough to show a store reviewer. This block specifies the whole deletion: the user confirms intent, proves they are still the account owner, the app erases everything the user owns (including their public presence such as a leaderboard row), revokes provider tokens where the provider requires it, destroys the identity, and cleans up the device. It also specifies what happens when a step fails halfway, and the recording that proves the flow to a reviewer.</p>
+      </section>
+
+      <section id="prerequisites">
+        <div class="section-rule">
+          <span class="section-label">Dependencies</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="related-blocks">
+          <div class="related-row">
+            <span class="related-label">Depends on</span>
+            <div class="related-chips"><a class="prereq" href="auth.google-login.html">auth.google-login</a></div>
+          </div>
+          <div class="related-row">
+            <span class="related-label">Required by</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="data-model">
+        <div class="section-rule">
+          <span class="section-label">Data model</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="tables-grid"><div class="table-card">
+          <div class="table-name">users</div>
+          <div class="table-desc">Reused from auth.google-login; deletion removes or anonymizes the row.</div>
+        </div><div class="table-card">
+          <div class="table-name">account_deletions</div>
+          <div class="table-desc">Idempotent deletion state machine so a partial failure can be completed on retry. Extrapolated, not production-verified.</div>
+        </div></div>
+      </section>
+
+      <section id="files">
+        <div class="section-rule">
+          <span class="section-label">Spec files</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Documentation</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/compliance/account-deletion/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/compliance/account-deletion/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/compliance/account-deletion/frontend.md" target="_blank" rel="noopener">frontend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/compliance/account-deletion/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Scenarios</span>
+          <span class="files-section-count">3</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/compliance/account-deletion/delete-account.feature" target="_blank" rel="noopener">delete-account.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/compliance/account-deletion/partial-failure.feature" target="_blank" rel="noopener">partial-failure.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/compliance/account-deletion/reachability.feature" target="_blank" rel="noopener">reachability.feature<span class="ftype">GHERKIN</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Fixtures</span>
+          <span class="files-section-count">2</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/compliance/account-deletion/fixtures/reauth-proofs.json" target="_blank" rel="noopener">fixtures/reauth-proofs.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/compliance/account-deletion/fixtures/user-owned-data.json" target="_blank" rel="noopener">fixtures/user-owned-data.json<span class="ftype">JSON</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Acceptance</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/compliance/account-deletion/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+      </div>
+        <p style="margin-top: 24px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/blocks/compliance/account-deletion" target="_blank" rel="noopener">Browse <code>blocks/compliance/account-deletion/</code> on GitHub &rarr;</a></p>
+      </section>
+
+
+        <nav class="prev-next">
+          <a href="compliance.shopify-gdpr.html"><span class="label">← Previous block</span><span class="title">Shopify GDPR Mandatory Webhooks</span></a>
+          <a class="next" href="data.shopify-metafields.html"><span class="label">Next block →</span><span class="title">Shopify Metafields</span></a>
+        </nav>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+// Highlight active TOC link on scroll
+document.addEventListener("DOMContentLoaded", () => {
+  const links = document.querySelectorAll(".toc-nav a");
+  const sections = [...links].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>

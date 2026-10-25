@@ -1,0 +1,648 @@
+{
+  "_comment": "Snapshot API contract cases (backend.md). NOT RUN: unlike the other fixtures these were not checked against any implementation; the source app uses a document store, not this API. Each case starts from an empty table. `as` is the account id the auth block puts in the verified session (null = no session). Where a body has `snapshot_json` the harness sends JSON.stringify(snapshot_json) as the `snapshot` string; the step-level keys `generate_snapshot_chars` (N) and `account_id_in_body` modify the request body: N means a JSON object text of exactly N characters. `expect.body` lists the fields that must be present with these values.",
+  "accounts": [
+    "acct-0001",
+    "acct-0002"
+  ],
+  "cases": [
+    {
+      "id": "get-before-any-write",
+      "steps": [
+        {
+          "as": "acct-0001",
+          "method": "GET",
+          "path": "/api/progress/snapshot",
+          "expect": {
+            "status": 404,
+            "body": {
+              "error": "no_snapshot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "first-write",
+      "steps": [
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot_json": {
+              "history": {
+                "seq": 0,
+                "entries": []
+              },
+              "marks": []
+            },
+            "format_version": 1,
+            "base_revision": 0
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "revision": 1
+            }
+          }
+        },
+        {
+          "as": "acct-0001",
+          "method": "GET",
+          "path": "/api/progress/snapshot",
+          "expect": {
+            "status": 200,
+            "body": {
+              "revision": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "second-write-bumps-revision",
+      "steps": [
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot_json": {
+              "history": {
+                "seq": 0,
+                "entries": []
+              },
+              "marks": []
+            },
+            "format_version": 1,
+            "base_revision": 0
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "revision": 1
+            }
+          }
+        },
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot_json": {
+              "history": {
+                "seq": 0,
+                "entries": []
+              },
+              "marks": [
+                "q-001"
+              ]
+            },
+            "format_version": 1,
+            "base_revision": 1
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "revision": 2
+            }
+          }
+        },
+        {
+          "as": "acct-0001",
+          "method": "GET",
+          "path": "/api/progress/snapshot",
+          "expect": {
+            "status": 200,
+            "body": {
+              "revision": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "stale-write-conflicts",
+      "why": "Device B merged against revision 1 but device A already wrote revision 2",
+      "steps": [
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot_json": {
+              "history": {
+                "seq": 0,
+                "entries": []
+              },
+              "marks": []
+            },
+            "format_version": 1,
+            "base_revision": 0
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "revision": 1
+            }
+          }
+        },
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot_json": {
+              "history": {
+                "seq": 0,
+                "entries": []
+              },
+              "marks": [
+                "q-001"
+              ]
+            },
+            "format_version": 1,
+            "base_revision": 1
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "revision": 2
+            }
+          }
+        },
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot_json": {
+              "history": {
+                "seq": 0,
+                "entries": []
+              },
+              "marks": []
+            },
+            "format_version": 1,
+            "base_revision": 1
+          },
+          "expect": {
+            "status": 409,
+            "body": {
+              "error": "revision_conflict",
+              "revision": 2
+            }
+          }
+        },
+        {
+          "note": "stored snapshot is still S2",
+          "as": "acct-0001",
+          "method": "GET",
+          "path": "/api/progress/snapshot",
+          "expect": {
+            "status": 200,
+            "body": {
+              "revision": 2
+            },
+            "snapshot_json": {
+              "history": {
+                "seq": 0,
+                "entries": []
+              },
+              "marks": [
+                "q-001"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "first-write-loses-race",
+      "why": "base_revision 0 means 'I found no row'; a row exists",
+      "steps": [
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot_json": {
+              "history": {
+                "seq": 0,
+                "entries": []
+              },
+              "marks": []
+            },
+            "format_version": 1,
+            "base_revision": 0
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "revision": 1
+            }
+          }
+        },
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot_json": {
+              "history": {
+                "seq": 0,
+                "entries": []
+              },
+              "marks": [
+                "q-001"
+              ]
+            },
+            "format_version": 1,
+            "base_revision": 0
+          },
+          "expect": {
+            "status": 409,
+            "body": {
+              "error": "revision_conflict",
+              "revision": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "oversized-snapshot",
+      "steps": [
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot_json": {
+              "history": {
+                "seq": 0,
+                "entries": []
+              },
+              "marks": []
+            },
+            "format_version": 1,
+            "base_revision": 0
+          },
+          "generate_snapshot_chars": 950001,
+          "expect": {
+            "status": 413,
+            "body": {
+              "error": "snapshot_too_large"
+            }
+          }
+        },
+        {
+          "as": "acct-0001",
+          "method": "GET",
+          "path": "/api/progress/snapshot",
+          "expect": {
+            "status": 404,
+            "body": {
+              "error": "no_snapshot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "snapshot-at-the-cap",
+      "steps": [
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot_json": {
+              "history": {
+                "seq": 0,
+                "entries": []
+              },
+              "marks": []
+            },
+            "format_version": 1,
+            "base_revision": 0
+          },
+          "generate_snapshot_chars": 950000,
+          "expect": {
+            "status": 200,
+            "body": {
+              "revision": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "snapshot-not-json",
+      "steps": [
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot": "{broken",
+            "format_version": 1,
+            "base_revision": 0
+          },
+          "expect": {
+            "status": 422,
+            "body": {
+              "error": "invalid_snapshot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "snapshot-json-array",
+      "steps": [
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot": "[]",
+            "format_version": 1,
+            "base_revision": 0
+          },
+          "expect": {
+            "status": 422,
+            "body": {
+              "error": "invalid_snapshot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "unsupported-format-version",
+      "steps": [
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot": "{}",
+            "format_version": 2,
+            "base_revision": 0
+          },
+          "expect": {
+            "status": 422,
+            "body": {
+              "error": "unsupported_format_version"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "malformed-envelope",
+      "steps": [
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot": {
+              "history": 1
+            },
+            "format_version": 1,
+            "base_revision": 0
+          },
+          "expect": {
+            "status": 400,
+            "body": {
+              "error": "invalid_request"
+            }
+          }
+        },
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot": "{}",
+            "format_version": 1,
+            "base_revision": -1
+          },
+          "expect": {
+            "status": 400,
+            "body": {
+              "error": "invalid_request"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "account-id-in-body-is-ignored",
+      "why": "The session says acct-0001; the body names acct-0002",
+      "steps": [
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot_json": {
+              "history": {
+                "seq": 0,
+                "entries": []
+              },
+              "marks": []
+            },
+            "format_version": 1,
+            "base_revision": 0
+          },
+          "account_id_in_body": "acct-0002",
+          "expect": {
+            "status": 200,
+            "body": {
+              "revision": 1
+            }
+          }
+        },
+        {
+          "as": "acct-0002",
+          "method": "GET",
+          "path": "/api/progress/snapshot",
+          "expect": {
+            "status": 404,
+            "body": {
+              "error": "no_snapshot"
+            }
+          }
+        },
+        {
+          "as": "acct-0001",
+          "method": "GET",
+          "path": "/api/progress/snapshot",
+          "expect": {
+            "status": 200,
+            "body": {
+              "revision": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "accounts-are-isolated",
+      "steps": [
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot_json": {
+              "history": {
+                "seq": 0,
+                "entries": []
+              },
+              "marks": []
+            },
+            "format_version": 1,
+            "base_revision": 0
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "revision": 1
+            }
+          }
+        },
+        {
+          "as": "acct-0002",
+          "method": "GET",
+          "path": "/api/progress/snapshot",
+          "expect": {
+            "status": 404,
+            "body": {
+              "error": "no_snapshot"
+            }
+          }
+        },
+        {
+          "as": "acct-0002",
+          "method": "DELETE",
+          "path": "/api/progress/snapshot",
+          "expect": {
+            "status": 204
+          }
+        },
+        {
+          "as": "acct-0001",
+          "method": "GET",
+          "path": "/api/progress/snapshot",
+          "expect": {
+            "status": 200,
+            "body": {
+              "revision": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "delete-is-idempotent",
+      "steps": [
+        {
+          "as": "acct-0001",
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot_json": {
+              "history": {
+                "seq": 0,
+                "entries": []
+              },
+              "marks": []
+            },
+            "format_version": 1,
+            "base_revision": 0
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "revision": 1
+            }
+          }
+        },
+        {
+          "as": "acct-0001",
+          "method": "DELETE",
+          "path": "/api/progress/snapshot",
+          "expect": {
+            "status": 204
+          }
+        },
+        {
+          "as": "acct-0001",
+          "method": "DELETE",
+          "path": "/api/progress/snapshot",
+          "expect": {
+            "status": 204
+          }
+        },
+        {
+          "as": "acct-0001",
+          "method": "GET",
+          "path": "/api/progress/snapshot",
+          "expect": {
+            "status": 404,
+            "body": {
+              "error": "no_snapshot"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "unauthenticated",
+      "steps": [
+        {
+          "as": null,
+          "method": "GET",
+          "path": "/api/progress/snapshot",
+          "expect": {
+            "status": 401,
+            "body": {
+              "error": "unauthenticated"
+            }
+          }
+        },
+        {
+          "as": null,
+          "method": "PUT",
+          "path": "/api/progress/snapshot",
+          "body": {
+            "snapshot": "{}",
+            "format_version": 1,
+            "base_revision": 0
+          },
+          "expect": {
+            "status": 401,
+            "body": {
+              "error": "unauthenticated"
+            }
+          }
+        },
+        {
+          "as": null,
+          "method": "DELETE",
+          "path": "/api/progress/snapshot",
+          "expect": {
+            "status": 401,
+            "body": {
+              "error": "unauthenticated"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

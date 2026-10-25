@@ -43,19 +43,20 @@ Hướng cải thiện này không có ceiling — model tốt hơn, block spec 
 ```
 primitive-blocks/
   INTERFACE.md                        ← bạn đang đọc file này
-  {category}/
-    {feature-name}/                   ← mỗi block = 1 folder
-      README.md                       # Identity, overview, data model, config, architecture
-      frontend.md                     # Frontend implementation guide + patterns
-      backend.md                      # Backend implementation guide + patterns
-      security.md                     # Threat model, validation, secrets
-      *.feature                       # Gherkin scenarios (BDD) — human + machine readable
-      fixtures/                       # Test data, mock responses, seed data
-        *.json
-      tests/                          # Actual test code patterns
-        unit.ts                       # Unit test patterns
-        integration.ts                # Integration test patterns
-      acceptance.md                   # Verification checklist
+  blocks/
+    {category}/
+      {feature-name}/                 ← mỗi block = 1 folder
+        README.md                     # Identity, overview, data model, config, architecture
+        frontend.md                   # Frontend implementation guide + patterns
+        backend.md                    # Backend implementation guide + patterns
+        security.md                   # Threat model, validation, secrets
+        *.feature                     # Gherkin scenarios (BDD) — human + machine readable
+        fixtures/                     # Test data, mock responses, seed data
+          *.json
+        tests/                        # Actual test code patterns
+          unit.ts                     # Unit test patterns
+          integration.ts              # Integration test patterns
+        acceptance.md                 # Verification checklist
 ```
 
 Tách files theo concern — mỗi file phục vụ 1 mục đích rõ ràng. Claude Code đọc files theo nhu cầu, không phải load 1 monolith.
@@ -287,7 +288,7 @@ Khi Foundry dispatch Claude Code cho merchant, CLAUDE.md include:
 Implement the following primitive block into this project.
 
 ### Block Spec
-{content of primitive-blocks/{category}/{feature}.md}
+{content of primitive-blocks/blocks/{category}/{feature}.md}
 
 ### Merchant Context
 - Framework: {detected from package.json}

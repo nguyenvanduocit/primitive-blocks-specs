@@ -16,10 +16,10 @@ primitive block → scope it with the user → implement it into their codebase.
 
 ## BLOCKS_ROOT
 
-The primitive blocks library lives at: `{{BLOCKS_ROOT}}`
+The primitive blocks live at: `{{BLOCKS_ROOT}}` (the `blocks/` folder of the primitive-blocks repo)
 
 If this variable is not set, ask the user where the primitive-blocks repo is cloned.
-Default assumption: `./primitive-blocks/` or `../primitive-blocks/` relative to cwd.
+Default assumption: `./primitive-blocks/blocks/` or `../primitive-blocks/blocks/` relative to cwd.
 
 ---
 

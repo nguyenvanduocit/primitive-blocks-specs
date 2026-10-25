@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>In-App Purchase: One-Time Unlock — Primitive Block Library</title>
+<meta name="description" content="A permanent &ldquo;unlock all&rdquo; sold through App Store and Google Play billing via RevenueCat: coverage-gated free slice, one gate for every session, inert-by-default without store keys, restore,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">§</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#principles">Manifesto</a></li>
+      <li><a href="../anatomy.html">Anatomy</a></li>
+      <li><a href="../authoring.html">Authoring</a></li>
+      <li><a href="../#blocks">Examples</a></li>
+      <li><a href="../kits.html">Kits</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="page-grid">
+
+    <aside class="toc">
+      <a class="back" href="../#blocks">Back to examples</a>
+      <div class="toc-section">On this page</div>
+      <nav class="toc-nav"><a href="#problem" class="active">Problem</a><a href="#prerequisites">Dependencies</a><a href="#data-model">Data model</a><a href="#files">Spec files</a></nav>
+      <div class="toc-meta">
+        <div class="meta-row"><span class="label">Category</span><span class="cat-badge billing">billing</span></div>
+        <div class="meta-row"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+        <div class="meta-row"><span class="label">Effort</span><span>~60 min + store setup</span></div>
+        <div class="meta-row"><span class="label">Version</span><code>v1.0.0</code></div>
+      </div>
+    </aside>
+
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../#blocks">Examples</a>
+        <span class="sep">/</span>
+        <span>billing</span>
+      </div>
+      <span class="block-id-large">billing.in-app-purchase</span>
+      <h1>In-App Purchase: One-Time Unlock</h1>
+      <p class="lead">A permanent &ldquo;unlock all&rdquo; sold through App Store and Google Play billing via RevenueCat: coverage-gated free slice, one gate for every session, inert-by-default without store keys, restore, and reviewer access. Client-side gate proven in production; the server-side entitlement mirror is optional and unverified.</p>
+      <div class="block-tags"><span class="tag">billing</span><span class="tag">in-app-purchase</span><span class="tag">revenuecat</span><span class="tag">paywall</span><span class="tag">one-time-purchase</span><span class="tag">entitlement</span><span class="tag">mobile</span><span class="tag">storekit</span><span class="tag">play-billing</span></div>
+
+      
+      <section id="problem">
+        <div class="section-rule">
+          <span class="section-label">Problem</span>
+          <span class="section-line"></span>
+        </div>
+        <p class="problem-callout">A mobile app (a web app wrapped in a native shell, shipped to the App Store and Google Play) wants to sell one thing: a permanent &quot;unlock all&quot; for its content. Digital content unlocked inside the app has to be sold through the store's own billing (Apple In-App Purchase, Google Play Billing); a separate web checkout cannot replace it. RevenueCat sits on top of both stores so the app asks one question, &quot;is the <code>pro</code> entitlement active?&quot;, and never talks to StoreKit or Play Billing directly.</p>
+      </section>
+
+      <section id="prerequisites">
+        <div class="section-rule">
+          <span class="section-label">Dependencies</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="related-blocks">
+          <div class="related-row">
+            <span class="related-label">Depends on</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+          <div class="related-row">
+            <span class="related-label">Required by</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="data-model">
+        <div class="section-rule">
+          <span class="section-label">Data model</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="tables-grid"><div class="table-card">
+          <div class="table-name">gated_scopes</div>
+          <div class="table-desc">Catalog of unlockable scopes and the free-slice rule, loaded from bundled data.</div>
+        </div><div class="table-card">
+          <div class="table-name">entitlement_mirror</div>
+          <div class="table-desc">OPTIONAL server-side mirror of a user&rsquo;s entitlement. Not production-verified.</div>
+        </div></div>
+      </section>
+
+      <section id="files">
+        <div class="section-rule">
+          <span class="section-label">Spec files</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Documentation</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/in-app-purchase/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/in-app-purchase/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/in-app-purchase/frontend.md" target="_blank" rel="noopener">frontend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/in-app-purchase/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Scenarios</span>
+          <span class="files-section-count">5</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/in-app-purchase/free-slice-gate.feature" target="_blank" rel="noopener">free-slice-gate.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/in-app-purchase/purchase.feature" target="_blank" rel="noopener">purchase.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/in-app-purchase/restore-and-identity.feature" target="_blank" rel="noopener">restore-and-identity.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/in-app-purchase/inert-mode.feature" target="_blank" rel="noopener">inert-mode.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/in-app-purchase/release-readiness.feature" target="_blank" rel="noopener">release-readiness.feature<span class="ftype">GHERKIN</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Fixtures</span>
+          <span class="files-section-count">3</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/in-app-purchase/fixtures/free-slice-catalog.json" target="_blank" rel="noopener">fixtures/free-slice-catalog.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/in-app-purchase/fixtures/store-errors.json" target="_blank" rel="noopener">fixtures/store-errors.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/in-app-purchase/fixtures/store-responses.json" target="_blank" rel="noopener">fixtures/store-responses.json<span class="ftype">JSON</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Acceptance</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/in-app-purchase/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+      </div>
+        <p style="margin-top: 24px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/blocks/billing/in-app-purchase" target="_blank" rel="noopener">Browse <code>blocks/billing/in-app-purchase/</code> on GitHub &rarr;</a></p>
+      </section>
+
+
+        <nav class="prev-next">
+          <a href="billing.shopify-charges.html"><span class="label">← Previous block</span><span class="title">Shopify App Billing & Subscriptions</span></a>
+          <a class="next" href="compliance.shopify-gdpr.html"><span class="label">Next block →</span><span class="title">Shopify GDPR Mandatory Webhooks</span></a>
+        </nav>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+// Highlight active TOC link on scroll
+document.addEventListener("DOMContentLoaded", () => {
+  const links = document.querySelectorAll(".toc-nav a");
+  const sections = [...links].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>

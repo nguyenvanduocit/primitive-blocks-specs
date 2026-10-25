@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App Factory: idea to paid app on both stores — Primitive Block Library</title>
+<meta name="description" content="App Factory: idea to paid app on both stores">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">§</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#principles">Manifesto</a></li>
+      <li><a href="../anatomy.html">Anatomy</a></li>
+      <li><a href="../authoring.html">Authoring</a></li>
+      <li><a href="../#blocks">Examples</a></li>
+      <li><a href="../kits.html">Kits</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="kit-wrap">
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../kits.html">Kits</a>
+      </div>
+      <span class="block-id-large">app-factory</span>
+      <h1>App Factory: idea to paid app on both stores</h1>
+      <p class="lead">The path from an idea or a working web app to a paid iOS and Android app that has passed both store reviews. It was distilled from one mobile app built over about five days by one person directing many parallel Claude sessions, and it is written for the next app.</p>
+      <div class="block-tags"><span class="tag">mobile</span><span class="tag">ios</span><span class="tag">android</span><span class="tag">capacitor</span><span class="tag">firebase</span><span class="tag">revenuecat</span><span class="tag">store-submission</span></div>
+
+      <div class="block-meta">
+        <div class="meta-item"><span class="label">Complexity</span><span><span class="complexity high">high</span></span></div>
+        <div class="meta-item"><span class="label">Effort</span><span>days of work, plus lead times of up to weeks (account enrolment, a 14-day closed test on new personal Play accounts, store review)</span></div>
+        <div class="meta-item"><span class="label">Version</span><span><code>v1.0.0</code></span></div>
+        <div class="meta-item"><span class="label">Guides</span><span>7</span></div>
+        <div class="meta-item"><span class="label">Blocks</span><span>6</span></div>
+        <div class="meta-item"><span class="label">Tools</span><span>2</span></div>
+      </div>
+
+      <section id="interview">
+        <div class="section-rule">
+          <span class="section-label">Day-0 interview</span>
+          <span class="section-line"></span>
+        </div>
+        <ol><li><strong>Where does the app ship, and how does it earn?</strong><p><strong>Default:</strong> store apps only; one-time unlock; the web is a landing page (store links and privacy page), not a copy of the app.</p><p><strong>Options:</strong> web only · store apps · both; free · one-time unlock · subscription; web copy = landing page · limited demo · full free copy.</p><p><strong>Why it is expensive to reverse:</strong> a free full web copy undercuts the in-app unlock, and payment code is built around the model.</p></li><li><strong>Who may license the content, and is the permission in writing?</strong><p><strong>Default:</strong> written permission from the rights holder before any content work starts.</p><p><strong>Options:</strong> own content (the owner states so in writing) · licensed in writing · no permission yet (blocks content work).</p><p><strong>Why it is expensive to reverse:</strong> both stores can ask for proof, and the question tends to surface on submission day.</p></li><li><strong>Which stack and design system do you already use?</strong><p><strong>Default:</strong> the owner's stack; if none, a web framework with a component kit that the shell owner picks and records in the contract, and a Capacitor shell.</p><p><strong>Options:</strong> owner's stack · default stack · native only.</p><p><strong>Why it is expensive to reverse:</strong> switching after the UI exists means rewriting every screen.</p></li><li><strong>What is the product's positioning, and which 5 to 10 reference screenshots show the look?</strong><p><strong>Default:</strong> the owner supplies the screenshots before any UI task; one sentence of positioning in the contract.</p><p><strong>Options:</strong> references supplied · positioning only · none (expect heavy restyling).</p><p><strong>Why it is expensive to reverse:</strong> without references, the first designs get rejected and many tasks are restyled.</p></li><li><strong>Which backend tier?</strong><p><strong>Default:</strong> none when the answers to 6, 12 and 13 need no server-side data; otherwise managed auth and database with rules written before UI.</p><p><strong>Options:</strong> none (data stays on the device) · managed backend · custom server (needs server-side authority, a secret-holding call, other webhooks, cron or moderation).</p><p><strong>Why it is expensive to reverse:</strong> a custom server built and then replaced stays deployed and costs hours; adding a backend later changes the data layer.</p></li><li><strong>Which login providers?</strong><p><strong>Default:</strong> no login when the app needs no accounts; otherwise Google everywhere plus an equivalent login option on iOS (Sign in with Apple); no email and password.</p><p><strong>Options:</strong> no login · Google · Google + Apple · other providers.</p><p><strong>Why it is expensive to reverse:</strong> the store review and account deletion flow depend on the providers.</p></li><li><strong>Which single domain and host?</strong><p><strong>Default:</strong> one canonical domain and one host, chosen before the first store listing. A free host subdomain is allowed during development but never appears in a store listing or the privacy URL.</p><p><strong>Options:</strong> owner's domain · a free subdomain for development only.</p><p><strong>Why it is expensive to reverse:</strong> listings, share cards, the privacy URL and auth domains all embed it.</p></li><li><strong>Which developer team owns the bundle id, and is the owner the Account Holder?</strong><p><strong>Default:</strong> owner is Account Holder on a team that does not yet own the id; one reverse-domain id on a domain the owner controls, reserved on both stores.</p><p><strong>Options:</strong> personal team · company team · not yet enrolled.</p><p><strong>Why it is expensive to reverse:</strong> a team that already owns the id forces a different id, and enrolment takes days.</p></li><li><strong>Which languages ship?</strong><p><strong>Default:</strong> one language; where more ship, all bundled content and UI strings are translated ahead of time, never at runtime.</p><p><strong>Options:</strong> one language · several, pre-translated.</p><p><strong>Why it is expensive to reverse:</strong> runtime translation costs rework rounds and a heavier page.</p></li><li><strong>What are the acceptance criteria, with measurement conditions?</strong><p><strong>Default:</strong> cold start to the first usable screen within 3 seconds on a named mid-range Android phone and a recent iPhone; a web-layer size budget of 2 MB gzip; performance measured on the built artifact under throttling. These are starting points the owner may change.</p><p><strong>Options:</strong> owner supplies numbers · defaults.</p><p><strong>Why it is expensive to reverse:</strong> a criterion copied without conditions can be unreachable and cost hours.</p></li><li><strong>What is sold, at what price, and what stays free?</strong><p><strong>Default:</strong> one one-time unlock at a price the owner names; the free tier lets a user complete the app's whole core loop on a visible slice. Gate by coverage (how much), never by difficulty.</p><p><strong>Options:</strong> free · one-time unlock · subscription; free slice by count of items, by topics, or by time.</p><p><strong>Why it is expensive to reverse:</strong> the gate is the entitlement design, and the store product, price and review screenshots are built around it.</p></li><li><strong>Must progress follow the account across devices?</strong><p><strong>Default:</strong> no; data stays on the device.</p><p><strong>Options:</strong> no · yes (needs an account and a backend).</p><p><strong>Why it is expensive to reverse:</strong> it adds accounts, a backend and a merge rule to every stored record.</p></li><li><strong>Does the app have friends, leaderboards or shared profiles?</strong><p><strong>Default:</strong> no.</p><p><strong>Options:</strong> no · friends by code · public leaderboard.</p><p><strong>Why it is expensive to reverse:</strong> it adds public data, moderation questions and store user-generated-content rules.</p></li><li><strong>Which support contact address goes into the policy, listings and review contacts?</strong><p><strong>Default:</strong> a role-based address on the app's own domain, never the owner's personal address.</p><p><strong>Options:</strong> role-based address on the owner's domain · a mailbox the owner already uses for the product.</p><p><strong>Why it is expensive to reverse:</strong> it is published in the privacy policy and store listings.</p></li></ol>
+      </section>
+      <section id="blocks">
+        <div class="section-rule">
+          <span class="section-label">Blocks</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="related-blocks"><div class="related-row">
+            <span class="related-label">login</span>
+            <div class="related-chips"><span class="prereq-list"><a class="prereq" href="../blocks/auth.google-login.html">auth.google-login</a></span><span>interview 6 chooses a login and the project has no login yet</span></div>
+          </div><div class="related-row">
+            <span class="related-label">login</span>
+            <div class="related-chips"><span class="prereq-list"><a class="prereq" href="../blocks/auth.sign-in-with-apple.html">auth.sign-in-with-apple</a></span><span>interview 6 puts a social login on iOS</span></div>
+          </div><div class="related-row">
+            <span class="related-label">payments</span>
+            <div class="related-chips"><span class="prereq-list"><a class="prereq" href="../blocks/billing.in-app-purchase.html">billing.in-app-purchase</a></span><span>interview 1 or 11 says the app charges</span></div>
+          </div><div class="related-row">
+            <span class="related-label">compliance</span>
+            <div class="related-chips"><span class="prereq-list"><a class="prereq" href="../blocks/compliance.account-deletion.html">compliance.account-deletion</a></span><span>interview 6 gives the app accounts</span></div>
+          </div><div class="related-row">
+            <span class="related-label">data</span>
+            <div class="related-chips"><span class="prereq-list"><a class="prereq" href="../blocks/data.progress-sync.html">data.progress-sync</a></span><span>interview 12 says progress follows the account</span></div>
+          </div><div class="related-row">
+            <span class="related-label">social</span>
+            <div class="related-chips"><span class="prereq-list"><a class="prereq" href="../blocks/ugc.friends-leaderboard.html">ugc.friends-leaderboard</a></span><span>interview 13 says the app has friends, leaderboards or shared profiles</span></div>
+          </div></div>
+      </section>
+      <section id="guides">
+        <div class="section-rule">
+          <span class="section-label">Guides</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/kits/app-factory/guides/01-day-0-decisions.md" target="_blank" rel="noopener">01-day-0-decisions.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/kits/app-factory/guides/02-lead-time-items.md" target="_blank" rel="noopener">02-lead-time-items.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/kits/app-factory/guides/03-stack-and-contract.md" target="_blank" rel="noopener">03-stack-and-contract.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/kits/app-factory/guides/04-backend-login-privacy.md" target="_blank" rel="noopener">04-backend-login-privacy.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/kits/app-factory/guides/05-shell-payments-signing.md" target="_blank" rel="noopener">05-shell-payments-signing.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/kits/app-factory/guides/06-store-submission.md" target="_blank" rel="noopener">06-store-submission.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/kits/app-factory/guides/07-working-with-agents.md" target="_blank" rel="noopener">07-working-with-agents.md<span class="ftype">MD</span></a></div>
+      </section>
+      <section id="tools">
+        <div class="section-rule">
+          <span class="section-label">Tools</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-section">
+          <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/kits/app-factory/tools/store-art-gen.py" target="_blank" rel="noopener">tools/store-art-gen.py<span class="ftype">TOOL</span></a></div>
+          <p>Generate store listing background art</p>
+          <p><strong>Environment variables:</strong> <code>OPENROUTER_API_KEY</code></p>
+          <p><strong>Calls an external service:</strong> Yes</p>
+        </div><div class="files-section">
+          <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/kits/app-factory/tools/store-art-compose.py" target="_blank" rel="noopener">tools/store-art-compose.py<span class="ftype">TOOL</span></a></div>
+          <p>Compose phone screenshots and the feature graphic from art, screenshots and a config</p>
+          <p><strong>Environment variables:</strong> None</p>
+          <p><strong>Calls an external service:</strong> No</p>
+        </div>
+      </section>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
+    </p>
+  </div>
+</footer>
+</body>
+</html>

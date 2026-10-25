@@ -1,0 +1,29 @@
+{
+  "_comment": "Snapshot of device A (the device running the merge in snapshot-merged-a-local.json). Reference schema from README section 2. Sections `history`, `marks`, `collection`, `settings`, `prefs`, `notes`, `milestones`, `edits` are the synced set; `edits` carries the per-field stamps and tombstones. Times are epoch milliseconds (small numbers keep scenarios readable).",
+  "history": {
+    "seq": 3,
+    "entries": [
+      { "seq": 1, "ref": "q-001", "value": "B", "ok": true,  "ms": 1200, "at": 1000 },
+      { "seq": 2, "ref": "q-002", "value": "C", "ok": false, "ms": 3000, "at": 2000 },
+      { "seq": 3, "ref": "q-003", "value": "A", "ok": true,  "ms": 900,  "at": 4000 }
+    ]
+  },
+  "marks": ["q-002", "q-003"],
+  "collection": [
+    { "key": "Quotient", "meaning": "result of a division", "savedAt": 1000, "sources": ["glossary"] },
+    { "key": "Ratio",    "meaning": "comparison of two quantities", "savedAt": 2000, "sources": ["glossary"] }
+  ],
+  "settings": { "reviewInterval": 10 },
+  "prefs": { "lang": "en" },
+  "notes": { "q-001": "note written on A", "q-002": "only on A" },
+  "milestones": { "v": 1, "level": 2, "badges": ["first-star"] },
+  "edits": {
+    "marks": {
+      "q-001": { "at": 3000, "on": false },
+      "q-002": { "at": 1500, "on": true },
+      "q-003": { "at": 4100, "on": true }
+    },
+    "collection": { "median": 3500 },
+    "settings": 5000
+  }
+}

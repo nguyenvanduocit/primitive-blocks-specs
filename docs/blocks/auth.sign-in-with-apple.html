@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in with Apple — Primitive Block Library</title>
+<meta name="description" content="Add Sign in with Apple next to Google login: native iOS sheet and an optional web flow, nonce-bound identity-token verification, first-login-only name capture, private-relay emails, account linking, a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">§</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#principles">Manifesto</a></li>
+      <li><a href="../anatomy.html">Anatomy</a></li>
+      <li><a href="../authoring.html">Authoring</a></li>
+      <li><a href="../#blocks">Examples</a></li>
+      <li><a href="../kits.html">Kits</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="page-grid">
+
+    <aside class="toc">
+      <a class="back" href="../#blocks">Back to examples</a>
+      <div class="toc-section">On this page</div>
+      <nav class="toc-nav"><a href="#problem" class="active">Problem</a><a href="#prerequisites">Dependencies</a><a href="#data-model">Data model</a><a href="#files">Spec files</a></nav>
+      <div class="toc-meta">
+        <div class="meta-row"><span class="label">Category</span><span class="cat-badge auth">auth</span></div>
+        <div class="meta-row"><span class="label">Complexity</span><span class="complexity medium">medium</span></div>
+        <div class="meta-row"><span class="label">Effort</span><span>~60 min</span></div>
+        <div class="meta-row"><span class="label">Version</span><code>v1.0.0</code></div>
+      </div>
+    </aside>
+
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../#blocks">Examples</a>
+        <span class="sep">/</span>
+        <span>auth</span>
+      </div>
+      <span class="block-id-large">auth.sign-in-with-apple</span>
+      <h1>Sign in with Apple</h1>
+      <p class="lead">Add Sign in with Apple next to Google login: native iOS sheet and an optional web flow, nonce-bound identity-token verification, first-login-only name capture, private-relay emails, account linking, and token revocation on deletion. Derived from an iOS-only production implementation; the server-side verification is extrapolated.</p>
+      <div class="block-tags"><span class="tag">authentication</span><span class="tag">apple</span><span class="tag">sign-in-with-apple</span><span class="tag">oauth</span><span class="tag">social-login</span><span class="tag">ios</span><span class="tag">capacitor</span><span class="tag">account-linking</span></div>
+
+      
+      <section id="problem">
+        <div class="section-rule">
+          <span class="section-label">Problem</span>
+          <span class="section-line"></span>
+        </div>
+        <p class="problem-callout">An app that sets up or authenticates the user's primary account through a third-party or social login (Google Sign-In, Facebook Login and similar) and ships on the iOS App Store must also offer an <strong>equivalent</strong> login service that (a) limits data collection to the user's name and email address, (b) lets the user keep their email address private, and (c) does not collect interactions with the app for advertising without consent (App Store Review Guideline 4.8; wording read from Apple's published guidelines on 2026-10-22, re-check before submitting). Sign in with Apple is the usual way to meet this, not the only one. It is not required when the app exclusively uses its own account system, requires an existing education or enterprise sign-in, uses a government or industry-backed e-ID, or is a client for one specific third-party service. The two providers differ in ways that break a copy of the Google flow:</p>
+      </section>
+
+      <section id="prerequisites">
+        <div class="section-rule">
+          <span class="section-label">Dependencies</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="related-blocks">
+          <div class="related-row">
+            <span class="related-label">Depends on</span>
+            <div class="related-chips"><a class="prereq" href="auth.google-login.html">auth.google-login</a></div>
+          </div>
+          <div class="related-row">
+            <span class="related-label">Required by</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="data-model">
+        <div class="section-rule">
+          <span class="section-label">Data model</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="tables-grid"><div class="table-card">
+          <div class="table-name">users</div>
+          <div class="table-desc">Extends the google-login users table: apple_id external id, relay-aware email, at-least-one-identity constraint.</div>
+        </div><div class="table-card">
+          <div class="table-name">sessions</div>
+          <div class="table-desc">Reused unchanged from auth.google-login.</div>
+        </div></div>
+      </section>
+
+      <section id="files">
+        <div class="section-rule">
+          <span class="section-label">Spec files</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Documentation</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/sign-in-with-apple/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/sign-in-with-apple/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/sign-in-with-apple/frontend.md" target="_blank" rel="noopener">frontend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/sign-in-with-apple/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Scenarios</span>
+          <span class="files-section-count">5</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/sign-in-with-apple/native-sign-in.feature" target="_blank" rel="noopener">native-sign-in.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/sign-in-with-apple/identity-token-verification.feature" target="_blank" rel="noopener">identity-token-verification.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/sign-in-with-apple/web-sign-in.feature" target="_blank" rel="noopener">web-sign-in.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/sign-in-with-apple/account-linking.feature" target="_blank" rel="noopener">account-linking.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/sign-in-with-apple/apple-revocation.feature" target="_blank" rel="noopener">apple-revocation.feature<span class="ftype">GHERKIN</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Fixtures</span>
+          <span class="files-section-count">2</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/sign-in-with-apple/fixtures/apple-identity-token.json" target="_blank" rel="noopener">fixtures/apple-identity-token.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/sign-in-with-apple/fixtures/apple-endpoints.json" target="_blank" rel="noopener">fixtures/apple-endpoints.json<span class="ftype">JSON</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Acceptance</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/sign-in-with-apple/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+      </div>
+        <p style="margin-top: 24px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/blocks/auth/sign-in-with-apple" target="_blank" rel="noopener">Browse <code>blocks/auth/sign-in-with-apple/</code> on GitHub &rarr;</a></p>
+      </section>
+
+
+        <nav class="prev-next">
+          <a href="auth.shopify-session-token.html"><span class="label">← Previous block</span><span class="title">Shopify Session Token Verification</span></a>
+          <a class="next" href="billing.shopify-charges.html"><span class="label">Next block →</span><span class="title">Shopify App Billing & Subscriptions</span></a>
+        </nav>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+// Highlight active TOC link on scroll
+document.addEventListener("DOMContentLoaded", () => {
+  const links = document.querySelectorAll(".toc-nav a");
+  const sections = [...links].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>

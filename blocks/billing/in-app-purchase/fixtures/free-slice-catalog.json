@@ -1,0 +1,76 @@
+{
+  "_comment": "Synthetic catalog for the free-slice rule: 6 ordered scopes, 8 items, FREE_SCOPE_COUNT = 3. Use in unit tests of freeItemIds and in free-slice-gate.feature. The `every` expectation is the shipped rule of the source project; the `any` expectation is derived from the rule definition and was not shipped.",
+  "_usage": "Free scopes are the first 3 in order: scope-01, scope-02, scope-03. Item q5 has no scopes, item q6 names a scope missing from the catalog; both are locked under both rules. Difficulty never gates.",
+
+  "free_scope_count": 3,
+
+  "scopes": [
+    { "scope_key": "scope-01", "sort_order": 0 },
+    { "scope_key": "scope-02", "sort_order": 1 },
+    { "scope_key": "scope-03", "sort_order": 2 },
+    { "scope_key": "scope-04", "sort_order": 3 },
+    { "scope_key": "scope-05", "sort_order": 4 },
+    { "scope_key": "scope-06", "sort_order": 5 }
+  ],
+
+  "items": [
+    { "id": "q1", "scope_keys": ["scope-01"], "difficulty": "easy" },
+    { "id": "q2", "scope_keys": ["scope-02", "scope-03"], "difficulty": "medium" },
+    { "id": "q3", "scope_keys": ["scope-03", "scope-04"], "difficulty": "hard" },
+    { "id": "q4", "scope_keys": ["scope-04"], "difficulty": "easy" },
+    { "id": "q5", "scope_keys": [], "difficulty": "easy" },
+    { "id": "q6", "scope_keys": ["scope-99-unknown"], "difficulty": "medium" },
+    { "id": "q7", "scope_keys": ["scope-01"], "difficulty": "hard" },
+    { "id": "q8", "scope_keys": ["scope-06", "scope-01"], "difficulty": "medium" }
+  ],
+
+  "expected_free_item_ids": {
+    "every": ["q1", "q2", "q7"],
+    "any": ["q1", "q2", "q3", "q7", "q8"]
+  },
+
+  "expected_free_item_ids_by_count_every": {
+    "0": [],
+    "3": ["q1", "q2", "q7"],
+    "6": ["q1", "q2", "q3", "q4", "q7", "q8"]
+  },
+
+  "gate_cases": [
+    {
+      "name": "locked learner keeps free ids in the caller's order",
+      "owned": false,
+      "candidates": ["q1", "q2", "q3", "q4", "q7"],
+      "expected_kept": ["q1", "q2", "q7"],
+      "expected_paywall_opens": false
+    },
+    {
+      "name": "owned learner keeps everything in the caller's order",
+      "owned": true,
+      "candidates": ["q4", "q1", "q3"],
+      "expected_kept": ["q4", "q1", "q3"],
+      "expected_paywall_opens": false
+    },
+    {
+      "name": "nothing playable opens the paywall",
+      "owned": false,
+      "candidates": ["q3", "q4", "q8"],
+      "expected_kept": [],
+      "expected_paywall_opens": true
+    },
+    {
+      "name": "empty request does not open the paywall",
+      "owned": false,
+      "candidates": [],
+      "expected_kept": [],
+      "expected_paywall_opens": false
+    },
+    {
+      "name": "session of size 2 is filled after locked ids are dropped",
+      "owned": false,
+      "candidates": ["q4", "q1", "q3", "q2", "q7"],
+      "session_size": 2,
+      "expected_session": ["q1", "q2"],
+      "expected_paywall_opens": false
+    }
+  ]
+}

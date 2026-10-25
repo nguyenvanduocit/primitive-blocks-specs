@@ -11,6 +11,8 @@
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadKit, validateKit } from "./kit-manifest.mjs";
+import { renderKitsIndexBody, renderKitBody } from "./kit-render.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DOCS = __dirname;
@@ -216,12 +218,15 @@ function groupFiles(files) {
 // ============================================================================
 // DATA
 // ============================================================================
+// Kit folder names under kits/. Everything else comes from each kit's README.md frontmatter.
+const KITS = ["app-factory"];
+
 const BLOCKS = [
   {
     id: "auth.google-login",
     name: "Login with Google",
     category: "auth",
-    folder: "auth/google-login",
+    folder: "blocks/auth/google-login",
     version: "1.0.0",
     complexity: "medium",
     effort: "~45 min",
@@ -248,7 +253,7 @@ const BLOCKS = [
     id: "auth.shopify-oauth",
     name: "Shopify App Installation & OAuth",
     category: "auth",
-    folder: "auth/shopify-oauth",
+    folder: "blocks/auth/shopify-oauth",
     version: "1.0.0",
     complexity: "medium",
     effort: "~45 min",
@@ -275,7 +280,7 @@ const BLOCKS = [
     id: "auth.shopify-session-token",
     name: "Shopify Session Token Verification",
     category: "auth",
-    folder: "auth/shopify-session-token",
+    folder: "blocks/auth/shopify-session-token",
     version: "1.0.0",
     complexity: "low",
     effort: "~30 min",
@@ -298,10 +303,35 @@ const BLOCKS = [
     files: ["README.md", "backend.md", "security.md", "session-token-verification.feature", "middleware-integration.feature", "fixtures/session-tokens.json", "acceptance.md"]
   },
   {
+    id: "auth.sign-in-with-apple",
+    name: "Sign in with Apple",
+    category: "auth",
+    folder: "blocks/auth/sign-in-with-apple",
+    version: "1.0.0",
+    complexity: "medium",
+    effort: "~60 min",
+    tags: ["authentication", "apple", "sign-in-with-apple", "oauth", "social-login", "ios", "capacitor", "account-linking"],
+    prerequisites: ["auth.google-login"],
+    summary: "Add Sign in with Apple next to Google login: native iOS sheet and an optional web flow, nonce-bound identity-token verification, first-login-only name capture, private-relay emails, account linking, and token revocation on deletion. Derived from an iOS-only production implementation; the server-side verification is extrapolated.",
+    use: [
+      "Your iOS app offers another social login such as Google.",
+      "Mentions &ldquo;Sign in with Apple&rdquo;, &ldquo;Apple login&rdquo;, &ldquo;App Review login rule&rdquo;."
+    ],
+    avoid: [
+      "The app has no social login at all.",
+      "Android-only apps &mdash; Apple sign-in is not required there."
+    ],
+    tables: [
+      { name: "users", desc: "Extends the google-login users table: apple_id external id, relay-aware email, at-least-one-identity constraint." },
+      { name: "sessions", desc: "Reused unchanged from auth.google-login." }
+    ],
+    files: ["README.md", "backend.md", "frontend.md", "security.md", "native-sign-in.feature", "identity-token-verification.feature", "web-sign-in.feature", "account-linking.feature", "apple-revocation.feature", "fixtures/apple-identity-token.json", "fixtures/apple-endpoints.json", "acceptance.md"]
+  },
+  {
     id: "billing.shopify-charges",
     name: "Shopify App Billing & Subscriptions",
     category: "billing",
-    folder: "billing/shopify-charges",
+    folder: "blocks/billing/shopify-charges",
     version: "1.0.0",
     complexity: "high",
     effort: "~90 min",
@@ -326,10 +356,36 @@ const BLOCKS = [
     files: ["README.md", "backend.md", "frontend.md", "security.md", "plan-selection.feature", "subscription-lifecycle.feature", "usage-billing.feature", "plan-gating.feature", "fixtures/billing-plans.json", "fixtures/shopify-billing-responses.json", "acceptance.md"]
   },
   {
+    id: "billing.in-app-purchase",
+    name: "In-App Purchase: One-Time Unlock",
+    category: "billing",
+    folder: "blocks/billing/in-app-purchase",
+    version: "1.0.0",
+    complexity: "medium",
+    effort: "~60 min + store setup",
+    tags: ["billing", "in-app-purchase", "revenuecat", "paywall", "one-time-purchase", "entitlement", "mobile", "storekit", "play-billing"],
+    prerequisites: [],
+    summary: "A permanent &ldquo;unlock all&rdquo; sold through App Store and Google Play billing via RevenueCat: coverage-gated free slice, one gate for every session, inert-by-default without store keys, restore, and reviewer access. Client-side gate proven in production; the server-side entitlement mirror is optional and unverified.",
+    use: [
+      "A mobile app charges once for access to its content.",
+      "Mentions &ldquo;in-app purchase&rdquo;, &ldquo;paywall&rdquo;, &ldquo;RevenueCat&rdquo;, &ldquo;unlock all&rdquo;, &ldquo;restore purchases&rdquo;."
+    ],
+    avoid: [
+      "Shopify app billing &mdash; use billing.shopify-charges.",
+      "Subscriptions with renewals, trials and grace periods &mdash; not covered here.",
+      "Web-only checkout."
+    ],
+    tables: [
+      { name: "gated_scopes", desc: "Catalog of unlockable scopes and the free-slice rule, loaded from bundled data." },
+      { name: "entitlement_mirror", desc: "OPTIONAL server-side mirror of a user&rsquo;s entitlement. Not production-verified." }
+    ],
+    files: ["README.md", "backend.md", "frontend.md", "security.md", "free-slice-gate.feature", "purchase.feature", "restore-and-identity.feature", "inert-mode.feature", "release-readiness.feature", "fixtures/free-slice-catalog.json", "fixtures/store-errors.json", "fixtures/store-responses.json", "acceptance.md"]
+  },
+  {
     id: "compliance.shopify-gdpr",
     name: "Shopify GDPR Mandatory Webhooks",
     category: "compliance",
-    folder: "compliance/shopify-gdpr",
+    folder: "blocks/compliance/shopify-gdpr",
     version: "1.0.0",
     complexity: "low",
     effort: "~30 min",
@@ -352,10 +408,35 @@ const BLOCKS = [
     files: ["README.md", "backend.md", "security.md", "data-request.feature", "customer-redact.feature", "shop-redact.feature", "fixtures/gdpr-payloads.json", "acceptance.md"]
   },
   {
+    id: "compliance.account-deletion",
+    name: "In-App Account Deletion",
+    category: "compliance",
+    folder: "blocks/compliance/account-deletion",
+    version: "1.0.0",
+    complexity: "medium",
+    effort: "~60 min",
+    tags: ["account-deletion", "app-store", "google-play", "privacy", "reauthentication", "mobile", "erasure"],
+    prerequisites: ["auth.google-login"],
+    summary: "Delete an account from inside the app: confirm intent, re-authenticate, erase everything the user owns including public presence, revoke provider tokens, and survive partial failure. Store review asks to see this flow.",
+    use: [
+      "The app lets users create accounts and ships on the App Store or Google Play.",
+      "Mentions &ldquo;delete account&rdquo;, &ldquo;erase my data&rdquo;, &ldquo;App Review asks for deletion&rdquo;."
+    ],
+    avoid: [
+      "Shopify GDPR webhooks &mdash; use compliance.shopify-gdpr.",
+      "Apps without accounts."
+    ],
+    tables: [
+      { name: "users", desc: "Reused from auth.google-login; deletion removes or anonymizes the row." },
+      { name: "account_deletions", desc: "Idempotent deletion state machine so a partial failure can be completed on retry. Extrapolated, not production-verified." }
+    ],
+    files: ["README.md", "backend.md", "frontend.md", "security.md", "delete-account.feature", "partial-failure.feature", "reachability.feature", "fixtures/reauth-proofs.json", "fixtures/user-owned-data.json", "acceptance.md"]
+  },
+  {
     id: "data.shopify-metafields",
     name: "Shopify Metafields",
     category: "data",
-    folder: "data/shopify-metafields",
+    folder: "blocks/data/shopify-metafields",
     version: "1.0.0",
     complexity: "medium",
     effort: "~60 min",
@@ -378,10 +459,34 @@ const BLOCKS = [
     files: ["README.md", "backend.md", "security.md", "definition-sync.feature", "read-write.feature", "type-validation.feature", "fixtures/metafield-definitions.json", "fixtures/metafield-values.json", "acceptance.md"]
   },
   {
+    id: "data.progress-sync",
+    name: "Progress Sync (local-first user progress)",
+    category: "data",
+    folder: "blocks/data/progress-sync",
+    version: "0.1.0",
+    complexity: "high",
+    effort: "~3 hours",
+    tags: ["local-first", "offline", "persistence", "import-export", "sync", "merge", "mobile"],
+    prerequisites: [],
+    summary: "A versioned local store with strict validation, safe import and export, merge-before-write across tabs, and a cloud snapshot with a deterministic merge across devices. Merge rules and fixtures are verified against the production code; the SQL transport is extrapolated.",
+    use: [
+      "An app records user progress that must work offline and follow the account across devices.",
+      "Mentions &ldquo;sync&rdquo;, &ldquo;offline&rdquo;, &ldquo;import/export progress&rdquo;, &ldquo;two tabs overwrite each other&rdquo;."
+    ],
+    avoid: [
+      "Server-authoritative data such as orders or balances.",
+      "Apps with no per-user state."
+    ],
+    tables: [
+      { name: "progress_snapshots", desc: "One validated snapshot per account with a revision for compare-and-swap and a size cap." }
+    ],
+    files: ["README.md", "backend.md", "frontend.md", "security.md", "local-store.feature", "import-export.feature", "multi-tab.feature", "snapshot-merge.feature", "cloud-sync.feature", "account-switch.feature", "fixtures/local-record.json", "fixtures/invalid-imports.json", "fixtures/load-repair-cases.json", "fixtures/snapshot-device-a.json", "fixtures/snapshot-device-b.json", "fixtures/snapshot-merged-a-local.json", "fixtures/snapshot-merged-b-local.json", "fixtures/api-cases.json", "acceptance.md"]
+  },
+  {
     id: "integration.shopify-app-proxy",
     name: "Shopify App Proxy",
     category: "integration",
-    folder: "integration/shopify-app-proxy",
+    folder: "blocks/integration/shopify-app-proxy",
     version: "1.0.0",
     complexity: "medium",
     effort: "~45 min",
@@ -407,7 +512,7 @@ const BLOCKS = [
     id: "messaging.transactional-email",
     name: "Send Transactional Email",
     category: "messaging",
-    folder: "messaging/transactional-email",
+    folder: "blocks/messaging/transactional-email",
     version: "1.0.0",
     complexity: "medium",
     effort: "~60 min",
@@ -435,7 +540,7 @@ const BLOCKS = [
     id: "operations.shopify-bulk",
     name: "Shopify Bulk Operations",
     category: "operations",
-    folder: "operations/shopify-bulk",
+    folder: "blocks/operations/shopify-bulk",
     version: "1.0.0",
     complexity: "high",
     effort: "~75 min",
@@ -461,7 +566,7 @@ const BLOCKS = [
     id: "ugc.product-reviews",
     name: "Product Reviews",
     category: "ugc",
-    folder: "ugc/product-reviews",
+    folder: "blocks/ugc/product-reviews",
     version: "1.0.0",
     complexity: "medium",
     effort: "~60 min",
@@ -485,10 +590,35 @@ const BLOCKS = [
     files: ["README.md", "frontend.md", "backend.md", "security.md", "submit-review.feature", "moderate-review.feature", "display-reviews.feature", "fixtures/sample-reviews.json", "fixtures/aggregate.json", "acceptance.md"]
   },
   {
+    id: "ugc.friends-leaderboard",
+    name: "Friends & Leaderboard",
+    category: "ugc",
+    folder: "blocks/ugc/friends-leaderboard",
+    version: "1.0.0",
+    complexity: "medium",
+    effort: "~90 min",
+    tags: ["leaderboard", "friends", "friend-code", "community", "privacy", "opt-in", "weekly-ranking", "gamification"],
+    prerequisites: ["auth.google-login"],
+    summary: "Weekly and all-time leaderboard with an opt-in public board, plus a private circle of friends added by a shareable code. The code is the capability, only whitelisted fields are exposed, and progress reports are bounded. Verified on the emulator, not live.",
+    use: [
+      "A learning or game app wants social competition without exposing answers.",
+      "Mentions &ldquo;leaderboard&rdquo;, &ldquo;friends&rdquo;, &ldquo;weekly ranking&rdquo;, &ldquo;friend code&rdquo;."
+    ],
+    avoid: [
+      "Reviews or comments &mdash; use ugc.product-reviews.",
+      "Anything needing authoritative anti-cheat: client-reported progress cannot provide it."
+    ],
+    tables: [
+      { name: "board_profiles", desc: "Per-account public profile: opt-in flag, whitelisted stats, weekly numbers and the shareable friend code." },
+      { name: "friend_links", desc: "One-way friend links by code, capped per account." }
+    ],
+    files: ["README.md", "frontend.md", "backend.md", "security.md", "friends-by-code.feature", "leaderboard-ranking.feature", "public-board-privacy.feature", "report-progress.feature", "week-rollover.feature", "fixtures/profiles.json", "fixtures/friend-codes.json", "fixtures/progress-reports.json", "acceptance.md"]
+  },
+  {
     id: "webhooks.shopify-webhooks",
     name: "Shopify Webhook Management",
     category: "webhooks",
-    folder: "webhooks/shopify-webhooks",
+    folder: "blocks/webhooks/shopify-webhooks",
     version: "1.0.0",
     complexity: "medium",
     effort: "~60 min",
@@ -1687,6 +1817,17 @@ footer.site a {
 }
 footer.site a:hover { color: var(--cobalt); text-decoration-color: var(--cobalt); }
 
+/* ====================== KITS ====================== */
+.kit-wrap {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 48px 0 96px;
+}
+.kit-wrap .page-content { max-width: 760px; }
+.kit-card { grid-template-columns: 1fr; }
+.kit-wrap .page-content ol > li { margin-bottom: 22px; }
+.cta-grid .cta-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
 /* ====================== PER-BLOCK PAGE ====================== */
 .page-grid {
   max-width: var(--max-w);
@@ -2438,6 +2579,7 @@ function siteHeader(rootPath = "") {
       <li><a href="${rootPath}anatomy.html">Anatomy</a></li>
       <li><a href="${rootPath}authoring.html">Authoring</a></li>
       <li><a href="${rootPath}#blocks">Examples</a></li>
+      <li><a href="${rootPath}kits.html">Kits</a></li>
       <li><a class="github" href="${REPO_HTTPS}" target="_blank" rel="noopener">GitHub ↗</a></li>
     </ul>
   </nav>
@@ -2640,7 +2782,7 @@ ${siteHeader("")}
     </div>
     <div class="section-header">
       <h2>Want to write your own?</h2>
-      <p>Two pages cover what a block looks like and how to author one that survives the 3-stack test.</p>
+      <p>Two pages cover what a block looks like and how to author one that survives the 3-stack test. Kits bundle blocks with guides and tools for a full journey.</p>
     </div>
 
     <div class="cta-grid">
@@ -2658,6 +2800,14 @@ ${siteHeader("")}
           <h3>Authoring discipline</h3>
           <p>The 3-layer abstraction rule, logical types for SQL portability, external-protocol carve-outs, anti-patterns.</p>
           <span class="cta-link">Read &rarr;</span>
+        </div>
+      </a>
+      <a class="cta-card" href="kits.html">
+        <span class="cta-num">C</span>
+        <div class="cta-body">
+          <h3>Kits</h3>
+          <p>A whole journey in one folder: ordered guides, the blocks it uses, and the tools that do the jobs reading cannot.</p>
+          <span class="cta-link">Browse &rarr;</span>
         </div>
       </a>
     </div>
@@ -2949,6 +3099,56 @@ document.addEventListener("DOMContentLoaded", () => {
   sections.forEach(s => obs.observe(s));
 });
 </script>
+</body>
+</html>`;
+}
+
+// ============================================================================
+// KIT PAGES
+// ============================================================================
+function renderKitsIndex(kits) {
+  return `${headTags(
+    "Kits — Primitive Block Library",
+    "Kits bundle ordered guides, primitive blocks and tools for one whole journey.",
+    { cssPath: "assets/style.css" }
+  )}
+
+${siteHeader("")}
+
+<main>
+  <div class="kit-wrap">
+    <section>
+      <div class="section-header">
+        <h1>Kits</h1>
+        <p>A block is one capability. A kit carries a whole journey: ordered guides, the blocks it uses, and the tools that do the jobs reading cannot.</p>
+      </div>
+      ${renderKitsIndexBody(kits)}
+    </section>
+  </div>
+</main>
+
+${siteFooter()}
+</body>
+</html>`;
+}
+
+function renderKit(kit) {
+  const body = renderKitBody(kit, { repoBlob: REPO_BLOB, blockIds: BLOCKS.map(b => b.id) });
+  return `${headTags(
+    `${kit.meta.name} — Primitive Block Library`,
+    String(kit.meta.name).slice(0, 200),
+    { cssPath: "../assets/style.css" }
+  )}
+
+${siteHeader("../")}
+
+<main>
+  <div class="kit-wrap">
+    ${body}
+  </div>
+</main>
+
+${siteFooter()}
 </body>
 </html>`;
 }
@@ -3304,7 +3504,7 @@ ${siteHeader("")}
         <span class="cta-num">&rarr;</span>
         <div class="cta-body">
           <h3>Browse the examples</h3>
-          <p>${BLOCKS.length} reference blocks &mdash; each passes the 3-stack test.</p>
+          <p>${BLOCKS.length} reference blocks &mdash; each written to the 3-stack test; the newer ones passed it by review only, see each block&rsquo;s &ldquo;Origin and verification status&rdquo;.</p>
           <span class="cta-link">Examples &rarr;</span>
         </div>
       </a>
@@ -3334,6 +3534,13 @@ function main() {
   written.push(emit("index.html", renderLanding()));
   written.push(emit("anatomy.html", renderAnatomy()));
   written.push(emit("authoring.html", renderAuthoring()));
+  const kits = KITS.map(id => {
+    const errors = validateKit(REPO_ROOT, id);
+    if (errors.length) throw new Error(`kit ${id} is invalid:\n  ${errors.join("\n  ")}`);
+    return loadKit(REPO_ROOT, id);
+  });
+  written.push(emit("kits.html", renderKitsIndex(kits)));
+  kits.forEach(k => written.push(emit(`kits/${k.id}.html`, renderKit(k))));
   BLOCKS.forEach((b, i) => {
     const prev = i > 0 ? BLOCKS[i - 1] : null;
     const next = i < BLOCKS.length - 1 ? BLOCKS[i + 1] : null;
@@ -3341,7 +3548,7 @@ function main() {
   });
   console.log(`Built ${written.length} files:`);
   written.forEach(p => console.log("  " + p.replace(resolve(DOCS, ".."), ".")));
-  console.log(`\n${BLOCKS.length} blocks, ${new Set(BLOCKS.map(b => b.category)).size} categories.`);
+  console.log(`\n${BLOCKS.length} blocks, ${new Set(BLOCKS.map(b => b.category)).size} categories, ${KITS.length} kits.`);
 }
 
 main();

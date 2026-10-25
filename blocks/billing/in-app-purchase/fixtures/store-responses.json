@@ -1,0 +1,67 @@
+{
+  "_comment": "Shapes of the RevenueCat SDK results the app reads, reduced to the fields the app uses (`entitlements.active`, `current.availablePackages`, `product.priceString`). The real SDK objects carry more fields. Use to build the fake store in tests.",
+  "_usage": "Identifiers are placeholders: `acme_unlock_all` stands for your PRODUCT_ID, `account-uid-001` for an account uid. `$rc_lifetime` and `pro` are the identifiers used by the source project. Price strings are store-localized; two formats are shown because they differ by storefront.",
+
+  "offerings_one_package": {
+    "current": {
+      "identifier": "default",
+      "availablePackages": [
+        {
+          "identifier": "$rc_lifetime",
+          "product": { "identifier": "acme_unlock_all", "priceString": "$14.99" }
+        }
+      ]
+    }
+  },
+
+  "offerings_one_package_other_storefront": {
+    "current": {
+      "identifier": "default",
+      "availablePackages": [
+        {
+          "identifier": "$rc_lifetime",
+          "product": { "identifier": "acme_unlock_all", "priceString": "US$14,99" }
+        }
+      ]
+    }
+  },
+
+  "offerings_no_current": {
+    "current": null
+  },
+
+  "offerings_empty_package_list": {
+    "current": { "identifier": "default", "availablePackages": [] }
+  },
+
+  "customer_info_owned": {
+    "entitlements": { "active": { "pro": { "identifier": "pro" } } }
+  },
+
+  "customer_info_not_owned": {
+    "entitlements": { "active": {} }
+  },
+
+  "customer_info_other_entitlement_only": {
+    "entitlements": { "active": { "other": { "identifier": "other" } } }
+  },
+
+  "expected": {
+    "has_pro": {
+      "customer_info_owned": true,
+      "customer_info_not_owned": false,
+      "customer_info_other_entitlement_only": false
+    },
+    "offer": {
+      "offerings_one_package": { "priceString": "$14.99" },
+      "offerings_one_package_other_storefront": { "priceString": "US$14,99" },
+      "offerings_no_current": null,
+      "offerings_empty_package_list": null
+    }
+  },
+
+  "store_users": {
+    "signed_in_app_user_id": "account-uid-001",
+    "signed_out_app_user_id": null
+  }
+}

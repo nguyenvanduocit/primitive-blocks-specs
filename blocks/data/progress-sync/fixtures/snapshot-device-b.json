@@ -1,0 +1,29 @@
+{
+  "_comment": "Snapshot of device B (the cloud copy when device A syncs). Differs from device A so that every merge rule fires once: a duplicate history entry (q-002), an undated legacy entry (q-009), a bookmark removed on A but present on B (q-001), a word deleted on A but present on B (Median), a newer word on B (Ratio), a stamped preference (prefs 2500 vs none), a later settings stamp on A (5000 vs 4000), a note clash (q-001), and a higher milestone level on B.",
+  "history": {
+    "seq": 4,
+    "entries": [
+      { "seq": 1, "ref": "q-009", "value": "A", "ok": true,  "ms": 700 },
+      { "seq": 2, "ref": "q-002", "value": "C", "ok": false, "ms": 3000, "at": 2000 },
+      { "seq": 3, "ref": "q-004", "value": "D", "ok": true,  "ms": 1500, "at": 3000 },
+      { "seq": 4, "ref": "q-005", "value": "E", "ok": false, "ms": 2500, "at": 5000 }
+    ]
+  },
+  "marks": ["q-001", "q-004"],
+  "collection": [
+    { "key": "Median", "meaning": "middle value", "savedAt": 800, "sources": ["glossary"] },
+    { "key": "ratio",  "meaning": "tỉ số", "savedAt": 3000, "sources": ["api"] }
+  ],
+  "settings": { "reviewInterval": 30 },
+  "prefs": { "lang": "vi" },
+  "notes": { "q-001": "note written on B", "q-004": "only on B" },
+  "milestones": { "v": 1, "level": 3, "badges": ["streak-3"] },
+  "edits": {
+    "marks": {
+      "q-001": { "at": 500, "on": true },
+      "q-004": { "at": 3200, "on": true }
+    },
+    "settings": 4000,
+    "prefs": 2500
+  }
+}

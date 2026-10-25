@@ -1,0 +1,123 @@
+{
+  "_comment": "Expected result of merge(local = snapshot-device-a.json, remote = snapshot-device-b.json). Compare structurally; see README section 4 for which rule produced each difference. History: undated q-009 first, then dated entries ascending by `at`, the duplicate q-002 counted once, seq renumbered 1..6. Marks: q-001 removed (A stamped it off at 3000, later than B on at 500). Collection: Median dropped (deleted 3500 after saved 800), `ratio` is B entry (savedAt 3000 newer) with sources of both. Settings: A (stamp 5000 > 4000). Prefs: B (stamped 2500; A unstamped). Notes: local wins the q-001 clash. Milestones: highest level, union of badges in registry order.",
+  "history": {
+    "seq": 6,
+    "entries": [
+      {
+        "seq": 1,
+        "ref": "q-009",
+        "value": "A",
+        "ok": true,
+        "ms": 700
+      },
+      {
+        "seq": 2,
+        "ref": "q-001",
+        "value": "B",
+        "ok": true,
+        "ms": 1200,
+        "at": 1000
+      },
+      {
+        "seq": 3,
+        "ref": "q-002",
+        "value": "C",
+        "ok": false,
+        "ms": 3000,
+        "at": 2000
+      },
+      {
+        "seq": 4,
+        "ref": "q-004",
+        "value": "D",
+        "ok": true,
+        "ms": 1500,
+        "at": 3000
+      },
+      {
+        "seq": 5,
+        "ref": "q-003",
+        "value": "A",
+        "ok": true,
+        "ms": 900,
+        "at": 4000
+      },
+      {
+        "seq": 6,
+        "ref": "q-005",
+        "value": "E",
+        "ok": false,
+        "ms": 2500,
+        "at": 5000
+      }
+    ]
+  },
+  "marks": [
+    "q-002",
+    "q-003",
+    "q-004"
+  ],
+  "collection": [
+    {
+      "key": "Quotient",
+      "meaning": "result of a division",
+      "savedAt": 1000,
+      "sources": [
+        "glossary"
+      ]
+    },
+    {
+      "key": "ratio",
+      "meaning": "tỉ số",
+      "savedAt": 3000,
+      "sources": [
+        "glossary",
+        "api"
+      ]
+    }
+  ],
+  "settings": {
+    "reviewInterval": 10
+  },
+  "prefs": {
+    "lang": "vi"
+  },
+  "notes": {
+    "q-001": "note written on A",
+    "q-004": "only on B",
+    "q-002": "only on A"
+  },
+  "milestones": {
+    "v": 1,
+    "level": 3,
+    "badges": [
+      "first-star",
+      "streak-3"
+    ]
+  },
+  "edits": {
+    "marks": {
+      "q-001": {
+        "at": 3000,
+        "on": false
+      },
+      "q-002": {
+        "at": 1500,
+        "on": true
+      },
+      "q-003": {
+        "at": 4100,
+        "on": true
+      },
+      "q-004": {
+        "at": 3200,
+        "on": true
+      }
+    },
+    "collection": {
+      "median": 3500
+    },
+    "settings": 5000,
+    "prefs": 2500
+  }
+}

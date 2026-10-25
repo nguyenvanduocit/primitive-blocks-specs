@@ -1169,6 +1169,17 @@ footer.site a {
 }
 footer.site a:hover { color: var(--cobalt); text-decoration-color: var(--cobalt); }
 
+/* ====================== KITS ====================== */
+.kit-wrap {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 48px 0 96px;
+}
+.kit-wrap .page-content { max-width: 760px; }
+.kit-card { grid-template-columns: 1fr; }
+.kit-wrap .page-content ol > li { margin-bottom: 22px; }
+.cta-grid .cta-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
 /* ====================== PER-BLOCK PAGE ====================== */
 .page-grid {
   max-width: var(--max-w);

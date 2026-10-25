@@ -1,0 +1,36 @@
+{
+  "font": null,
+  "text_color": [255, 255, 255],
+  "out_dir": "store",
+  "screenshots_dir": "screenshots",
+  "backgrounds_dir": "art",
+  "mascot_dir": "art",
+  "shots": [
+    {
+      "screenshot": "home.png",
+      "background": "bg-1.png",
+      "flip_background": false,
+      "mascot": "mascot-wave.webp",
+      "headline": "First benefit\nin two lines"
+    },
+    {
+      "screenshot": "detail.png",
+      "background": "bg-2.png",
+      "flip_background": false,
+      "mascot": "mascot-cheer.webp",
+      "headline": "Second benefit\nin two lines"
+    },
+    {
+      "screenshot": "progress.png",
+      "background": "bg-1.png",
+      "flip_background": true,
+      "mascot": null,
+      "headline": "Third benefit\nin two lines"
+    }
+  ],
+  "feature_graphic": {
+    "background": "feature-bg.png",
+    "mascot": "mascot-cheer.webp",
+    "headline": "App Name\nShort tagline"
+  }
+}

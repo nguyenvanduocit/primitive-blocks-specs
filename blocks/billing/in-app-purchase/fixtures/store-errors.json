@@ -1,0 +1,23 @@
+{
+  "_comment": "Store error code to problem mapping and the learner-facing result. Codes are RevenueCat PURCHASES_ERROR_CODE values as used by the source project's mapping (names taken from its code comments); `noOffer` is the app-defined port code. Use in unit tests of purchaseProblem and in purchase.feature.",
+  "_usage": "`message_shown` is false only for `cancelled`. Message keys are placeholders for your i18n catalog.",
+
+  "cases": [
+    { "code": "1",       "revenuecat_name": "PURCHASE_CANCELLED_ERROR",                 "problem": "cancelled",   "message_shown": false, "message_key": null },
+    { "code": "10",      "revenuecat_name": "NETWORK_ERROR",                            "problem": "network",     "message_shown": true,  "message_key": "err.network" },
+    { "code": "35",      "revenuecat_name": "OFFLINE_CONNECTION_ERROR",                 "problem": "network",     "message_shown": true,  "message_key": "err.network" },
+    { "code": "32",      "revenuecat_name": "PRODUCT_REQUEST_TIMED_OUT_ERROR",          "problem": "network",     "message_shown": true,  "message_key": "err.network" },
+    { "code": "3",       "revenuecat_name": "PURCHASE_NOT_ALLOWED_ERROR",               "problem": "notAllowed",  "message_shown": true,  "message_key": "err.notAllowed" },
+    { "code": "20",      "revenuecat_name": "PAYMENT_PENDING_ERROR",                    "problem": "pending",     "message_shown": true,  "message_key": "err.pending" },
+    { "code": "6",       "revenuecat_name": "PRODUCT_ALREADY_PURCHASED_ERROR",          "problem": "owned",       "message_shown": true,  "message_key": "err.owned" },
+    { "code": "5",       "revenuecat_name": "PRODUCT_NOT_AVAILABLE_FOR_PURCHASE_ERROR", "problem": "unavailable", "message_shown": true,  "message_key": "err.unavailable" },
+    { "code": "noOffer", "revenuecat_name": null,                                       "problem": "unavailable", "message_shown": true,  "message_key": "err.unavailable" },
+    { "code": "999",     "revenuecat_name": null,                                       "problem": "store",       "message_shown": true,  "message_key": "err.store" },
+    { "code": "unknown", "revenuecat_name": null,                                       "problem": "store",       "message_shown": true,  "message_key": "err.store" }
+  ],
+
+  "inert_port_code": {
+    "code": "inactive",
+    "note": "Returned by the inert port for every call. No UI path calls the inert port, so this code never reaches the learner."
+  }
+}
