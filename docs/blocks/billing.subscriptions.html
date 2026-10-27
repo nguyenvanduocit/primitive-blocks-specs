@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subscriptions: App Store and Google Play with a Server-Side Entitlement — Primitive Block Library</title>
+<meta name="description" content="Store subscriptions on App Store and Google Play with a server-side entitlement(account_id, product_code), a state machine, idempotent store-message intake and periodic exactly-once currency stipends.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">§</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#principles">Manifesto</a></li>
+      <li><a href="../anatomy.html">Anatomy</a></li>
+      <li><a href="../authoring.html">Authoring</a></li>
+      <li><a href="../#blocks">Examples</a></li>
+      <li><a href="../kits.html">Kits</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="page-grid">
+
+    <aside class="toc">
+      <a class="back" href="../#blocks">Back to examples</a>
+      <div class="toc-section">On this page</div>
+      <nav class="toc-nav"><a href="#problem" class="active">Problem</a><a href="#prerequisites">Dependencies</a><a href="#data-model">Data model</a><a href="#files">Spec files</a></nav>
+      <div class="toc-meta">
+        <div class="meta-row"><span class="label">Category</span><span class="cat-badge billing">billing</span></div>
+        <div class="meta-row"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+        <div class="meta-row"><span class="label">Effort</span><span>~2 days code (server core, notification handler, client screens) + store console and Pub/Sub setup (hours, plus review waits); estimate, not measured</span></div>
+        <div class="meta-row"><span class="label">Version</span><code>v0.1.0</code></div>
+      </div>
+    </aside>
+
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../#blocks">Examples</a>
+        <span class="sep">/</span>
+        <span>billing</span>
+      </div>
+      <span class="block-id-large">billing.subscriptions</span>
+      <h1>Subscriptions: App Store and Google Play with a Server-Side Entitlement</h1>
+      <p class="lead">Store subscriptions on App Store and Google Play with a server-side entitlement(account_id, product_code), a state machine, idempotent store-message intake and periodic exactly-once currency stipends.</p>
+      <div class="block-tags"><span class="tag">billing</span><span class="tag">subscriptions</span><span class="tag">entitlement</span><span class="tag">app-store-server-notifications</span><span class="tag">google-play-rtdn</span><span class="tag">trial</span><span class="tag">grace-period</span><span class="tag">billing-retry</span><span class="tag">stipend</span><span class="tag">paywall</span><span class="tag">restore</span><span class="tag">family-sharing</span><span class="tag">mobile</span><span class="tag">game</span></div>
+
+      
+      <section id="problem">
+        <div class="section-rule">
+          <span class="section-label">Problem</span>
+          <span class="section-line"></span>
+        </div>
+        <p class="problem-callout">A mobile game (a web app in a native shell, shipped to the App Store and Google Play) sells recurring access, for example a VIP membership with perks and a periodic currency stipend. Digital features unlocked in the app must be sold through the store's own billing: Apple requires in-app purchase for &quot;subscriptions, in-game currencies, game levels&quot; [SA15], and Google requires Google Play's billing system for subscription services, naming game among the examples [SG13]. The stores own the money and the lifecycle: free trial, renewal, grace period, billing retry, account hold, pause, refund. The app owns only access.</p>
+      </section>
+
+      <section id="prerequisites">
+        <div class="section-rule">
+          <span class="section-label">Dependencies</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="related-blocks">
+          <div class="related-row">
+            <span class="related-label">Depends on</span>
+            <div class="related-chips"><a class="prereq" href="billing.virtual-currency.html">billing.virtual-currency</a></div>
+          </div>
+          <div class="related-row">
+            <span class="related-label">Required by</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="data-model">
+        <div class="section-rule">
+          <span class="section-label">Data model</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="tables-grid"><div class="table-card">
+          <div class="table-name">subscription_products</div>
+          <div class="table-desc">Entitlement catalog with level and stipend.</div>
+        </div><div class="table-card">
+          <div class="table-name">subscription_plans</div>
+          <div class="table-desc">Store SKUs per product and platform.</div>
+        </div><div class="table-card">
+          <div class="table-name">subscription_account_tokens</div>
+          <div class="table-desc">Opaque token sent to the store at purchase.</div>
+        </div><div class="table-card">
+          <div class="table-name">subscription_chains</div>
+          <div class="table-desc">One store subscription: state, expiry, snapshot time.</div>
+        </div><div class="table-card">
+          <div class="table-name">subscription_terms</div>
+          <div class="table-desc">One paid or free period.</div>
+        </div><div class="table-card">
+          <div class="table-name">subscription_events</div>
+          <div class="table-desc">Handler idempotency and audit log.</div>
+        </div><div class="table-card">
+          <div class="table-name">stipend_grants</div>
+          <div class="table-desc">Stipend slices and ledger entries.</div>
+        </div></div>
+      </section>
+
+      <section id="files">
+        <div class="section-rule">
+          <span class="section-label">Spec files</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Documentation</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/subscriptions/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/subscriptions/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/subscriptions/frontend.md" target="_blank" rel="noopener">frontend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/subscriptions/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Scenarios</span>
+          <span class="files-section-count">6</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/subscriptions/lifecycle-states.feature" target="_blank" rel="noopener">lifecycle-states.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/subscriptions/event-ingest.feature" target="_blank" rel="noopener">event-ingest.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/subscriptions/purchase-restore-linking.feature" target="_blank" rel="noopener">purchase-restore-linking.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/subscriptions/offers-and-plan-changes.feature" target="_blank" rel="noopener">offers-and-plan-changes.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/subscriptions/stipends.feature" target="_blank" rel="noopener">stipends.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/subscriptions/paywall-disclosure.feature" target="_blank" rel="noopener">paywall-disclosure.feature<span class="ftype">GHERKIN</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Fixtures</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/subscriptions/fixtures/plans-catalog.json" target="_blank" rel="noopener">fixtures/plans-catalog.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/subscriptions/fixtures/state-matrix.json" target="_blank" rel="noopener">fixtures/state-matrix.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/subscriptions/fixtures/store-events.json" target="_blank" rel="noopener">fixtures/store-events.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/subscriptions/fixtures/stipend-schedule.json" target="_blank" rel="noopener">fixtures/stipend-schedule.json<span class="ftype">JSON</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Acceptance</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/billing/subscriptions/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+      </div>
+        <p style="margin-top: 24px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/blocks/billing/subscriptions" target="_blank" rel="noopener">Browse <code>blocks/billing/subscriptions/</code> on GitHub &rarr;</a></p>
+      </section>
+
+
+        <nav class="prev-next">
+          <a href="billing.virtual-currency.html"><span class="label">← Previous block</span><span class="title">Virtual Currency: Wallet Ledger and Consumable Currency Packs (App Store + Google Play)</span></a>
+          <a class="next" href="compliance.shopify-gdpr.html"><span class="label">Next block →</span><span class="title">Shopify GDPR Mandatory Webhooks</span></a>
+        </nav>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+// Highlight active TOC link on scroll
+document.addEventListener("DOMContentLoaded", () => {
+  const links = document.querySelectorAll(".toc-nav a");
+  const sections = [...links].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>

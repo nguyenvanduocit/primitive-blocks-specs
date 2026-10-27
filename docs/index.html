@@ -48,11 +48,11 @@
       <aside class="title-block" aria-label="Library at a glance">
         <div class="tb-row">
           <span class="tb-label">Blocks</span>
-          <span class="tb-value">16</span>
+          <span class="tb-value">27</span>
         </div>
         <div class="tb-row">
           <span class="tb-label">Categories</span>
-          <span class="tb-value">9</span>
+          <span class="tb-value">10</span>
         </div>
         <div class="tb-row">
           <span class="tb-label">Tested stacks</span>
@@ -198,11 +198,11 @@
       <span class="section-line"></span>
     </div>
     <div class="section-header">
-      <h2>16 blocks demonstrate the discipline.</h2>
+      <h2>27 blocks demonstrate the discipline.</h2>
       <p>Reference implementations &mdash; not a closed catalog. Each one is the complete spec of a real feature, written to pass the 3-stack test.</p>
     </div>
 
-    <div class="filter-bar" role="tablist" aria-label="Filter blocks by category"><button class="filter-pill active" data-cat="all">All<span class="count">16</span></button><button class="filter-pill" data-cat="auth">auth<span class="count">4</span></button><button class="filter-pill" data-cat="billing">billing<span class="count">2</span></button><button class="filter-pill" data-cat="compliance">compliance<span class="count">2</span></button><button class="filter-pill" data-cat="data">data<span class="count">2</span></button><button class="filter-pill" data-cat="integration">integration<span class="count">1</span></button><button class="filter-pill" data-cat="messaging">messaging<span class="count">1</span></button><button class="filter-pill" data-cat="operations">operations<span class="count">1</span></button><button class="filter-pill" data-cat="ugc">ugc<span class="count">2</span></button><button class="filter-pill" data-cat="webhooks">webhooks<span class="count">1</span></button></div>
+    <div class="filter-bar" role="tablist" aria-label="Filter blocks by category"><button class="filter-pill active" data-cat="all">All<span class="count">27</span></button><button class="filter-pill" data-cat="auth">auth<span class="count">5</span></button><button class="filter-pill" data-cat="billing">billing<span class="count">4</span></button><button class="filter-pill" data-cat="compliance">compliance<span class="count">2</span></button><button class="filter-pill" data-cat="data">data<span class="count">2</span></button><button class="filter-pill" data-cat="engagement">engagement<span class="count">7</span></button><button class="filter-pill" data-cat="integration">integration<span class="count">1</span></button><button class="filter-pill" data-cat="messaging">messaging<span class="count">2</span></button><button class="filter-pill" data-cat="operations">operations<span class="count">1</span></button><button class="filter-pill" data-cat="ugc">ugc<span class="count">2</span></button><button class="filter-pill" data-cat="webhooks">webhooks<span class="count">1</span></button></div>
 
     <div class="block-grid" id="block-grid">
         <a class="block-card" data-cat="auth" href="blocks/auth.google-login.html">
@@ -210,7 +210,7 @@
           <div class="card-num">
             <span class="num-main">01</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -231,7 +231,7 @@
           <div class="card-num">
             <span class="num-main">02</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -252,7 +252,7 @@
           <div class="card-num">
             <span class="num-main">03</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -273,7 +273,7 @@
           <div class="card-num">
             <span class="num-main">04</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -289,12 +289,33 @@
             </div>
           </div>
         </a>
-        <a class="block-card" data-cat="billing" href="blocks/billing.shopify-charges.html">
+        <a class="block-card" data-cat="auth" href="blocks/auth.guest-account.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
             <span class="num-main">05</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">auth.guest-account</span>
+              <span class="cat-badge auth">auth</span>
+            </div>
+            <div class="block-name">Guest Account (silent anonymous account, linkable to Google or Apple)</div>
+            <p class="lead">A server-issued silent guest account with a stored device secret, abuse controls, lifecycle and recovery, linkable to Google or Apple on the same account_id, with a confirmed, digest-bound conflict flow.</p>
+            <div class="block-tags"><span class="tag">guest</span><span class="tag">anonymous-account</span><span class="tag">device-credential</span><span class="tag">account-linking</span><span class="tag">recovery-code</span><span class="tag">attestation</span><span class="tag">abuse-control</span><span class="tag">privacy</span><span class="tag">mobile</span><span class="tag">game</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~6 hours</span></div>
+            </div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="billing" href="blocks/billing.shopify-charges.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">06</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -313,9 +334,9 @@
         <a class="block-card" data-cat="billing" href="blocks/billing.in-app-purchase.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">06</span>
+            <span class="num-main">07</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -331,12 +352,54 @@
             </div>
           </div>
         </a>
+        <a class="block-card" data-cat="billing" href="blocks/billing.virtual-currency.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">08</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">27</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">billing.virtual-currency</span>
+              <span class="cat-badge billing">billing</span>
+            </div>
+            <div class="block-name">Virtual Currency: Wallet Ledger and Consumable Currency Packs (App Store + Google Play)</div>
+            <p class="lead">Server-owned wallet ledger (grant and spend with idempotency keys, currency registry, item counts) and consumable currency packs verified server-side against the App Store Server API and Google Play Developer API, with refund clawback, a spend limit with cool-off, purchase confirmation and reconciliation.</p>
+            <div class="block-tags"><span class="tag">billing</span><span class="tag">virtual-currency</span><span class="tag">wallet</span><span class="tag">ledger</span><span class="tag">consumable</span><span class="tag">currency-pack</span><span class="tag">in-app-purchase</span><span class="tag">app-store-server-api</span><span class="tag">google-play-developer-api</span><span class="tag">refund</span><span class="tag">clawback</span><span class="tag">mobile</span><span class="tag">game</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~2 days code + store console and Pub/Sub setup (hours, plus review waits)</span></div>
+            </div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="billing" href="blocks/billing.subscriptions.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">09</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">27</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">billing.subscriptions</span>
+              <span class="cat-badge billing">billing</span>
+            </div>
+            <div class="block-name">Subscriptions: App Store and Google Play with a Server-Side Entitlement</div>
+            <p class="lead">Store subscriptions on App Store and Google Play with a server-side entitlement(account_id, product_code), a state machine, idempotent store-message intake and periodic exactly-once currency stipends.</p>
+            <div class="block-tags"><span class="tag">billing</span><span class="tag">subscriptions</span><span class="tag">entitlement</span><span class="tag">app-store-server-notifications</span><span class="tag">google-play-rtdn</span><span class="tag">trial</span><span class="tag">grace-period</span><span class="tag">billing-retry</span><span class="tag">stipend</span><span class="tag">paywall</span><span class="tag">restore</span><span class="tag">family-sharing</span><span class="tag">mobile</span><span class="tag">game</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~2 days code (server core, notification handler, client screens) + store console and Pub/Sub setup (hours, plus review waits); estimate, not measured</span></div>
+            </div>
+          </div>
+        </a>
         <a class="block-card" data-cat="compliance" href="blocks/compliance.shopify-gdpr.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">07</span>
+            <span class="num-main">10</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -355,9 +418,9 @@
         <a class="block-card" data-cat="compliance" href="blocks/compliance.account-deletion.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">08</span>
+            <span class="num-main">11</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -376,9 +439,9 @@
         <a class="block-card" data-cat="data" href="blocks/data.shopify-metafields.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">09</span>
+            <span class="num-main">12</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -397,9 +460,9 @@
         <a class="block-card" data-cat="data" href="blocks/data.progress-sync.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">10</span>
+            <span class="num-main">13</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -415,12 +478,159 @@
             </div>
           </div>
         </a>
+        <a class="block-card" data-cat="engagement" href="blocks/engagement.daily-streak.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">14</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">27</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">engagement.daily-streak</span>
+              <span class="cat-badge engagement">engagement</span>
+            </div>
+            <div class="block-name">Daily Streak (daily reward calendar and streak counter)</div>
+            <p class="lead">Daily reward calendar and streak counter: a once-per-day claim keyed by a server-computed day_key, miss policies, earned freezes, repair, and timezone and travel handling, with non-punitive defaults.</p>
+            <div class="block-tags"><span class="tag">daily-reward</span><span class="tag">streak</span><span class="tag">calendar</span><span class="tag">retention</span><span class="tag">live-ops</span><span class="tag">timezone</span><span class="tag">idempotency</span><span class="tag">streak-freeze</span><span class="tag">streak-repair</span><span class="tag">mobile</span><span class="tag">game</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~5 hours</span></div>
+            </div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="engagement" href="blocks/engagement.energy-lives.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">15</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">27</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">engagement.energy-lives</span>
+              <span class="cat-badge engagement">engagement</span>
+            </div>
+            <div class="block-name">Energy and Lives (regenerating play allowance)</div>
+            <p class="lead">Server-authoritative regenerating energy or lives: the value is derived lazily from a stored value, an anchor and the server clock, with caps, overflow, atomic idempotent spends, refunds, refills, boosts, offline reconcile, merge and an ethical floor.</p>
+            <div class="block-tags"><span class="tag">energy</span><span class="tag">lives</span><span class="tag">stamina</span><span class="tag">regeneration</span><span class="tag">lazy-timer</span><span class="tag">pacing</span><span class="tag">refill</span><span class="tag">rewarded-ad</span><span class="tag">boost</span><span class="tag">idempotency</span><span class="tag">server-clock</span><span class="tag">mobile-game</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~4 hours</span></div>
+            </div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="engagement" href="blocks/engagement.event-calendar.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">16</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">27</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">engagement.event-calendar</span>
+              <span class="cat-badge engagement">engagement</span>
+            </div>
+            <div class="block-name">Event Calendar: server-driven daily, weekly and seasonal live events</div>
+            <p class="lead">A server-driven schedule of daily, weekly and seasonal live events that the client discovers without an app update, with exactly-once reward grants and fair early endings.</p>
+            <div class="block-tags"><span class="tag">live-ops</span><span class="tag">events</span><span class="tag">calendar</span><span class="tag">scheduling</span><span class="tag">rewards</span><span class="tag">audience-targeting</span><span class="tag">server-time</span><span class="tag">mobile-game</span><span class="tag">retention</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~2 days</span></div>
+            </div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="engagement" href="blocks/engagement.items.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">17</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">27</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">engagement.items</span>
+              <span class="cat-badge engagement">engagement</span>
+            </div>
+            <div class="block-name">Items: Definitions, Owned Instances, Upgrades, Inventory Limits and Expiry on top of the Wallet Ledger</div>
+            <p class="lead">Versioned item definitions and per-player item instances (level, attributes, expiry, equip state) on top of the shared ledger, with idempotent grants, duplicate rules, an upgrade saga across ledger and item table, held grants for full bags, server-clock expiry, stable inventory pagination, guest merge and erasure.</p>
+            <div class="block-tags"><span class="tag">items</span><span class="tag">inventory</span><span class="tag">equipment</span><span class="tag">collectibles</span><span class="tag">upgrades</span><span class="tag">duplicates</span><span class="tag">boosters</span><span class="tag">expiry</span><span class="tag">held-grants</span><span class="tag">saga</span><span class="tag">mobile</span><span class="tag">game</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~2 days code</span></div>
+            </div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="engagement" href="blocks/engagement.objectives.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">18</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">27</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">engagement.objectives</span>
+              <span class="cat-badge engagement">engagement</span>
+            </div>
+            <div class="block-name">Objectives, Missions and Achievements</div>
+            <p class="lead">Server-owned objectives at every range, from a guided first session through daily and weekly boards to lifetime achievements, with idempotent event ingestion and ledger-paid claims.</p>
+            <div class="block-tags"><span class="tag">objectives</span><span class="tag">missions</span><span class="tag">quests</span><span class="tag">achievements</span><span class="tag">onboarding</span><span class="tag">goals</span><span class="tag">progress</span><span class="tag">rewards</span><span class="tag">live-ops</span><span class="tag">mobile-game</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~7 hours</span></div>
+            </div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="engagement" href="blocks/engagement.season-pass.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">19</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">27</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">engagement.season-pass</span>
+              <span class="cat-badge engagement">engagement</span>
+            </div>
+            <div class="block-name">Season Pass: seasonal progression with a free track, a premium track and XP tiers</div>
+            <p class="lead">A seasonal progression pass with a free and a premium track, XP-derived tiers, idempotent claims, mid-season premium unlock, tier skips, XP boosts, auto-claim at season end, and a rollover with no overlapping seasons.</p>
+            <div class="block-tags"><span class="tag">season-pass</span><span class="tag">battle-pass</span><span class="tag">progression</span><span class="tag">xp</span><span class="tag">tiers</span><span class="tag">live-ops</span><span class="tag">monetization</span><span class="tag">claim</span><span class="tag">mobile</span><span class="tag">game</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~4 hours</span></div>
+            </div>
+          </div>
+        </a>
+        <a class="block-card" data-cat="engagement" href="blocks/engagement.timed-queues.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">20</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">27</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">engagement.timed-queues</span>
+              <span class="cat-badge engagement">engagement</span>
+            </div>
+            <div class="block-name">Timed Queues (build, craft, research and expedition slots with server timers and speed-ups)</div>
+            <p class="lead">Build, craft, research and expedition queues with slots, lazy server-side completion, a quoted speed-up price, cancel refunds and an idle-slot nudge. Keeps a player occupied between sessions without a timer per player or a forced purchase.</p>
+            <div class="block-tags"><span class="tag">timed-queue</span><span class="tag">build-timer</span><span class="tag">crafting</span><span class="tag">research</span><span class="tag">expedition</span><span class="tag">speed-up</span><span class="tag">slots</span><span class="tag">lazy-timer</span><span class="tag">quote</span><span class="tag">idempotency</span><span class="tag">server-clock</span><span class="tag">mobile</span><span class="tag">game</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~6 hours</span></div>
+            </div>
+          </div>
+        </a>
         <a class="block-card" data-cat="integration" href="blocks/integration.shopify-app-proxy.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">11</span>
+            <span class="num-main">21</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -439,9 +649,9 @@
         <a class="block-card" data-cat="messaging" href="blocks/messaging.transactional-email.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">12</span>
+            <span class="num-main">22</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -457,12 +667,33 @@
             </div>
           </div>
         </a>
+        <a class="block-card" data-cat="messaging" href="blocks/messaging.push-reengagement.html">
+          <span class="arrow" aria-hidden="true">→</span>
+          <div class="card-num">
+            <span class="num-main">23</span>
+            <span class="num-divider" aria-hidden="true"></span>
+            <span class="num-total">27</span>
+          </div>
+          <div class="card-body">
+            <div class="row-1">
+              <span class="block-id">messaging.push-reengagement</span>
+              <span class="cat-badge messaging">messaging</span>
+            </div>
+            <div class="block-name">Push Notifications and Re-engagement (mobile game)</div>
+            <p class="lead">Permission priming, token lifecycle, local and remote delivery lanes, a lapsed-player ladder with ledger-granted comeback rewards, caps, quiet hours, an age gate and holdout measurement for a mobile game.</p>
+            <div class="block-tags"><span class="tag">push</span><span class="tag">notifications</span><span class="tag">apns</span><span class="tag">fcm</span><span class="tag">local-notifications</span><span class="tag">re-engagement</span><span class="tag">win-back</span><span class="tag">quiet-hours</span><span class="tag">frequency-caps</span><span class="tag">deep-links</span><span class="tag">game</span><span class="tag">mobile</span></div>
+            <div class="block-meta">
+              <div class="meta-item"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+              <div class="meta-item"><span class="label">Effort</span><span>~4 hours</span></div>
+            </div>
+          </div>
+        </a>
         <a class="block-card" data-cat="operations" href="blocks/operations.shopify-bulk.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">13</span>
+            <span class="num-main">24</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -481,9 +712,9 @@
         <a class="block-card" data-cat="ugc" href="blocks/ugc.product-reviews.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">14</span>
+            <span class="num-main">25</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -502,9 +733,9 @@
         <a class="block-card" data-cat="ugc" href="blocks/ugc.friends-leaderboard.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">15</span>
+            <span class="num-main">26</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">
@@ -523,9 +754,9 @@
         <a class="block-card" data-cat="webhooks" href="blocks/webhooks.shopify-webhooks.html">
           <span class="arrow" aria-hidden="true">→</span>
           <div class="card-num">
-            <span class="num-main">16</span>
+            <span class="num-main">27</span>
             <span class="num-divider" aria-hidden="true"></span>
-            <span class="num-total">16</span>
+            <span class="num-total">27</span>
           </div>
           <div class="card-body">
             <div class="row-1">

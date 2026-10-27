@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event Calendar: server-driven daily, weekly and seasonal live events — Primitive Block Library</title>
+<meta name="description" content="A server-driven schedule of daily, weekly and seasonal live events that the client discovers without an app update, with exactly-once reward grants and fair early endings.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">§</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#principles">Manifesto</a></li>
+      <li><a href="../anatomy.html">Anatomy</a></li>
+      <li><a href="../authoring.html">Authoring</a></li>
+      <li><a href="../#blocks">Examples</a></li>
+      <li><a href="../kits.html">Kits</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="page-grid">
+
+    <aside class="toc">
+      <a class="back" href="../#blocks">Back to examples</a>
+      <div class="toc-section">On this page</div>
+      <nav class="toc-nav"><a href="#problem" class="active">Problem</a><a href="#prerequisites">Dependencies</a><a href="#data-model">Data model</a><a href="#files">Spec files</a></nav>
+      <div class="toc-meta">
+        <div class="meta-row"><span class="label">Category</span><span class="cat-badge engagement">engagement</span></div>
+        <div class="meta-row"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+        <div class="meta-row"><span class="label">Effort</span><span>~2 days</span></div>
+        <div class="meta-row"><span class="label">Version</span><code>v0.1.0</code></div>
+      </div>
+    </aside>
+
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../#blocks">Examples</a>
+        <span class="sep">/</span>
+        <span>engagement</span>
+      </div>
+      <span class="block-id-large">engagement.event-calendar</span>
+      <h1>Event Calendar: server-driven daily, weekly and seasonal live events</h1>
+      <p class="lead">A server-driven schedule of daily, weekly and seasonal live events that the client discovers without an app update, with exactly-once reward grants and fair early endings.</p>
+      <div class="block-tags"><span class="tag">live-ops</span><span class="tag">events</span><span class="tag">calendar</span><span class="tag">scheduling</span><span class="tag">rewards</span><span class="tag">audience-targeting</span><span class="tag">server-time</span><span class="tag">mobile-game</span><span class="tag">retention</span></div>
+
+      
+      <section id="problem">
+        <div class="section-rule">
+          <span class="section-label">Problem</span>
+          <span class="section-line"></span>
+        </div>
+        <p class="problem-callout">A mobile game keeps players returning at three time scales: something to do today, a goal across this week, a long arc across this season. The schedule of those reasons is the live-ops calendar. If the calendar is compiled into the app, every new event needs a store release, a release takes days to reach players, and a client with a wrong device clock decides for itself what is live.</p>
+      </section>
+
+      <section id="prerequisites">
+        <div class="section-rule">
+          <span class="section-label">Dependencies</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="related-blocks">
+          <div class="related-row">
+            <span class="related-label">Depends on</span>
+            <div class="related-chips"><a class="prereq" href="billing.virtual-currency.html">billing.virtual-currency</a></div>
+          </div>
+          <div class="related-row">
+            <span class="related-label">Required by</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="data-model">
+        <div class="section-rule">
+          <span class="section-label">Data model</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="tables-grid"><div class="table-card">
+          <div class="table-name">event_definitions</div>
+          <div class="table-desc">Event windows, audience, content and state flags.</div>
+        </div><div class="table-card">
+          <div class="table-name">event_rewards</div>
+          <div class="table-desc">Frozen reward table per event.</div>
+        </div><div class="table-card">
+          <div class="table-name">event_participation</div>
+          <div class="table-desc">Opt-in, progress, eligibility latch and settlement marker.</div>
+        </div><div class="table-card">
+          <div class="table-name">event_progress_entries</div>
+          <div class="table-desc">Idempotent progress log.</div>
+        </div><div class="table-card">
+          <div class="table-name">event_reward_claims</div>
+          <div class="table-desc">One row per earned reward, exactly once.</div>
+        </div><div class="table-card">
+          <div class="table-name">event_operations</div>
+          <div class="table-desc">Audit of every operator action.</div>
+        </div></div>
+      </section>
+
+      <section id="files">
+        <div class="section-rule">
+          <span class="section-label">Spec files</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Documentation</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/event-calendar/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/event-calendar/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/event-calendar/frontend.md" target="_blank" rel="noopener">frontend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/event-calendar/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Scenarios</span>
+          <span class="files-section-count">6</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/event-calendar/event-lifecycle.feature" target="_blank" rel="noopener">event-lifecycle.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/event-calendar/discovery-and-targeting.feature" target="_blank" rel="noopener">discovery-and-targeting.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/event-calendar/participation-and-rewards.feature" target="_blank" rel="noopener">participation-and-rewards.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/event-calendar/calendar-authoring.feature" target="_blank" rel="noopener">calendar-authoring.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/event-calendar/emergency-and-preview.feature" target="_blank" rel="noopener">emergency-and-preview.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/event-calendar/local-windows-and-clock.feature" target="_blank" rel="noopener">local-windows-and-clock.feature<span class="ftype">GHERKIN</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Fixtures</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/event-calendar/fixtures/events.json" target="_blank" rel="noopener">fixtures/events.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/event-calendar/fixtures/accounts.json" target="_blank" rel="noopener">fixtures/accounts.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/event-calendar/fixtures/rewards-and-participation.json" target="_blank" rel="noopener">fixtures/rewards-and-participation.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/event-calendar/fixtures/time-cases.json" target="_blank" rel="noopener">fixtures/time-cases.json<span class="ftype">JSON</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Acceptance</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/event-calendar/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+      </div>
+        <p style="margin-top: 24px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/blocks/engagement/event-calendar" target="_blank" rel="noopener">Browse <code>blocks/engagement/event-calendar/</code> on GitHub &rarr;</a></p>
+      </section>
+
+
+        <nav class="prev-next">
+          <a href="engagement.energy-lives.html"><span class="label">← Previous block</span><span class="title">Energy and Lives (regenerating play allowance)</span></a>
+          <a class="next" href="engagement.items.html"><span class="label">Next block →</span><span class="title">Items: Definitions, Owned Instances, Upgrades, Inventory Limits and Expiry on top of the Wallet Ledger</span></a>
+        </nav>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+// Highlight active TOC link on scroll
+document.addEventListener("DOMContentLoaded", () => {
+  const links = document.querySelectorAll(".toc-nav a");
+  const sections = [...links].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>

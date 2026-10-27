@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energy and Lives (regenerating play allowance) — Primitive Block Library</title>
+<meta name="description" content="Server-authoritative regenerating energy or lives: the value is derived lazily from a stored value, an anchor and the server clock, with caps, overflow, atomic idempotent spends, refunds, refills, boo">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">§</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#principles">Manifesto</a></li>
+      <li><a href="../anatomy.html">Anatomy</a></li>
+      <li><a href="../authoring.html">Authoring</a></li>
+      <li><a href="../#blocks">Examples</a></li>
+      <li><a href="../kits.html">Kits</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="page-grid">
+
+    <aside class="toc">
+      <a class="back" href="../#blocks">Back to examples</a>
+      <div class="toc-section">On this page</div>
+      <nav class="toc-nav"><a href="#problem" class="active">Problem</a><a href="#prerequisites">Dependencies</a><a href="#data-model">Data model</a><a href="#files">Spec files</a></nav>
+      <div class="toc-meta">
+        <div class="meta-row"><span class="label">Category</span><span class="cat-badge engagement">engagement</span></div>
+        <div class="meta-row"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+        <div class="meta-row"><span class="label">Effort</span><span>~4 hours</span></div>
+        <div class="meta-row"><span class="label">Version</span><code>v0.1.0</code></div>
+      </div>
+    </aside>
+
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../#blocks">Examples</a>
+        <span class="sep">/</span>
+        <span>engagement</span>
+      </div>
+      <span class="block-id-large">engagement.energy-lives</span>
+      <h1>Energy and Lives (regenerating play allowance)</h1>
+      <p class="lead">Server-authoritative regenerating energy or lives: the value is derived lazily from a stored value, an anchor and the server clock, with caps, overflow, atomic idempotent spends, refunds, refills, boosts, offline reconcile, merge and an ethical floor.</p>
+      <div class="block-tags"><span class="tag">energy</span><span class="tag">lives</span><span class="tag">stamina</span><span class="tag">regeneration</span><span class="tag">lazy-timer</span><span class="tag">pacing</span><span class="tag">refill</span><span class="tag">rewarded-ad</span><span class="tag">boost</span><span class="tag">idempotency</span><span class="tag">server-clock</span><span class="tag">mobile-game</span></div>
+
+      
+      <section id="problem">
+        <div class="section-rule">
+          <span class="section-label">Problem</span>
+          <span class="section-line"></span>
+        </div>
+        <p class="problem-callout">A game that limits how often a player can start a session (energy, stamina, lives, hearts) needs a counter that refills with time, caps, can be refilled by other means, and stays correct across two phones, a dead battery and a tampered device clock. The usual shortcut is a per-player timer job that adds one point every interval. It costs a scheduled write per player per interval, drifts when the job is late, and has no answer for a player who was away for ten hours. This block specifies the other model: <strong>store the value and the instant it is exact for, and derive the current value from the server clock on every read</strong>. Nothing runs per player.</p>
+      </section>
+
+      <section id="prerequisites">
+        <div class="section-rule">
+          <span class="section-label">Dependencies</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="related-blocks">
+          <div class="related-row">
+            <span class="related-label">Depends on</span>
+            <div class="related-chips"><a class="prereq" href="billing.virtual-currency.html">billing.virtual-currency</a></div>
+          </div>
+          <div class="related-row">
+            <span class="related-label">Required by</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="data-model">
+        <div class="section-rule">
+          <span class="section-label">Data model</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="tables-grid"><div class="table-card">
+          <div class="table-name">energy_meter_configs</div>
+          <div class="table-desc">Append-only config versions per meter.</div>
+        </div><div class="table-card">
+          <div class="table-name">energy_meters</div>
+          <div class="table-desc">Value, anchor, cycle start and boost end per account and meter.</div>
+        </div><div class="table-card">
+          <div class="table-name">energy_attempts</div>
+          <div class="table-desc">One row per attempt id: state, charge or reservation, refund facts.</div>
+        </div><div class="table-card">
+          <div class="table-name">energy_entries</div>
+          <div class="table-desc">Idempotency log of grants, refills, refunds, boosts and merges.</div>
+        </div><div class="table-card">
+          <div class="table-name">energy_gifts</div>
+          <div class="table-desc">Optional friend gifts, with energy_gift_settings for opt-out.</div>
+        </div></div>
+      </section>
+
+      <section id="files">
+        <div class="section-rule">
+          <span class="section-label">Spec files</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Documentation</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/energy-lives/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/energy-lives/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/energy-lives/frontend.md" target="_blank" rel="noopener">frontend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/energy-lives/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Scenarios</span>
+          <span class="files-section-count">6</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/energy-lives/lazy-regeneration.feature" target="_blank" rel="noopener">lazy-regeneration.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/energy-lives/attempt-spend.feature" target="_blank" rel="noopener">attempt-spend.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/energy-lives/refill-paths.feature" target="_blank" rel="noopener">refill-paths.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/energy-lives/config-change.feature" target="_blank" rel="noopener">config-change.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/energy-lives/offline-and-clock.feature" target="_blank" rel="noopener">offline-and-clock.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/energy-lives/account-merge.feature" target="_blank" rel="noopener">account-merge.feature<span class="ftype">GHERKIN</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Fixtures</span>
+          <span class="files-section-count">3</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/energy-lives/fixtures/meter-config.json" target="_blank" rel="noopener">fixtures/meter-config.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/energy-lives/fixtures/regen-cases.json" target="_blank" rel="noopener">fixtures/regen-cases.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/energy-lives/fixtures/api-cases.json" target="_blank" rel="noopener">fixtures/api-cases.json<span class="ftype">JSON</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Acceptance</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/energy-lives/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+      </div>
+        <p style="margin-top: 24px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/blocks/engagement/energy-lives" target="_blank" rel="noopener">Browse <code>blocks/engagement/energy-lives/</code> on GitHub &rarr;</a></p>
+      </section>
+
+
+        <nav class="prev-next">
+          <a href="engagement.daily-streak.html"><span class="label">← Previous block</span><span class="title">Daily Streak (daily reward calendar and streak counter)</span></a>
+          <a class="next" href="engagement.event-calendar.html"><span class="label">Next block →</span><span class="title">Event Calendar: server-driven daily, weekly and seasonal live events</span></a>
+        </nav>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+// Highlight active TOC link on scroll
+document.addEventListener("DOMContentLoaded", () => {
+  const links = document.querySelectorAll(".toc-nav a");
+  const sections = [...links].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>

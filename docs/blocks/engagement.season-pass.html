@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Season Pass: seasonal progression with a free track, a premium track and XP tiers — Primitive Block Library</title>
+<meta name="description" content="A seasonal progression pass with a free and a premium track, XP-derived tiers, idempotent claims, mid-season premium unlock, tier skips, XP boosts, auto-claim at season end, and a rollover with no ove">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">§</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#principles">Manifesto</a></li>
+      <li><a href="../anatomy.html">Anatomy</a></li>
+      <li><a href="../authoring.html">Authoring</a></li>
+      <li><a href="../#blocks">Examples</a></li>
+      <li><a href="../kits.html">Kits</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="page-grid">
+
+    <aside class="toc">
+      <a class="back" href="../#blocks">Back to examples</a>
+      <div class="toc-section">On this page</div>
+      <nav class="toc-nav"><a href="#problem" class="active">Problem</a><a href="#prerequisites">Dependencies</a><a href="#data-model">Data model</a><a href="#files">Spec files</a></nav>
+      <div class="toc-meta">
+        <div class="meta-row"><span class="label">Category</span><span class="cat-badge engagement">engagement</span></div>
+        <div class="meta-row"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+        <div class="meta-row"><span class="label">Effort</span><span>~4 hours</span></div>
+        <div class="meta-row"><span class="label">Version</span><code>v0.1.0</code></div>
+      </div>
+    </aside>
+
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../#blocks">Examples</a>
+        <span class="sep">/</span>
+        <span>engagement</span>
+      </div>
+      <span class="block-id-large">engagement.season-pass</span>
+      <h1>Season Pass: seasonal progression with a free track, a premium track and XP tiers</h1>
+      <p class="lead">A seasonal progression pass with a free and a premium track, XP-derived tiers, idempotent claims, mid-season premium unlock, tier skips, XP boosts, auto-claim at season end, and a rollover with no overlapping seasons.</p>
+      <div class="block-tags"><span class="tag">season-pass</span><span class="tag">battle-pass</span><span class="tag">progression</span><span class="tag">xp</span><span class="tag">tiers</span><span class="tag">live-ops</span><span class="tag">monetization</span><span class="tag">claim</span><span class="tag">mobile</span><span class="tag">game</span></div>
+
+      
+      <section id="problem">
+        <div class="section-rule">
+          <span class="section-label">Problem</span>
+          <span class="section-line"></span>
+        </div>
+        <p class="problem-callout">A mobile game wants a season-long reason to come back: a track of tiers the player climbs by playing, a free reward at some tiers for everyone, and a premium track the player can buy for better rewards. The industry names this a battle pass, season pass, or event pass: a time-limited pass with free and premium tiers of rewards, with some premium rewards visible to non-buyers ([GameAnalytics, updated 2025-02-26](https://www.gameanalytics.com/blog/designing-battle-passes-in-mobile-games-the-whats-whys-and-hows), MEDIUM: vendor blog, prices as of the article). It sits in the seasonal layer of live operations next to collections and large events ([Sensor Tower, March 2026](https://sensortower.com/blog/top-grossing-mobile-games-live-ops-strategies-2025-report), HIGH; carried from the repository's research notes, not reopened for this block).</p>
+      </section>
+
+      <section id="prerequisites">
+        <div class="section-rule">
+          <span class="section-label">Dependencies</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="related-blocks">
+          <div class="related-row">
+            <span class="related-label">Depends on</span>
+            <div class="related-chips"><a class="prereq" href="billing.virtual-currency.html">billing.virtual-currency</a></div>
+          </div>
+          <div class="related-row">
+            <span class="related-label">Required by</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="data-model">
+        <div class="section-rule">
+          <span class="section-label">Data model</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="tables-grid"><div class="table-card">
+          <div class="table-name">season_definitions</div>
+          <div class="table-desc">Season window, premium product and repeat-tier rule.</div>
+        </div><div class="table-card">
+          <div class="table-name">season_tiers</div>
+          <div class="table-desc">XP cost and free and premium reward per tier.</div>
+        </div><div class="table-card">
+          <div class="table-name">season_progress</div>
+          <div class="table-desc">Total XP per account, premium state and settlement flag.</div>
+        </div><div class="table-card">
+          <div class="table-name">xp_events</div>
+          <div class="table-desc">Idempotent XP ledger with cap and boost audit.</div>
+        </div><div class="table-card">
+          <div class="table-name">tier_claims</div>
+          <div class="table-desc">One claim row per account, season, track and tier.</div>
+        </div><div class="table-card">
+          <div class="table-name">season_purchases</div>
+          <div class="table-desc">Tier skip and XP boost intents with state.</div>
+        </div></div>
+      </section>
+
+      <section id="files">
+        <div class="section-rule">
+          <span class="section-label">Spec files</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Documentation</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/season-pass/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/season-pass/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/season-pass/frontend.md" target="_blank" rel="noopener">frontend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/season-pass/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Scenarios</span>
+          <span class="files-section-count">6</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/season-pass/xp-ingestion-and-tiers.feature" target="_blank" rel="noopener">xp-ingestion-and-tiers.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/season-pass/claims.feature" target="_blank" rel="noopener">claims.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/season-pass/premium-unlock-and-refund.feature" target="_blank" rel="noopener">premium-unlock-and-refund.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/season-pass/skips-and-boosts.feature" target="_blank" rel="noopener">skips-and-boosts.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/season-pass/season-end-and-rollover.feature" target="_blank" rel="noopener">season-end-and-rollover.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/season-pass/clock-and-season-definition.feature" target="_blank" rel="noopener">clock-and-season-definition.feature<span class="ftype">GHERKIN</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Fixtures</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/season-pass/fixtures/season-2026-10.json" target="_blank" rel="noopener">fixtures/season-2026-10.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/season-pass/fixtures/progress-states.json" target="_blank" rel="noopener">fixtures/progress-states.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/season-pass/fixtures/xp-event-cases.json" target="_blank" rel="noopener">fixtures/xp-event-cases.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/season-pass/fixtures/purchase-records.json" target="_blank" rel="noopener">fixtures/purchase-records.json<span class="ftype">JSON</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Acceptance</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/season-pass/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+      </div>
+        <p style="margin-top: 24px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/blocks/engagement/season-pass" target="_blank" rel="noopener">Browse <code>blocks/engagement/season-pass/</code> on GitHub &rarr;</a></p>
+      </section>
+
+
+        <nav class="prev-next">
+          <a href="engagement.objectives.html"><span class="label">← Previous block</span><span class="title">Objectives, Missions and Achievements</span></a>
+          <a class="next" href="engagement.timed-queues.html"><span class="label">Next block →</span><span class="title">Timed Queues (build, craft, research and expedition slots with server timers and speed-ups)</span></a>
+        </nav>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+// Highlight active TOC link on scroll
+document.addEventListener("DOMContentLoaded", () => {
+  const links = document.querySelectorAll(".toc-nav a");
+  const sections = [...links].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>

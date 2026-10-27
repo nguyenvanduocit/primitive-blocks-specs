@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Objectives, Missions and Achievements — Primitive Block Library</title>
+<meta name="description" content="Server-owned objectives at every range, from a guided first session through daily and weekly boards to lifetime achievements, with idempotent event ingestion and ledger-paid claims.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">§</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#principles">Manifesto</a></li>
+      <li><a href="../anatomy.html">Anatomy</a></li>
+      <li><a href="../authoring.html">Authoring</a></li>
+      <li><a href="../#blocks">Examples</a></li>
+      <li><a href="../kits.html">Kits</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="page-grid">
+
+    <aside class="toc">
+      <a class="back" href="../#blocks">Back to examples</a>
+      <div class="toc-section">On this page</div>
+      <nav class="toc-nav"><a href="#problem" class="active">Problem</a><a href="#prerequisites">Dependencies</a><a href="#data-model">Data model</a><a href="#files">Spec files</a></nav>
+      <div class="toc-meta">
+        <div class="meta-row"><span class="label">Category</span><span class="cat-badge engagement">engagement</span></div>
+        <div class="meta-row"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+        <div class="meta-row"><span class="label">Effort</span><span>~7 hours</span></div>
+        <div class="meta-row"><span class="label">Version</span><code>v0.1.0</code></div>
+      </div>
+    </aside>
+
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../#blocks">Examples</a>
+        <span class="sep">/</span>
+        <span>engagement</span>
+      </div>
+      <span class="block-id-large">engagement.objectives</span>
+      <h1>Objectives, Missions and Achievements</h1>
+      <p class="lead">Server-owned objectives at every range, from a guided first session through daily and weekly boards to lifetime achievements, with idempotent event ingestion and ledger-paid claims.</p>
+      <div class="block-tags"><span class="tag">objectives</span><span class="tag">missions</span><span class="tag">quests</span><span class="tag">achievements</span><span class="tag">onboarding</span><span class="tag">goals</span><span class="tag">progress</span><span class="tag">rewards</span><span class="tag">live-ops</span><span class="tag">mobile-game</span></div>
+
+      
+      <section id="problem">
+        <div class="section-rule">
+          <span class="section-label">Problem</span>
+          <span class="section-line"></span>
+        </div>
+        <p class="problem-callout">A mobile game keeps a player coming back when a goal is always within reach at three ranges: this session, this week or season, and the whole life of the account. A hard-coded list of goals per range does not survive the first live-ops change, and three problems recur:</p>
+      </section>
+
+      <section id="prerequisites">
+        <div class="section-rule">
+          <span class="section-label">Dependencies</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="related-blocks">
+          <div class="related-row">
+            <span class="related-label">Depends on</span>
+            <div class="related-chips"><a class="prereq" href="billing.virtual-currency.html">billing.virtual-currency</a></div>
+          </div>
+          <div class="related-row">
+            <span class="related-label">Required by</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="data-model">
+        <div class="section-rule">
+          <span class="section-label">Data model</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="tables-grid"><div class="table-card">
+          <div class="table-name">objective_metrics</div>
+          <div class="table-desc">Event vocabulary with trust class and caps.</div>
+        </div><div class="table-card">
+          <div class="table-name">objective_definitions</div>
+          <div class="table-desc">Versioned objective definitions.</div>
+        </div><div class="table-card">
+          <div class="table-name">assignment_plans</div>
+          <div class="table-desc">Fixed or pool plans, reroll bank and ladder.</div>
+        </div><div class="table-card">
+          <div class="table-name">assignment_windows</div>
+          <div class="table-desc">One assigned window per account and plan.</div>
+        </div><div class="table-card">
+          <div class="table-name">reroll_banks</div>
+          <div class="table-desc">Banked rerolls per account and plan.</div>
+        </div><div class="table-card">
+          <div class="table-name">objective_instances</div>
+          <div class="table-desc">Per-account objective state.</div>
+        </div><div class="table-card">
+          <div class="table-name">metric_counters</div>
+          <div class="table-desc">Lifetime metric totals.</div>
+        </div><div class="table-card">
+          <div class="table-name">objective_events</div>
+          <div class="table-desc">Event idempotency record.</div>
+        </div><div class="table-card">
+          <div class="table-name">account_merges</div>
+          <div class="table-desc">Guest merge records.</div>
+        </div></div>
+      </section>
+
+      <section id="files">
+        <div class="section-rule">
+          <span class="section-label">Spec files</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Documentation</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/objectives/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/objectives/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/objectives/frontend.md" target="_blank" rel="noopener">frontend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/objectives/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Scenarios</span>
+          <span class="files-section-count">6</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/objectives/starter-objectives.feature" target="_blank" rel="noopener">starter-objectives.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/objectives/progress-ingestion.feature" target="_blank" rel="noopener">progress-ingestion.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/objectives/claim-rewards.feature" target="_blank" rel="noopener">claim-rewards.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/objectives/assignment-and-reroll.feature" target="_blank" rel="noopener">assignment-and-reroll.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/objectives/expiry-and-versioning.feature" target="_blank" rel="noopener">expiry-and-versioning.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/objectives/achievements-and-merge.feature" target="_blank" rel="noopener">achievements-and-merge.feature<span class="ftype">GHERKIN</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Fixtures</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/objectives/fixtures/definitions.json" target="_blank" rel="noopener">fixtures/definitions.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/objectives/fixtures/event-cases.json" target="_blank" rel="noopener">fixtures/event-cases.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/objectives/fixtures/assignment-cases.json" target="_blank" rel="noopener">fixtures/assignment-cases.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/objectives/fixtures/merge-and-version-cases.json" target="_blank" rel="noopener">fixtures/merge-and-version-cases.json<span class="ftype">JSON</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Acceptance</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/engagement/objectives/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+      </div>
+        <p style="margin-top: 24px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/blocks/engagement/objectives" target="_blank" rel="noopener">Browse <code>blocks/engagement/objectives/</code> on GitHub &rarr;</a></p>
+      </section>
+
+
+        <nav class="prev-next">
+          <a href="engagement.items.html"><span class="label">← Previous block</span><span class="title">Items: Definitions, Owned Instances, Upgrades, Inventory Limits and Expiry on top of the Wallet Ledger</span></a>
+          <a class="next" href="engagement.season-pass.html"><span class="label">Next block →</span><span class="title">Season Pass: seasonal progression with a free track, a premium track and XP tiers</span></a>
+        </nav>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+// Highlight active TOC link on scroll
+document.addEventListener("DOMContentLoaded", () => {
+  const links = document.querySelectorAll(".toc-nav a");
+  const sections = [...links].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>

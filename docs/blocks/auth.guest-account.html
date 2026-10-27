@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guest Account (silent anonymous account, linkable to Google or Apple) — Primitive Block Library</title>
+<meta name="description" content="A server-issued silent guest account with a stored device secret, abuse controls, lifecycle and recovery, linkable to Google or Apple on the same account_id, with a confirmed, digest-bound conflict fl">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..600,30..100,0..1;1,9..144,400..600,30..100,0..1&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="../" class="brand">
+      <span class="brand-mark">§</span>
+      <span>Primitive Block Library</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../#principles">Manifesto</a></li>
+      <li><a href="../anatomy.html">Anatomy</a></li>
+      <li><a href="../authoring.html">Authoring</a></li>
+      <li><a href="../#blocks">Examples</a></li>
+      <li><a href="../kits.html">Kits</a></li>
+      <li><a class="github" href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="page-grid">
+
+    <aside class="toc">
+      <a class="back" href="../#blocks">Back to examples</a>
+      <div class="toc-section">On this page</div>
+      <nav class="toc-nav"><a href="#problem" class="active">Problem</a><a href="#prerequisites">Dependencies</a><a href="#data-model">Data model</a><a href="#files">Spec files</a></nav>
+      <div class="toc-meta">
+        <div class="meta-row"><span class="label">Category</span><span class="cat-badge auth">auth</span></div>
+        <div class="meta-row"><span class="label">Complexity</span><span class="complexity high">high</span></div>
+        <div class="meta-row"><span class="label">Effort</span><span>~6 hours</span></div>
+        <div class="meta-row"><span class="label">Version</span><code>v0.1.0</code></div>
+      </div>
+    </aside>
+
+    <article class="page-content">
+      <div class="breadcrumb">
+        <a href="../#blocks">Examples</a>
+        <span class="sep">/</span>
+        <span>auth</span>
+      </div>
+      <span class="block-id-large">auth.guest-account</span>
+      <h1>Guest Account (silent anonymous account, linkable to Google or Apple)</h1>
+      <p class="lead">A server-issued silent guest account with a stored device secret, abuse controls, lifecycle and recovery, linkable to Google or Apple on the same account_id, with a confirmed, digest-bound conflict flow.</p>
+      <div class="block-tags"><span class="tag">guest</span><span class="tag">anonymous-account</span><span class="tag">device-credential</span><span class="tag">account-linking</span><span class="tag">recovery-code</span><span class="tag">attestation</span><span class="tag">abuse-control</span><span class="tag">privacy</span><span class="tag">mobile</span><span class="tag">game</span></div>
+
+      
+      <section id="problem">
+        <div class="section-rule">
+          <span class="section-label">Problem</span>
+          <span class="section-line"></span>
+        </div>
+        <p class="problem-callout">A mobile game wants the player inside the first session with no sign-up, yet every server-authoritative block of the game (ledger, streak, energy, objectives, season pass, push preferences) keys its rows by one <code>account_id</code>. Something has to issue that id before the player has a Google or Apple identity. This block is that something: a <strong>server-side anonymous account</strong> created silently on first launch, identified on the device by a stored secret, that later gains a Google or Apple credential <strong>on the same <code>account_id</code></strong> so nothing is re-keyed or migrated.</p>
+      </section>
+
+      <section id="prerequisites">
+        <div class="section-rule">
+          <span class="section-label">Dependencies</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="related-blocks">
+          <div class="related-row">
+            <span class="related-label">Depends on</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+          <div class="related-row">
+            <span class="related-label">Required by</span>
+            <div class="related-chips"><span class="prereq none">none</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="data-model">
+        <div class="section-rule">
+          <span class="section-label">Data model</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="tables-grid"><div class="table-card">
+          <div class="table-name">accounts</div>
+          <div class="table-desc">Root: account_id, kind, status and linked_at.</div>
+        </div><div class="table-card">
+          <div class="table-name">guest_credentials</div>
+          <div class="table-desc">Hashed device secrets and recovery codes.</div>
+        </div><div class="table-card">
+          <div class="table-name">guest_sessions</div>
+          <div class="table-desc">Hashed short-lived sessions.</div>
+        </div><div class="table-card">
+          <div class="table-name">link_attempts</div>
+          <div class="table-desc">Link nonce, conflict state and resumable import.</div>
+        </div><div class="table-card">
+          <div class="table-name">guest_tombstones</div>
+          <div class="table-desc">Hash-only record so a returning device is told why.</div>
+        </div><div class="table-card">
+          <div class="table-name">guest_challenges</div>
+          <div class="table-desc">Single-use proof-of-work challenges.</div>
+        </div><div class="table-card">
+          <div class="table-name">abuse_counters</div>
+          <div class="table-desc">Keyed-hash rate counters.</div>
+        </div></div>
+      </section>
+
+      <section id="files">
+        <div class="section-rule">
+          <span class="section-label">Spec files</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Documentation</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/guest-account/README.md" target="_blank" rel="noopener">README.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/guest-account/backend.md" target="_blank" rel="noopener">backend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/guest-account/frontend.md" target="_blank" rel="noopener">frontend.md<span class="ftype">MD</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/guest-account/security.md" target="_blank" rel="noopener">security.md<span class="ftype">MD</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Scenarios</span>
+          <span class="files-section-count">6</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/guest-account/guest-issuance.feature" target="_blank" rel="noopener">guest-issuance.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/guest-account/abuse-controls.feature" target="_blank" rel="noopener">abuse-controls.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/guest-account/lifecycle-and-recovery.feature" target="_blank" rel="noopener">lifecycle-and-recovery.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/guest-account/link-same-account.feature" target="_blank" rel="noopener">link-same-account.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/guest-account/link-conflict.feature" target="_blank" rel="noopener">link-conflict.feature<span class="ftype">GHERKIN</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/guest-account/switch-and-delete.feature" target="_blank" rel="noopener">switch-and-delete.feature<span class="ftype">GHERKIN</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Fixtures</span>
+          <span class="files-section-count">4</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/guest-account/fixtures/accounts.json" target="_blank" rel="noopener">fixtures/accounts.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/guest-account/fixtures/abuse-vectors.json" target="_blank" rel="noopener">fixtures/abuse-vectors.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/guest-account/fixtures/link-conflict-cases.json" target="_blank" rel="noopener">fixtures/link-conflict-cases.json<span class="ftype">JSON</span></a><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/guest-account/fixtures/lifecycle-cases.json" target="_blank" rel="noopener">fixtures/lifecycle-cases.json<span class="ftype">JSON</span></a></div>
+      </div><div class="files-section">
+        <div class="files-section-head">
+          <span class="files-section-name">Acceptance</span>
+          <span class="files-section-count">1</span>
+        </div>
+        <div class="files-grid"><a class="file-link" href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/blocks/auth/guest-account/acceptance.md" target="_blank" rel="noopener">acceptance.md<span class="ftype">MD</span></a></div>
+      </div>
+        <p style="margin-top: 24px;"><a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/tree/main/blocks/auth/guest-account" target="_blank" rel="noopener">Browse <code>blocks/auth/guest-account/</code> on GitHub &rarr;</a></p>
+      </section>
+
+
+        <nav class="prev-next">
+          <a href="auth.sign-in-with-apple.html"><span class="label">← Previous block</span><span class="title">Sign in with Apple</span></a>
+          <a class="next" href="billing.shopify-charges.html"><span class="label">Next block →</span><span class="title">Shopify App Billing & Subscriptions</span></a>
+        </nav>
+    </article>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="footer-inner">
+    <p>
+      <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs" target="_blank" rel="noopener">github.com/nguyenvanduocit/primitive-blocks-specs</a>
+    </p>
+    <p>
+      Spec discipline: <a href="https://github.com/nguyenvanduocit/primitive-blocks-specs/blob/main/docs/SPEC_GUIDELINES.md" target="_blank" rel="noopener">SPEC_GUIDELINES.md</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+// Highlight active TOC link on scroll
+document.addEventListener("DOMContentLoaded", () => {
+  const links = document.querySelectorAll(".toc-nav a");
+  const sections = [...links].map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + id));
+      }
+    });
+  }, { rootMargin: "-30% 0px -60% 0px" });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>

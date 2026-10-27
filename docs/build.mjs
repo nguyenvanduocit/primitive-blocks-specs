@@ -328,6 +328,38 @@ const BLOCKS = [
     files: ["README.md", "backend.md", "frontend.md", "security.md", "native-sign-in.feature", "identity-token-verification.feature", "web-sign-in.feature", "account-linking.feature", "apple-revocation.feature", "fixtures/apple-identity-token.json", "fixtures/apple-endpoints.json", "acceptance.md"]
   },
   {
+    id: "auth.guest-account",
+    name: "Guest Account (silent anonymous account, linkable to Google or Apple)",
+    category: "auth",
+    folder: "blocks/auth/guest-account",
+    version: "0.1.0",
+    complexity: "high",
+    effort: "~6 hours",
+    tags: ["guest","anonymous-account","device-credential","account-linking","recovery-code","attestation","abuse-control","privacy","mobile","game"],
+    prerequisites: [],
+    summary: "A server-issued silent guest account with a stored device secret, abuse controls, lifecycle and recovery, linkable to Google or Apple on the same account_id, with a confirmed, digest-bound conflict flow.",
+    use: [
+      "A game that starts without sign-in and holds server-side per-player state",
+      "A player who should be able to save progress later without losing it",
+      "Other blocks that need one account_id for guests and signed-in players"
+    ],
+    avoid: [
+      "A game with no server-held per-player state",
+      "A project whose managed auth already provides anonymous accounts and linking",
+      "Sign-in that is mandatory before play"
+    ],
+    tables: [
+      { name: "accounts", desc: "Root: account_id, kind, status and linked_at." },
+      { name: "guest_credentials", desc: "Hashed device secrets and recovery codes." },
+      { name: "guest_sessions", desc: "Hashed short-lived sessions." },
+      { name: "link_attempts", desc: "Link nonce, conflict state and resumable import." },
+      { name: "guest_tombstones", desc: "Hash-only record so a returning device is told why." },
+      { name: "guest_challenges", desc: "Single-use proof-of-work challenges." },
+      { name: "abuse_counters", desc: "Keyed-hash rate counters." }
+    ],
+    files: ["README.md","backend.md","frontend.md","security.md","guest-issuance.feature","abuse-controls.feature","lifecycle-and-recovery.feature","link-same-account.feature","link-conflict.feature","switch-and-delete.feature","fixtures/accounts.json","fixtures/abuse-vectors.json","fixtures/link-conflict-cases.json","fixtures/lifecycle-cases.json","acceptance.md"]
+  },
+  {
     id: "billing.shopify-charges",
     name: "Shopify App Billing & Subscriptions",
     category: "billing",
@@ -380,6 +412,73 @@ const BLOCKS = [
       { name: "entitlement_mirror", desc: "OPTIONAL server-side mirror of a user&rsquo;s entitlement. Not production-verified." }
     ],
     files: ["README.md", "backend.md", "frontend.md", "security.md", "free-slice-gate.feature", "purchase.feature", "restore-and-identity.feature", "inert-mode.feature", "release-readiness.feature", "fixtures/free-slice-catalog.json", "fixtures/store-errors.json", "fixtures/store-responses.json", "acceptance.md"]
+  },
+  {
+    id: "billing.virtual-currency",
+    name: "Virtual Currency: Wallet Ledger and Consumable Currency Packs (App Store + Google Play)",
+    category: "billing",
+    folder: "blocks/billing/virtual-currency",
+    version: "0.1.0",
+    complexity: "high",
+    effort: "~2 days code + store console and Pub/Sub setup (hours, plus review waits)",
+    tags: ["billing","virtual-currency","wallet","ledger","consumable","currency-pack","in-app-purchase","app-store-server-api","google-play-developer-api","refund","clawback","mobile","game"],
+    prerequisites: [],
+    summary: "Server-owned wallet ledger (grant and spend with idempotency keys, currency registry, item counts) and consumable currency packs verified server-side against the App Store Server API and Google Play Developer API, with refund clawback, a spend limit with cool-off, purchase confirmation and reconciliation.",
+    use: [
+      "Gems, coins or boosters that features give and take",
+      "Consumable currency packs for App Store and Google Play",
+      "Idempotent rewards, refunds and clawback"
+    ],
+    avoid: [
+      "One permanent unlock only: use billing.in-app-purchase",
+      "Subscriptions: use billing.subscriptions",
+      "Loot-box sales, cash-out or player trading"
+    ],
+    tables: [
+      { name: "currencies", desc: "Currency and item registry." },
+      { name: "currency_flows", desc: "Named faucets and sinks per currency." },
+      { name: "wallet_accounts", desc: "Account link, store token, merge pointer." },
+      { name: "wallet_balances", desc: "Balance per account and currency, never below zero." },
+      { name: "ledger_entries", desc: "Append-only entries with a unique idempotency key." },
+      { name: "spend_controls", desc: "Optional spend limit and pending change." },
+      { name: "store_products", desc: "Product catalog and purchase registry." },
+      { name: "store_product_contents", desc: "Pack contents, bonus and first-purchase bonus." },
+      { name: "store_purchases", desc: "Purchase record, one per store transaction id." },
+      { name: "store_notifications", desc: "Dedupe inbox for store notifications." }
+    ],
+    files: ["README.md","backend.md","frontend.md","security.md","ledger.feature","pack-purchase.feature","pending-and-interrupted.feature","refund-and-clawback.feature","spending-controls.feature","reconciliation-and-erasure.feature","fixtures/catalog.json","fixtures/store-payloads.json","fixtures/ledger-cases.json","fixtures/money-cases.json","acceptance.md"]
+  },
+  {
+    id: "billing.subscriptions",
+    name: "Subscriptions: App Store and Google Play with a Server-Side Entitlement",
+    category: "billing",
+    folder: "blocks/billing/subscriptions",
+    version: "0.1.0",
+    complexity: "high",
+    effort: "~2 days code (server core, notification handler, client screens) + store console and Pub/Sub setup (hours, plus review waits); estimate, not measured",
+    tags: ["billing","subscriptions","entitlement","app-store-server-notifications","google-play-rtdn","trial","grace-period","billing-retry","stipend","paywall","restore","family-sharing","mobile","game"],
+    prerequisites: ["billing.virtual-currency"],
+    summary: "Store subscriptions on App Store and Google Play with a server-side entitlement(account_id, product_code), a state machine, idempotent store-message intake and periodic exactly-once currency stipends.",
+    use: [
+      "VIP or monthly-card subscription with trial, grace and restore",
+      "Perks that the server must decide",
+      "Subscribers who get periodic currency"
+    ],
+    avoid: [
+      "One-time unlocks: use billing.in-app-purchase",
+      "Currency packs and the ledger: use billing.virtual-currency",
+      "Shopify billing or web checkout"
+    ],
+    tables: [
+      { name: "subscription_products", desc: "Entitlement catalog with level and stipend." },
+      { name: "subscription_plans", desc: "Store SKUs per product and platform." },
+      { name: "subscription_account_tokens", desc: "Opaque token sent to the store at purchase." },
+      { name: "subscription_chains", desc: "One store subscription: state, expiry, snapshot time." },
+      { name: "subscription_terms", desc: "One paid or free period." },
+      { name: "subscription_events", desc: "Handler idempotency and audit log." },
+      { name: "stipend_grants", desc: "Stipend slices and ledger entries." }
+    ],
+    files: ["README.md","backend.md","frontend.md","security.md","lifecycle-states.feature","event-ingest.feature","purchase-restore-linking.feature","offers-and-plan-changes.feature","stipends.feature","paywall-disclosure.feature","fixtures/plans-catalog.json","fixtures/state-matrix.json","fixtures/store-events.json","fixtures/stipend-schedule.json","acceptance.md"]
   },
   {
     id: "compliance.shopify-gdpr",
@@ -483,6 +582,227 @@ const BLOCKS = [
     files: ["README.md", "backend.md", "frontend.md", "security.md", "local-store.feature", "import-export.feature", "multi-tab.feature", "snapshot-merge.feature", "cloud-sync.feature", "account-switch.feature", "fixtures/local-record.json", "fixtures/invalid-imports.json", "fixtures/load-repair-cases.json", "fixtures/snapshot-device-a.json", "fixtures/snapshot-device-b.json", "fixtures/snapshot-merged-a-local.json", "fixtures/snapshot-merged-b-local.json", "fixtures/api-cases.json", "acceptance.md"]
   },
   {
+    id: "engagement.daily-streak",
+    name: "Daily Streak (daily reward calendar and streak counter)",
+    category: "engagement",
+    folder: "blocks/engagement/daily-streak",
+    version: "0.1.0",
+    complexity: "high",
+    effort: "~5 hours",
+    tags: ["daily-reward","streak","calendar","retention","live-ops","timezone","idempotency","streak-freeze","streak-repair","mobile","game"],
+    prerequisites: ["billing.virtual-currency"],
+    summary: "Daily reward calendar and streak counter: a once-per-day claim keyed by a server-computed day_key, miss policies, earned freezes, repair, and timezone and travel handling, with non-punitive defaults.",
+    use: [
+      "Daily reward, login bonus or check-in calendar",
+      "Streak counter with freeze or repair",
+      "Daily jackpot through play_to_claim"
+    ],
+    avoid: [
+      "Random or paid rewards, or prizes with real stakes",
+      "Seasonal passes, missions or timed events"
+    ],
+    tables: [
+      { name: "streak_states", desc: "Streak, freezes, offer, zone and version." },
+      { name: "daily_claims", desc: "One row per credited day, unique per account and day_key." },
+      { name: "daily_play", desc: "Qualifying play per day." },
+      { name: "protection_orders", desc: "Freeze and repair orders." },
+      { name: "timezone_changes", desc: "Zone change rate-limit log." }
+    ],
+    files: ["README.md","backend.md","frontend.md","security.md","claim.feature","streak-arithmetic.feature","protection.feature","timezone-and-clock.feature","calendar-rewards.feature","account-lifecycle.feature","fixtures/calendar-config.json","fixtures/streak-vectors.json","fixtures/timezone-vectors.json","fixtures/account-cases.json","acceptance.md"]
+  },
+  {
+    id: "engagement.energy-lives",
+    name: "Energy and Lives (regenerating play allowance)",
+    category: "engagement",
+    folder: "blocks/engagement/energy-lives",
+    version: "0.1.0",
+    complexity: "high",
+    effort: "~4 hours",
+    tags: ["energy","lives","stamina","regeneration","lazy-timer","pacing","refill","rewarded-ad","boost","idempotency","server-clock","mobile-game"],
+    prerequisites: ["billing.virtual-currency"],
+    summary: "Server-authoritative regenerating energy or lives: the value is derived lazily from a stored value, an anchor and the server clock, with caps, overflow, atomic idempotent spends, refunds, refills, boosts, offline reconcile, merge and an ethical floor.",
+    use: [
+      "A mobile game that limits session starts with a counter that refills over time",
+      "Spends that must be idempotent across two devices and retries, with refills through the ledger or a rewarded ad",
+      "A cap or interval that must change mid-season without punishing players"
+    ],
+    avoid: [
+      "Timers on single items such as build or chest timers: use engagement.timed-queues",
+      "A game with no server where the device clock is the only clock",
+      "Ranked real-time modes where equal access matters"
+    ],
+    tables: [
+      { name: "energy_meter_configs", desc: "Append-only config versions per meter." },
+      { name: "energy_meters", desc: "Value, anchor, cycle start and boost end per account and meter." },
+      { name: "energy_attempts", desc: "One row per attempt id: state, charge or reservation, refund facts." },
+      { name: "energy_entries", desc: "Idempotency log of grants, refills, refunds, boosts and merges." },
+      { name: "energy_gifts", desc: "Optional friend gifts, with energy_gift_settings for opt-out." }
+    ],
+    files: ["README.md","backend.md","frontend.md","security.md","lazy-regeneration.feature","attempt-spend.feature","refill-paths.feature","config-change.feature","offline-and-clock.feature","account-merge.feature","fixtures/meter-config.json","fixtures/regen-cases.json","fixtures/api-cases.json","acceptance.md"]
+  },
+  {
+    id: "engagement.event-calendar",
+    name: "Event Calendar: server-driven daily, weekly and seasonal live events",
+    category: "engagement",
+    folder: "blocks/engagement/event-calendar",
+    version: "0.1.0",
+    complexity: "high",
+    effort: "~2 days",
+    tags: ["live-ops","events","calendar","scheduling","rewards","audience-targeting","server-time","mobile-game","retention"],
+    prerequisites: ["billing.virtual-currency"],
+    summary: "A server-driven schedule of daily, weekly and seasonal live events that the client discovers without an app update, with exactly-once reward grants and fair early endings.",
+    use: [
+      "Daily, weekly or seasonal live events without a store release",
+      "Events that need audience targeting, a kill switch and exactly-once rewards",
+      "A tester who must preview the calendar at any instant"
+    ],
+    avoid: [
+      "Season pass tiers, missions, streaks or leaderboard ranking",
+      "Paid entry, prices or spend-based targeting",
+      "Rewards with real-world value or any ranking with stakes"
+    ],
+    tables: [
+      { name: "event_definitions", desc: "Event windows, audience, content and state flags." },
+      { name: "event_rewards", desc: "Frozen reward table per event." },
+      { name: "event_participation", desc: "Opt-in, progress, eligibility latch and settlement marker." },
+      { name: "event_progress_entries", desc: "Idempotent progress log." },
+      { name: "event_reward_claims", desc: "One row per earned reward, exactly once." },
+      { name: "event_operations", desc: "Audit of every operator action." }
+    ],
+    files: ["README.md","backend.md","frontend.md","security.md","event-lifecycle.feature","discovery-and-targeting.feature","participation-and-rewards.feature","calendar-authoring.feature","emergency-and-preview.feature","local-windows-and-clock.feature","fixtures/events.json","fixtures/accounts.json","fixtures/rewards-and-participation.json","fixtures/time-cases.json","acceptance.md"]
+  },
+  {
+    id: "engagement.items",
+    name: "Items: Definitions, Owned Instances, Upgrades, Inventory Limits and Expiry on top of the Wallet Ledger",
+    category: "engagement",
+    folder: "blocks/engagement/items",
+    version: "0.1.0",
+    complexity: "high",
+    effort: "~2 days code",
+    tags: ["items","inventory","equipment","collectibles","upgrades","duplicates","boosters","expiry","held-grants","saga","mobile","game"],
+    prerequisites: ["billing.virtual-currency"],
+    summary: "Versioned item definitions and per-player item instances (level, attributes, expiry, equip state) on top of the shared ledger, with idempotent grants, duplicate rules, an upgrade saga across ledger and item table, held grants for full bags, server-clock expiry, stable inventory pagination, guest merge and erasure.",
+    use: [
+      "Heroes, equipment, cosmetics, cards or boosters with per-copy levels, expiry or duplicates",
+      "A bag limit with a claim path for rewards that do not fit",
+      "Upgrades that spend materials from the wallet ledger"
+    ],
+    avoid: [
+      "All items interchangeable: use ledger item counts alone",
+      "Random reward odds, trading, or timed crafting queues",
+      "Currencies and packs: billing.virtual-currency owns them"
+    ],
+    tables: [
+      { name: "item_definitions", desc: "Versioned immutable item definitions with disclosure fields." },
+      { name: "item_upgrade_costs", desc: "Per-level cost lines of a definition version." },
+      { name: "item_accounts", desc: "Per-account serialization anchor, inventory version and merge pointer." },
+      { name: "item_instances", desc: "Owned copies with level, attributes, state and version." },
+      { name: "item_equips", desc: "One item per target and slot." },
+      { name: "item_grants", desc: "Idempotent grant records and held quantities." },
+      { name: "item_activations", desc: "Booster activation windows on the server clock." },
+      { name: "item_operations", desc: "Saga journal and request idempotency." }
+    ],
+    files: ["README.md","backend.md","frontend.md","security.md","grant-and-duplicates.feature","upgrade-saga.feature","inventory-limits-and-reads.feature","expiry-and-boosters.feature","equip-consume-discard-convert.feature","definitions-merge-and-erasure.feature","fixtures/definitions.json","fixtures/account-states.json","fixtures/operation-cases.json","fixtures/expiry-and-merge-cases.json","acceptance.md"]
+  },
+  {
+    id: "engagement.objectives",
+    name: "Objectives, Missions and Achievements",
+    category: "engagement",
+    folder: "blocks/engagement/objectives",
+    version: "0.1.0",
+    complexity: "high",
+    effort: "~7 hours",
+    tags: ["objectives","missions","quests","achievements","onboarding","goals","progress","rewards","live-ops","mobile-game"],
+    prerequisites: ["billing.virtual-currency"],
+    summary: "Server-owned objectives at every range, from a guided first session through daily and weekly boards to lifetime achievements, with idempotent event ingestion and ledger-paid claims.",
+    use: [
+      "Daily or weekly missions and a points ladder",
+      "Starter goals that end onboarding",
+      "Achievements with hidden tiers"
+    ],
+    avoid: [
+      "Branching narrative quests",
+      "Random-reward drops",
+      "Prizes or rankings with real stakes"
+    ],
+    tables: [
+      { name: "objective_metrics", desc: "Event vocabulary with trust class and caps." },
+      { name: "objective_definitions", desc: "Versioned objective definitions." },
+      { name: "assignment_plans", desc: "Fixed or pool plans, reroll bank and ladder." },
+      { name: "assignment_windows", desc: "One assigned window per account and plan." },
+      { name: "reroll_banks", desc: "Banked rerolls per account and plan." },
+      { name: "objective_instances", desc: "Per-account objective state." },
+      { name: "metric_counters", desc: "Lifetime metric totals." },
+      { name: "objective_events", desc: "Event idempotency record." },
+      { name: "account_merges", desc: "Guest merge records." }
+    ],
+    files: ["README.md","backend.md","frontend.md","security.md","starter-objectives.feature","progress-ingestion.feature","claim-rewards.feature","assignment-and-reroll.feature","expiry-and-versioning.feature","achievements-and-merge.feature","fixtures/definitions.json","fixtures/event-cases.json","fixtures/assignment-cases.json","fixtures/merge-and-version-cases.json","acceptance.md"]
+  },
+  {
+    id: "engagement.season-pass",
+    name: "Season Pass: seasonal progression with a free track, a premium track and XP tiers",
+    category: "engagement",
+    folder: "blocks/engagement/season-pass",
+    version: "0.1.0",
+    complexity: "high",
+    effort: "~4 hours",
+    tags: ["season-pass","battle-pass","progression","xp","tiers","live-ops","monetization","claim","mobile","game"],
+    prerequisites: ["billing.virtual-currency"],
+    summary: "A seasonal progression pass with a free and a premium track, XP-derived tiers, idempotent claims, mid-season premium unlock, tier skips, XP boosts, auto-claim at season end, and a rollover with no overlapping seasons.",
+    use: [
+      "Battle pass or season pass with a paid track",
+      "Tier rewards granted through a currency ledger",
+      "Seasonal live-ops progression fed by server game events"
+    ],
+    avoid: [
+      "Randomized tier rewards",
+      "Several simultaneous passes",
+      "Games with no server"
+    ],
+    tables: [
+      { name: "season_definitions", desc: "Season window, premium product and repeat-tier rule." },
+      { name: "season_tiers", desc: "XP cost and free and premium reward per tier." },
+      { name: "season_progress", desc: "Total XP per account, premium state and settlement flag." },
+      { name: "xp_events", desc: "Idempotent XP ledger with cap and boost audit." },
+      { name: "tier_claims", desc: "One claim row per account, season, track and tier." },
+      { name: "season_purchases", desc: "Tier skip and XP boost intents with state." }
+    ],
+    files: ["README.md","backend.md","frontend.md","security.md","xp-ingestion-and-tiers.feature","claims.feature","premium-unlock-and-refund.feature","skips-and-boosts.feature","season-end-and-rollover.feature","clock-and-season-definition.feature","fixtures/season-2026-10.json","fixtures/progress-states.json","fixtures/xp-event-cases.json","fixtures/purchase-records.json","acceptance.md"]
+  },
+  {
+    id: "engagement.timed-queues",
+    name: "Timed Queues (build, craft, research and expedition slots with server timers and speed-ups)",
+    category: "engagement",
+    folder: "blocks/engagement/timed-queues",
+    version: "0.1.0",
+    complexity: "high",
+    effort: "~6 hours",
+    tags: ["timed-queue","build-timer","crafting","research","expedition","speed-up","slots","lazy-timer","quote","idempotency","server-clock","mobile","game"],
+    prerequisites: ["billing.virtual-currency"],
+    summary: "Build, craft, research and expedition queues with slots, lazy server-side completion, a quoted speed-up price, cancel refunds and an idle-slot nudge. Keeps a player occupied between sessions without a timer per player or a forced purchase.",
+    use: [
+      "A build queue, crafting timer or expedition that finishes later",
+      "A speed-up or skip-the-wait with a stated price",
+      "Extra slots earned by progression or bought"
+    ],
+    avoid: [
+      "Regenerating meters such as energy or lives: use engagement.energy-lives",
+      "Random outputs or loot boxes",
+      "Shared or contested timers between players"
+    ],
+    tables: [
+      { name: "queue_definitions", desc: "Versioned queue definitions: kind, slots, lane depth, unlock options." },
+      { name: "job_definitions", desc: "Jobs: duration, input, output, prerequisites, refund fraction." },
+      { name: "queue_states", desc: "Per account and queue compare-and-swap anchor and nudge counters." },
+      { name: "queue_items", desc: "Started items with snapshot, times and state." },
+      { name: "slot_unlocks", desc: "Extra slots by progression, currency or store purchase." },
+      { name: "speed_up_quotes", desc: "Quotes with price, validity window and item version." },
+      { name: "time_reductions", desc: "Every speed-up or reduction, recorded before the ledger call." },
+      { name: "merge_log", desc: "Guest merge results for idempotent replay." }
+    ],
+    files: ["README.md","backend.md","frontend.md","security.md","start-item.feature","collect-and-lifecycle.feature","speed-up.feature","slots-and-purchase.feature","cancel-and-config-change.feature","handoff-nudge-and-clock.feature","fixtures/catalog.json","fixtures/price-vectors.json","fixtures/lifecycle-cases.json","fixtures/account-cases.json","acceptance.md"]
+  },
+  {
     id: "integration.shopify-app-proxy",
     name: "Shopify App Proxy",
     category: "integration",
@@ -535,6 +855,37 @@ const BLOCKS = [
       { name: "email_suppressions", desc: "Bounces, complaints, manual suppression. Recipients are blocked from further sends." }
     ],
     files: ["README.md", "backend.md", "security.md", "send-email.feature", "template-management.feature", "fixtures/welcome-template.json", "fixtures/order-confirmation-template.json", "fixtures/provider-response.json", "acceptance.md"]
+  },
+  {
+    id: "messaging.push-reengagement",
+    name: "Push Notifications and Re-engagement (mobile game)",
+    category: "messaging",
+    folder: "blocks/messaging/push-reengagement",
+    version: "0.1.0",
+    complexity: "high",
+    effort: "~4 hours",
+    tags: ["push","notifications","apns","fcm","local-notifications","re-engagement","win-back","quiet-hours","frequency-caps","deep-links","game","mobile"],
+    prerequisites: [],
+    summary: "Permission priming, token lifecycle, local and remote delivery lanes, a lapsed-player ladder with ledger-granted comeback rewards, caps, quiet hours, an age gate and holdout measurement for a mobile game.",
+    use: [
+      "Push notifications or the notification permission",
+      "Re-engagement or win-back ladder",
+      "Timer and streak reminders with quiet hours"
+    ],
+    avoid: [
+      "Transactional email: use messaging.transactional-email",
+      "In-app messaging or retargeting ads",
+      "Web push, SMS or live activities"
+    ],
+    tables: [
+      { name: "push_profiles", desc: "Per-account switches, timezone, age status, holdout flag and ladder pointer." },
+      { name: "push_category_prefs", desc: "Per-category switch with consent version." },
+      { name: "device_tokens", desc: "One provider token per account and install." },
+      { name: "notification_intents", desc: "One decision per notification, both lanes." },
+      { name: "notification_deliveries", desc: "Per-device remote sends and provider results." },
+      { name: "comeback_grants", desc: "Audit and idempotency of comeback rewards." }
+    ],
+    files: ["README.md","backend.md","frontend.md","security.md","permission-priming.feature","tokens-and-provider.feature","delivery-lanes.feature","lapsed-ladder.feature","suppression-rules.feature","attribution-and-routing.feature","fixtures/config-defaults.json","fixtures/template-catalog.json","fixtures/profiles.json","fixtures/provider-responses.json","acceptance.md"]
   },
   {
     id: "operations.shopify-bulk",
@@ -683,6 +1034,7 @@ const CSS = `/* ===========================================================
   --c-billing:    #0a6e44;
   --c-compliance: #a72827;
   --c-data:       #6e3aa8;
+  --c-engagement: #4d7c0f;
   --c-integration:#0e7490;
   --c-messaging:  #b03060;
   --c-operations: #8a6a00;
@@ -1719,6 +2071,7 @@ section {
 .cat-badge.billing     { color: var(--c-billing);     border-color: var(--c-billing);     background: rgba(10, 110, 68, 0.08); }
 .cat-badge.compliance  { color: var(--c-compliance);  border-color: var(--c-compliance);  background: rgba(167, 40, 39, 0.08); }
 .cat-badge.data        { color: var(--c-data);        border-color: var(--c-data);        background: rgba(110, 58, 168, 0.08); }
+.cat-badge.engagement  { color: var(--c-engagement);  border-color: var(--c-engagement);  background: rgba(77, 124, 15, 0.08); }
 .cat-badge.integration { color: var(--c-integration); border-color: var(--c-integration); background: rgba(14, 116, 144, 0.08); }
 .cat-badge.messaging   { color: var(--c-messaging);   border-color: var(--c-messaging);   background: rgba(176, 48, 96, 0.08); }
 .cat-badge.operations  { color: var(--c-operations);  border-color: var(--c-operations);  background: rgba(138, 106, 0, 0.08); }
