@@ -219,7 +219,7 @@ function groupFiles(files) {
 // DATA
 // ============================================================================
 // Kit folder names under kits/. Everything else comes from each kit's README.md frontmatter.
-const KITS = ["app-factory"];
+const KITS = ["app-factory", "game-engagement"];
 
 const BLOCKS = [
   {
