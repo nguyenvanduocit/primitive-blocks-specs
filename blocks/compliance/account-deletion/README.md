@@ -73,6 +73,8 @@ If the project already has login, do **not** implement `auth.google-login`. Map 
 
 For this block specifically: the identity itself is erased **last**, through whatever system owns it (a `users` row and its sessions here; the auth provider's delete-user call on a managed stack). The ordered flow in this block does not change.
 
+**Guests.** With `auth.guest-account`, the account id is `accounts.id` and a guest has no `users` row (it is inserted with the same id when the guest links). `account_deletions.user_id` is therefore a foreign key to `accounts.id`, so a guest can hold an open deletion. The identity step deletes the `users` row when one exists, then the `accounts` row, which cascades the guest's credentials, sessions and link attempts and every table that keys `account_id` to it. A guest proves ownership with the `guest` proof type (section 3).
+
 ---
 
 ## 2. Data Model
@@ -81,7 +83,7 @@ For this block specifically: the identity itself is erased **last**, through wha
 
 This block owns one small table and one rule that applies to every other table in the app.
 
-**The rule (erasure inventory):** every table that holds data about a user either (a) has a `user_id` foreign key to `users.id` with `ON DELETE CASCADE`, or (b) has an explicit entry in the erasure registry (see `backend.md` Pattern 3). A table that is neither is a defect; acceptance checks for it.
+**The rule (erasure inventory):** every table that holds data about a user either (a) has a `user_id` foreign key to `users.id` with `ON DELETE CASCADE`, or (b) has an explicit entry in the erasure registry (see `backend.md` Pattern 3). A table that is neither is a defect; acceptance checks for it. With `auth.guest-account` the cascade root is `accounts.id` (tables key `account_id`): the identity step deletes the `accounts` row last, so its cascades fire after every eraser has run.
 
 ```mermaid
 erDiagram
@@ -91,10 +93,14 @@ erDiagram
         text email UK
     }
 
+    accounts {
+        unique_id id PK "From auth.guest-account; users.id equals it once linked"
+    }
+
     account_deletions {
         unique_id id PK
-        unique_id user_id FK "users.id ON DELETE CASCADE, UNIQUE"
-        enum provider "google | apple"
+        unique_id user_id FK "accounts.id ON DELETE CASCADE, UNIQUE"
+        enum provider "google | apple | guest"
         enum status "requested | content_erased | failed"
         enum revocation "pending | done | not_applicable | failed"
         text_short failed_step "nullable"
@@ -107,7 +113,7 @@ erDiagram
         unique_id user_id FK "users.id ON DELETE CASCADE"
     }
 
-    users ||--o| account_deletions : "has at most one open"
+    accounts ||--o| account_deletions : "has at most one open"
     users ||--o{ owned_table_n : "owns (profile, snapshots, friends, codes, sessions ...)"
 ```
 
@@ -121,8 +127,9 @@ The first six rows are what the origin app deletes. SQL-family translation is th
 | Private progress snapshot | `users/{uid}/private/study` | snapshot rows keyed by `user_id` | **hard delete** |
 | The user's own friend list | `users/{uid}/private/friends` | friendship rows where the user is the owner | **hard delete** |
 | Friend code registry entry | `friendCodes/{code}` | unique code column or registry row | **hard delete, only when the entry belongs to this user** |
-| Sign-in identity | Firebase Authentication user | `users` row, `sessions` rows, provider link | **hard delete, last** |
+| Sign-in identity | Firebase Authentication user | `users` row, `sessions` rows, provider link; then the `accounts` row when `auth.guest-account` is installed | **hard delete, last** (users, then accounts) |
 | Apple tokens for the app | held by Apple | revoke with the fresh authorization code | **best effort**, never blocks |
+| Guest credentials, recovery code and link attempts | none (the origin has no guests) | `auth.guest-account` tables, cascading from `accounts` | **hard delete** with the `accounts` row; the credential hashes survive only as tombstones with reason `deleted` and no account id |
 | Other users' friend lists that mention this user | other users' `private/friends` arrays | friendship rows where the user is the friend | origin: left in place, readers drop ids whose account no longer exists. SQL: FK cascade removes them (extrapolated) |
 | Purchase-processor subscriber record | RevenueCat, App Store, Play | external | **retained**, not touched by the shipped flow. *Decision for the merchant* |
 | On-device content (answers, notes, saved words) | app local storage | local storage | **kept by default**, dialog says so. *Decision for the merchant* |
@@ -135,8 +142,8 @@ The first six rows are what the origin app deletes. SQL-family translation is th
 | Column | Logical Type | Constraints | Notes |
 |--------|------|-------------|-------|
 | `id` | `unique_id` | PK | distributed-safe ID |
-| `user_id` | `unique_id` | NOT NULL, UNIQUE, FK → `users.id` **ON DELETE CASCADE** | The row disappears with the user: after completion nothing about the deleted person remains here |
-| `provider` | `enum` | NOT NULL | values: `google|apple` (the provider the user signed in with at request time) |
+| `user_id` | `unique_id` | NOT NULL, UNIQUE, FK → `accounts.id` **ON DELETE CASCADE** | The row disappears with the account: after completion nothing about the deleted person remains here. `accounts.id` is the account id of `auth.guest-account`; without that block it is the project's own account or user id (`users.id` of `auth.google-login`) |
+| `provider` | `enum` | NOT NULL | values: `google|apple|guest` (the provider the user signed in with at request time; `guest` for an active guest account) |
 | `status` | `enum` | NOT NULL, default `requested` | values: `requested|content_erased|failed` |
 | `revocation` | `enum` | NOT NULL, default `pending` | values: `pending|done|not_applicable|failed` (`not_applicable` for providers with nothing to revoke) |
 | `failed_step` | `text_short` | nullable | step that failed last. values: `content_erase|identity_delete|other`; no user content (revocation failure is recorded in `revocation`, not here) |
@@ -158,8 +165,8 @@ The first six rows are what the origin app deletes. SQL-family translation is th
 ```sql
 CREATE TABLE IF NOT EXISTS account_deletions (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     uuid NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-  provider    text NOT NULL CHECK (provider IN ('google','apple')),
+  user_id     uuid NOT NULL UNIQUE REFERENCES accounts(id) ON DELETE CASCADE,
+  provider    text NOT NULL CHECK (provider IN ('google','apple','guest')),
   status      text NOT NULL DEFAULT 'requested'
               CHECK (status IN ('requested','content_erased','failed')),
   revocation  text NOT NULL DEFAULT 'pending'
@@ -170,7 +177,7 @@ CREATE TABLE IF NOT EXISTS account_deletions (
 );
 ```
 
-> `users.id` in `auth.google-login` is declared `text` in its migration; use the same physical type here as the `users` table you already have.
+> `accounts.id` is `uuid` in `auth.guest-account`. Use the physical type of the table `user_id` points at (`users.id` is `text` in `auth.google-login`).
 
 ---
 
@@ -192,12 +199,14 @@ flowchart TD
     G --> H{"Provider needs token revocation?"}
     H -->|Apple, fresh code present| I["Revoke, best effort"]
     H -->|No| J
-    I --> J["Delete identity: sessions, provider link, users row"]
+    I --> J["Delete identity: sessions, provider link, users row, then the accounts row"]
     J --> K["Client: drop session and cached identity, clear ownership marker"]
     K --> L["Signed-out screen and success message"]
     G -.->|Fails| M["Open deletion stays, user still signed in, Delete can run again"]
     J -.->|Fails| M
 ```
+
+**Guest.** The proof in steps D and E is the guest's device credential presented together with the single-use challenge (`backend.md` Pattern 1b): no provider sheet opens, nothing is revoked (step H takes the No branch and `revocation` is `not_applicable`), and step J deletes only the `accounts` row because a guest has no `users` row. The proof types of the endpoint are `google`, `apple` and `guest`. The route for a guest without a device credential (a recovery code on the web deletion page) is specified in `auth.guest-account` section 3.9.
 
 ---
 
@@ -320,6 +329,7 @@ failed -> requested              user presses Delete again with a new proof
 |---|---|---|
 | Settings screen | Delete account entry | Must be reachable by a signed-in user inside the app, without contacting support |
 | `auth.google-login` | `users`, `sessions`, provider subject | Identity this block destroys |
+| `auth.guest-account` | `accounts`, device credentials | The `accounts` row is destroyed after the `users` row; the device credential is the `guest` proof |
 
 ### Outbound
 
@@ -331,7 +341,7 @@ failed -> requested              user presses Delete again with a new proof
 
 ### Other blocks that own user data
 
-Sibling blocks that store user-owned rows must register an eraser or use the cascade rule from section 2. By id: `billing.in-app-purchase` (purchase-processor subscriber link), `auth.sign-in-with-apple` (Apple provider link and revocation material), `data.progress-sync` (snapshots), `ugc.friends-leaderboard` (profile row, friend codes, friend lists). These ids are the blocks planned alongside this one; check they exist in your copy of the repo before depending on them.
+Sibling blocks that store user-owned rows must register an eraser or use the cascade rule from section 2. By id: `billing.in-app-purchase` (purchase-processor subscriber link), `auth.sign-in-with-apple` (Apple provider link and revocation material), `data.progress-sync` (snapshots), `ugc.friends-leaderboard` (profile row, friend codes, friend lists), `auth.guest-account` (device credentials, recovery codes, sessions and link attempts, which cascade from `accounts`, and the tombstones for the credential hashes). These ids are the blocks planned alongside this one; check they exist in your copy of the repo before depending on them.
 
 ### Events
 
@@ -377,5 +387,6 @@ What is established and what is not:
 - **Established by the origin code and tests**: confirm-before-anything, provider re-authentication first (popup on web, system sheet in the app), nothing deleted when the user backs out or picks a different account, content deleted in one batch, identity deleted last, Apple revocation best effort, deletion unavailable while the account cannot be reached, on-device data kept, and the dialog and privacy page saying so.
 - **Documented but not tested in the origin**: that a re-run after a half-finished delete completes it. The contract states it and the code is shaped for it; no origin test exercises it. `partial-failure.feature` is where your stack proves it.
 - **Not established**: whether Apple accepted the build. The app was resubmitted and the last read of the review state was "Waiting for Review"; no later reading exists. Treat "satisfies app-store review" as the design goal, not a proven result.
+- **Extrapolated, not run**: the `guest` proof type and the `accounts` step of the identity deletion. The origin has no guest accounts; both exist for `auth.guest-account`, whose section 3.9 states the contract this block implements.
 - **Translated, not run**: the SQL-family model (the `account_deletions` table, the cascade rule, the server-side endpoints, the challenge nonce, the direct-Apple revocation variant) is a translation of the Firestore behavior. It has **not been run on stacks A, B or C**. Expect the first implementation to refine the endpoint shapes.
 - **Policy status.** Apple's published App Store Review Guideline 5.1.1(v) (read 2026-10-22) says an app that supports account creation must also offer account deletion within the app; the origin code labels its deletion with that number. This block does not quote Apple's or Google's policy wording, deadlines, or exemptions beyond that sentence. Read the current store policy before relying on this block for a submission.

@@ -1,0 +1,124 @@
+{
+  "_comment": "Synthetic content for engagement.timed-queues: 4 queues, 9 jobs, 2 time items, the default configuration of README section 7 and ten invalid definition sets. Amounts, durations and the curve are placeholders, not tuning advice; the curve anchors reproduce the shape of one game's published 2014 reverse-engineering (README Evidence, LOW). Fixed clock now = 2026-10-21T12:00:00Z. Account acct-001 has timezone Asia/Ho_Chi_Minh (UTC+7, no DST): local time is 2026-10-21T19:00:00, so day_key = 2026-10-21.",
+  "_usage": "Every .feature file names this file as the content set. `ledger` lists the currencies and item codes the ledger knows, which of them have an enabled faucet flow in currency_flows (validation V4), the premium codes, the purchasable currencies (the ones that carry the shared ApproxMoney component beside a price; a soft currency carries none), and the balance limit. `balances` is the preset wallet of acct-001. `invalid_definitions` lists one change per case; publishing the changed set must fail with the listed error and leave the previous set active.",
+
+  "now": "2026-10-21T12:00:00Z",
+  "config_version": "cfg-1",
+  "definition_version": 1,
+
+  "account": { "account_id": "acct-001", "tenant_id": "tenant-001", "timezone": "Asia/Ho_Chi_Minh", "is_minor": false },
+
+  "config": {
+    "SLOTS_HARD_MAX": 8,
+    "INPUT_LINES_MAX": 3,
+    "OUTPUT_LINES_MAX": 5,
+    "JOB_DURATION_MAX_SECONDS": 604800,
+    "KIND_DURATION_MAX_SECONDS": { "expedition": 43200 },
+    "MAX_LANE_SECONDS": 172800,
+    "READY_UNCOLLECTED_MAX": 20,
+    "PREMIUM_CURRENCY_CODES": ["gems"],
+    "SPEEDUP_CURRENCY": "gems",
+    "SPEEDUP_CURVE": [[3600, 20], [86400, 260], [604800, 1000]],
+    "SPEEDUP_PRICE_PER_HOUR_CAP": 20,
+    "FREE_FINISH_SECONDS": 300,
+    "SPEEDUP_STEPS_SECONDS": [3600],
+    "QUOTE_TTL_SECONDS": 60,
+    "TIME_ITEMS": [{ "code": "speedup_5m", "seconds": 300 }, { "code": "speedup_1h", "seconds": 3600 }],
+    "PAID_SPEEDUP_ENABLED": true,
+    "PAID_SPEEDUP_FOR_MINORS": false,
+    "IDLE_NUDGE_ENABLED": true,
+    "IDLE_NUDGE_PER_DAY": 2,
+    "IDLE_NUDGE_MIN_GAP_SECONDS": 14400,
+    "IDLE_NUDGE_PER_OPEN": 1,
+    "IDLE_NUDGE_DISMISS_LIMIT": 3,
+    "IDLE_NUDGE_SUPPRESS_DAYS": 7,
+    "READY_NOTICE_TTL_SECONDS": 21600,
+    "COUNTDOWN_DRIFT_REPORT_SECONDS": 5,
+    "STARTS_PER_MINUTE_MAX": 20,
+    "QUOTES_PER_MINUTE_MAX": 30,
+    "COLLECT_ALL_MAX": 50,
+    "MAX_CAS_RETRIES": 5,
+    "RECOVERY_SWEEP_SECONDS": 60,
+    "RECOVERY_GRACE_SECONDS": 30,
+    "RECOVERY_ALERT_MINUTES": 30,
+    "PUSH_LOCAL_MAX_PENDING": 20
+  },
+
+  "ledger": {
+    "currencies": ["coins", "gems", "flour", "berries", "research_points"],
+    "items": ["bread", "jam", "booster_small", "speedup_5m", "speedup_1h"],
+    "faucets": ["coins", "flour", "berries", "research_points", "gems"],
+    "premium": ["gems"],
+    "purchasable": ["gems"],
+    "LEDGER_MAX_BALANCE": 100000,
+    "flows": [
+      { "reason": "timed-queues.start", "direction": "sink" },
+      { "reason": "timed-queues.speed-up", "direction": "sink" },
+      { "reason": "timed-queues.slot-unlock", "direction": "sink" },
+      { "reason": "timed-queues.collect", "direction": "faucet" },
+      { "reason": "timed-queues.cancel-refund", "direction": "faucet" }
+    ]
+  },
+
+  "balances": { "coins": 1000, "gems": 100, "flour": 9, "berries": 5, "research_points": 10, "bread": 0, "jam": 0, "booster_small": 0, "speedup_5m": 0, "speedup_1h": 2 },
+
+  "slot_products": [
+    { "product_code": "slot_craft_plus", "product_kind": "non_consumable", "fulfilment": "external", "owner_block": "engagement.timed-queues", "apple_product_id": "example.slot.craft.plus", "google_product_id": "example_slot_craft_plus" },
+    { "product_code": "slot_build_plus", "product_kind": "non_consumable", "fulfilment": "external", "owner_block": "engagement.timed-queues", "apple_product_id": "example.slot.build.plus", "google_product_id": "example_slot_build_plus" }
+  ],
+
+  "flags": { "tier_2": false, "level_10": false },
+
+  "queues": [
+    {
+      "queue_id": "craft", "kind": "craft", "base_slots": 1, "max_slots": 3, "lane_depth": 2, "sort_order": 10,
+      "slot_unlocks": [
+        { "slot_index": 1, "options": [{ "kind": "flag", "flag": "tier_2" }, { "kind": "store_product", "product_code": "slot_craft_plus" }] },
+        { "slot_index": 2, "options": [{ "kind": "currency", "currency": "gems", "amount": 150 }] }
+      ]
+    },
+    {
+      "queue_id": "build", "kind": "build", "base_slots": 1, "max_slots": 2, "lane_depth": 3, "sort_order": 20,
+      "slot_unlocks": [
+        { "slot_index": 1, "options": [{ "kind": "flag", "flag": "level_10" }, { "kind": "store_product", "product_code": "slot_build_plus" }] }
+      ]
+    },
+    { "queue_id": "research", "kind": "research", "base_slots": 1, "max_slots": 1, "lane_depth": 2, "sort_order": 30, "slot_unlocks": [] },
+    {
+      "queue_id": "expedition", "kind": "expedition", "base_slots": 2, "max_slots": 4, "lane_depth": 1, "sort_order": 40,
+      "slot_unlocks": [
+        { "slot_index": 2, "options": [{ "kind": "currency", "currency": "coins", "amount": 2000 }] },
+        { "slot_index": 3, "options": [{ "kind": "currency", "currency": "gems", "amount": 100 }] }
+      ]
+    }
+  ],
+
+  "jobs": [
+    { "job_id": "craft.bread", "queue_id": "craft", "duration_seconds": 900, "input": [{ "currency": "flour", "amount": 3 }], "output": [{ "kind": "item", "code": "bread", "amount": 2 }], "prerequisite_job_ids": [], "unlock_flag": null, "repeatable": true, "max_active_per_account": null, "cancel_refund_fraction": 0.5, "retired": false, "sort_order": 10 },
+    { "job_id": "craft.jam", "queue_id": "craft", "duration_seconds": 3600, "input": [{ "currency": "coins", "amount": 40 }, { "currency": "berries", "amount": 5 }], "output": [{ "kind": "item", "code": "jam", "amount": 1 }], "prerequisite_job_ids": [], "unlock_flag": null, "repeatable": true, "max_active_per_account": null, "cancel_refund_fraction": 0.5, "retired": false, "sort_order": 20 },
+    { "job_id": "build.farm.l2", "queue_id": "build", "duration_seconds": 7200, "input": [{ "currency": "coins", "amount": 500 }], "output": [{ "kind": "effect", "code": "farm.level", "amount": 2 }], "prerequisite_job_ids": [], "unlock_flag": null, "repeatable": false, "max_active_per_account": 1, "cancel_refund_fraction": 0.5, "retired": false, "sort_order": 10 },
+    { "job_id": "build.farm.l3", "queue_id": "build", "duration_seconds": 28800, "input": [{ "currency": "coins", "amount": 900 }], "output": [{ "kind": "effect", "code": "farm.level", "amount": 3 }], "prerequisite_job_ids": ["build.farm.l2"], "unlock_flag": null, "repeatable": false, "max_active_per_account": 1, "cancel_refund_fraction": 0.5, "retired": false, "sort_order": 20 },
+    { "job_id": "build.storage.l2", "queue_id": "build", "duration_seconds": 7200, "input": [{ "currency": "coins", "amount": 300 }], "output": [{ "kind": "effect", "code": "storage.level", "amount": 2 }], "prerequisite_job_ids": [], "unlock_flag": null, "repeatable": false, "max_active_per_account": 1, "cancel_refund_fraction": 0.5, "retired": false, "sort_order": 30 },
+    { "job_id": "research.faster-boots", "queue_id": "research", "duration_seconds": 28800, "input": [{ "currency": "research_points", "amount": 10 }], "output": [{ "kind": "effect", "code": "research.faster-boots", "amount": 1 }], "prerequisite_job_ids": [], "unlock_flag": null, "repeatable": false, "max_active_per_account": 1, "cancel_refund_fraction": 0.5, "retired": false, "sort_order": 10 },
+    { "job_id": "expedition.short", "queue_id": "expedition", "duration_seconds": 3600, "input": [], "output": [{ "kind": "currency", "code": "coins", "amount": 60 }], "prerequisite_job_ids": [], "unlock_flag": null, "repeatable": true, "max_active_per_account": null, "cancel_refund_fraction": 0.5, "retired": false, "sort_order": 10 },
+    { "job_id": "expedition.long", "queue_id": "expedition", "duration_seconds": 43200, "input": [{ "currency": "coins", "amount": 100 }], "output": [{ "kind": "currency", "code": "coins", "amount": 400 }, { "kind": "item", "code": "booster_small", "amount": 1 }], "prerequisite_job_ids": [], "unlock_flag": null, "repeatable": true, "max_active_per_account": null, "cancel_refund_fraction": 0.5, "retired": false, "sort_order": 20 },
+    { "job_id": "craft.old-recipe", "queue_id": "craft", "duration_seconds": 600, "input": [{ "currency": "flour", "amount": 1 }], "output": [{ "kind": "item", "code": "bread", "amount": 1 }], "prerequisite_job_ids": [], "unlock_flag": null, "repeatable": true, "max_active_per_account": null, "cancel_refund_fraction": 0.5, "retired": true, "sort_order": 90 }
+  ],
+
+  "derived": {
+    "handoff_capacity": { "sum_max_slots_times_lane_depth": 18, "limit": 20 }
+  },
+
+  "invalid_definitions": [
+    { "name": "premium-input", "change": "craft.jam input gains { currency: gems, amount: 1 }", "error": "premium_input", "validation": "V3" },
+    { "name": "expedition-over-kind-cap", "change": "expedition.long duration_seconds = 50000", "error": "duration_over_cap", "validation": "V2" },
+    { "name": "input-without-faucet", "change": "craft.bread input gains { currency: moonstone, amount: 1 } and moonstone has no faucet flow", "error": "input_without_faucet", "validation": "V4" },
+    { "name": "curve-slope-over-cap", "change": "SPEEDUP_CURVE = [[3600, 25], [86400, 260], [604800, 1000]]", "error": "curve_slope_over_cap", "validation": "V5" },
+    { "name": "curve-not-monotone", "change": "SPEEDUP_CURVE = [[3600, 20], [86400, 10], [604800, 1000]]", "error": "curve_not_monotone", "validation": "V5" },
+    { "name": "curve-too-short", "change": "SPEEDUP_CURVE = [[3600, 20]] while expedition.long lasts 43200 seconds", "error": "curve_too_short", "validation": "V5" },
+    { "name": "handoff-capacity", "change": "craft max_slots = 6 (sum of max_slots * lane_depth becomes 24)", "error": "handoff_capacity_exceeded", "validation": "V6" },
+    { "name": "prerequisite-cycle", "change": "build.farm.l2 prerequisite_job_ids = [build.farm.l3]", "error": "prerequisite_cycle", "validation": "V7" },
+    { "name": "refund-fraction-out-of-range", "change": "craft.bread cancel_refund_fraction = 1.5", "error": "refund_fraction_out_of_range", "validation": "V7" },
+    { "name": "slot-product-not-non-consumable", "change": "slot_craft_plus product_kind = consumable", "error": "slot_product_invalid", "validation": "V8" }
+  ]
+}

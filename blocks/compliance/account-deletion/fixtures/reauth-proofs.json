@@ -1,6 +1,6 @@
 {
   "_comment": "Re-authentication proofs for POST /api/account/deletion and the challenge they must carry. Tokens are placeholders: tests mock the ID-token verifier and feed it the decoded claims below. No real subjects, emails or keys.",
-  "_usage": "Use in delete-account.feature and partial-failure.feature. 'now' is the test clock; ages are seconds before now.",
+  "_usage": "Use in delete-account.feature and partial-failure.feature. 'now' is the test clock; ages are seconds before now. The guest_* cases belong to a guest account (no users row); their secrets and hashes are example values of auth.guest-account, where the hash is SHA-256 hex of the secret.",
 
   "challenge": {
     "_comment": "Response of POST /api/account/deletion/challenge, issued to the session of user-001.",
@@ -71,6 +71,30 @@
       "nonce": "nonce-abc",
       "age_seconds": 9
     }
+  },
+
+  "guest_valid": {
+    "_comment": "A guest presents its active device credential again together with the issued challenge. There is no token, so there are no decoded claims: the verifier hashes the secret and looks the hash up among the active device credentials of the session's account.",
+    "request": {
+      "provider": "guest",
+      "device_secret": "device-secret-example-0001",
+      "nonce": "nonce-abc"
+    },
+    "stored_credential": {
+      "purpose": "device",
+      "status": "active",
+      "secret_hash": "59ae234186b1cbdd657564baf561014a6c37395ebe5f695dfe8ecb68ac47f38f"
+    }
+  },
+
+  "guest_wrong_secret": {
+    "_comment": "A secret whose hash matches no active device credential of the account: expect 401 reauth_required, nothing deleted, the nonce still unused.",
+    "request": {
+      "provider": "guest",
+      "device_secret": "device-secret-example-0099",
+      "nonce": "nonce-abc"
+    },
+    "presented_hash": "5a7a23c66149e94e6b0dd6bd7ec95ba73e77692d076ab5b052e099327cc8c063"
   },
 
   "revoke_request_identity_toolkit": {

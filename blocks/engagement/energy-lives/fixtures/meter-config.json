@@ -1,0 +1,108 @@
+{
+  "_comment": "Shared setup for the energy-lives scenarios. All data is example data. Config versions use the column names of energy_meter_configs (README section 2). The two meters differ only in consume_mode: `energy` spends at start, `lives` spends on fail. Ad callbacks carry the AdMob query parameter names (https://developers.google.com/admob/android/ssv); the signature is produced by a test key inside the harness and is not a real signature.",
+  "tenant_id": "tenant-001",
+  "clock": "2026-10-21T12:00:00Z",
+  "accounts": [
+    { "account_id": "acct-0001", "timezone": "UTC", "is_minor": false },
+    { "account_id": "acct-0002", "timezone": "UTC", "is_minor": false, "note": "guest account merged into acct-0001" },
+    { "account_id": "acct-0003", "timezone": "Asia/Ho_Chi_Minh", "is_minor": false, "note": "day_key for 2026-10-21T18:30:00Z is 2026-10-22" },
+    { "account_id": "acct-0004", "timezone": "UTC", "is_minor": true },
+    { "account_id": "acct-0005", "timezone": "UTC", "is_minor": false, "note": "gift recipient with an old friend link" },
+    { "account_id": "acct-0006", "timezone": "UTC", "is_minor": false, "note": "gift recipient with a new friend link" }
+  ],
+  "meters": [
+    {
+      "meter_code": "energy",
+      "versions": [
+        { "version": 1, "effective_at": "2026-01-01T00:00:00Z", "cap": 5, "overfill_max": 5, "regen_amount": 1, "regen_interval_seconds": 1800, "consume_mode": "on_start", "attempt_cost": 1 }
+      ]
+    },
+    {
+      "meter_code": "lives",
+      "versions": [
+        { "version": 1, "effective_at": "2026-01-01T00:00:00Z", "cap": 5, "overfill_max": 5, "regen_amount": 1, "regen_interval_seconds": 1800, "consume_mode": "on_fail", "attempt_cost": 1 }
+      ]
+    }
+  ],
+  "settings": {
+    "confirm_timeout_seconds": 120,
+    "attempt_ttl_seconds": 3600,
+    "abandon_counts_as_fail": true,
+    "start_refund_limit_per_day": 10,
+    "ad_grant_units": 1,
+    "ad_grants_per_day": 5,
+    "boost_max_remaining_seconds": 86400,
+    "offline_attempts": false,
+    "offline_max_attempts": 3,
+    "paid_refill_for_minors": false,
+    "full_notice_ttl_seconds": 21600
+  },
+  "offers": [
+    { "offer_code": "refill-full", "meter_code": "energy", "kind": "to_full", "currency": "gems", "amount": 2, "note": "2 gems per missing unit" },
+    { "offer_code": "refill-one", "meter_code": "energy", "kind": "units", "units": 1, "currency": "gems", "amount": 3 },
+    { "offer_code": "boost-1h", "meter_code": "energy", "kind": "boost", "seconds": 3600, "currency": "gems", "amount": 12 }
+  ],
+  "ledger_balances": [
+    { "account_id": "acct-0001", "currency": "gems", "balance": 25 },
+    { "account_id": "acct-0004", "currency": "gems", "balance": 100 }
+  ],
+  "ad_callbacks": [
+    {
+      "id": "ad-valid",
+      "query": {
+        "ad_network": "0000000000000000000",
+        "ad_unit": "0000000000",
+        "reward_amount": "1",
+        "reward_item": "energy",
+        "timestamp": "1792584000000",
+        "transaction_id": "0123456789ABCDEF0123456789ABCDEF",
+        "user_id": "acct-0001"
+      },
+      "signature": "valid-for-harness-test-key",
+      "key_id": "1234567890",
+      "expect": { "grant": { "amount": 1, "reason": "energy-lives.ad-refill", "idempotency_key": "energy-lives:acct-0001:ad:0123456789ABCDEF0123456789ABCDEF" } }
+    },
+    {
+      "id": "ad-forged-signature",
+      "query": {
+        "ad_network": "0000000000000000000",
+        "ad_unit": "0000000000",
+        "reward_amount": "1",
+        "reward_item": "energy",
+        "timestamp": "1792584000000",
+        "transaction_id": "FEDCBA9876543210FEDCBA9876543210",
+        "user_id": "acct-0001"
+      },
+      "signature": "not-signed-by-any-key",
+      "key_id": "1234567890",
+      "expect": { "grant": null, "reason": "signature_invalid" }
+    },
+    {
+      "id": "ad-unknown-user",
+      "query": {
+        "ad_network": "0000000000000000000",
+        "ad_unit": "0000000000",
+        "reward_amount": "1",
+        "reward_item": "energy",
+        "timestamp": "1792584000000",
+        "transaction_id": "AAAAAAAAAAAAAAAA0000000000000001",
+        "user_id": "acct-9999"
+      },
+      "signature": "valid-for-harness-test-key",
+      "key_id": "1234567890",
+      "expect": { "grant": null, "reason": "unknown_account" }
+    }
+  ],
+  "friend_links": [
+    { "owner": "acct-0001", "friend": "acct-0005", "created_at": "2026-10-10T09:00:00Z" },
+    { "owner": "acct-0001", "friend": "acct-0006", "created_at": "2026-10-21T11:30:00Z" }
+  ],
+  "gift_settings": {
+    "gifts_enabled": true,
+    "gift_units": 1,
+    "gifts_sent_per_day": 5,
+    "gift_inbox_max": 10,
+    "gift_ttl_seconds": 604800,
+    "gift_min_friend_age_seconds": 86400
+  }
+}

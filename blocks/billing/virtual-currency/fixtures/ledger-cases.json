@@ -1,0 +1,123 @@
+{
+  "_comment": "Ledger contract cases: each case starts from `given` balances and runs `steps` in order against the writer with the registry from fixtures/catalog.json. `expect` uses the contract result {applied, balance, entry_id} or an error code. Entry ids are symbolic (E1, E2, ...): an `entry` value repeated in a later step means the same stored entry is returned.",
+  "_usage": "Used by ledger.feature and as the unit-test table for planEntry and the SQL writer. Config: LEDGER_MAX_AMOUNT 1000000000, LEDGER_MAX_BALANCE 9007199254740991, LEDGER_REQUIRE_REGISTERED_FLOW true. Clock 2026-10-27T12:00:00Z.",
+
+  "tenant_id": "tenant-001",
+  "clock": "2026-10-27T12:00:00Z",
+  "config": { "LEDGER_MAX_AMOUNT": 1000000000, "LEDGER_MAX_BALANCE": 9007199254740991, "LEDGER_REQUIRE_REGISTERED_FLOW": true },
+
+  "cases": [
+    {
+      "id": "grant_spend_replay",
+      "given": { "account-001": { "gems": 0 } },
+      "steps": [
+        { "call": "grant", "account": "account-001", "currency": "gems", "amount": 100, "reason": "daily-streak.claim", "key": "daily-streak:account-001:2026-10-27", "expect": { "applied": true, "balance": 100, "entry": "E1" } },
+        { "call": "spend", "account": "account-001", "currency": "gems", "amount": 30, "reason": "energy-lives.refill", "key": "energy-lives:account-001:refill-1", "expect": { "applied": true, "balance": 70, "entry": "E2" } },
+        { "call": "grant", "account": "account-001", "currency": "gems", "amount": 100, "reason": "daily-streak.claim", "key": "daily-streak:account-001:2026-10-27", "expect": { "applied": true, "balance": 100, "entry": "E1" }, "note": "replay: the original result, balance is the balance_after of E1, nothing changes" },
+        { "check": "balance", "account": "account-001", "currency": "gems", "expect": 70 },
+        { "check": "entry_count", "account": "account-001", "expect": 2 }
+      ]
+    },
+    {
+      "id": "rejected_spend_leaves_key_free",
+      "given": { "account-001": { "gems": 70 } },
+      "steps": [
+        { "call": "spend", "account": "account-001", "currency": "gems", "amount": 100, "reason": "season-pass.tier-skip", "key": "season-pass:account-001:s1:skip:p-1", "expect": { "error": "insufficient_balance", "balance": 70 } },
+        { "check": "entry_count", "account": "account-001", "expect": 0 },
+        { "call": "grant", "account": "account-001", "currency": "gems", "amount": 100, "reason": "season-pass.tier-reward", "key": "season-pass:account-001:s1:free:3", "expect": { "applied": true, "balance": 170, "entry": "E1" } },
+        { "call": "spend", "account": "account-001", "currency": "gems", "amount": 100, "reason": "season-pass.tier-skip", "key": "season-pass:account-001:s1:skip:p-1", "expect": { "applied": true, "balance": 70, "entry": "E2" }, "note": "the same key is a new attempt because the rejection wrote nothing" }
+      ]
+    },
+    {
+      "id": "exact_spend_to_zero",
+      "given": { "account-001": { "gems": 70 } },
+      "steps": [
+        { "call": "spend", "account": "account-001", "currency": "gems", "amount": 70, "reason": "energy-lives.refill", "key": "energy-lives:account-001:refill-2", "expect": { "applied": true, "balance": 0, "entry": "E1" } },
+        { "call": "spend", "account": "account-001", "currency": "gems", "amount": 1, "reason": "energy-lives.refill", "key": "energy-lives:account-001:refill-3", "expect": { "error": "insufficient_balance", "balance": 0 } }
+      ]
+    },
+    {
+      "id": "key_reuse_with_different_arguments",
+      "given": { "account-001": { "gems": 100 }, "account-002": { "gems": 0 } },
+      "steps": [
+        { "call": "spend", "account": "account-001", "currency": "gems", "amount": 30, "reason": "energy-lives.refill", "key": "energy-lives:account-001:refill-1", "expect": { "applied": true, "balance": 70, "entry": "E1" } },
+        { "call": "spend", "account": "account-001", "currency": "gems", "amount": 31, "reason": "energy-lives.refill", "key": "energy-lives:account-001:refill-1", "expect": { "error": "idempotency_conflict" }, "note": "different amount" },
+        { "call": "grant", "account": "account-001", "currency": "gems", "amount": 30, "reason": "energy-lives.refill", "key": "energy-lives:account-001:refill-1", "expect": { "error": "idempotency_conflict" }, "note": "different kind (grant against a spend key): the key check runs before the registry check" },
+        { "call": "spend", "account": "account-002", "currency": "gems", "amount": 30, "reason": "energy-lives.refill", "key": "energy-lives:account-001:refill-1", "expect": { "error": "idempotency_conflict" }, "note": "keys are unique per tenant: another account cannot reuse the key and learns nothing" },
+        { "check": "balance", "account": "account-001", "currency": "gems", "expect": 70 },
+        { "check": "balance", "account": "account-002", "currency": "gems", "expect": 0 }
+      ]
+    },
+    {
+      "id": "subscription_stipend_key_without_account",
+      "given": { "account-001": { "gems": 0 }, "account-002": { "gems": 0 } },
+      "steps": [
+        { "call": "grant", "account": "account-001", "currency": "gems", "amount": 50, "reason": "subscriptions.stipend", "key": "subscriptions.stipend:apple:3000000100000001:0", "expect": { "applied": true, "balance": 50, "entry": "E1" } },
+        { "call": "grant", "account": "account-002", "currency": "gems", "amount": 50, "reason": "subscriptions.stipend", "key": "subscriptions.stipend:apple:3000000100000001:0", "expect": { "error": "idempotency_conflict" }, "note": "a subscription rebound to another account cannot mint a second grant" }
+      ]
+    },
+    {
+      "id": "unknown_currency_and_reason",
+      "given": { "account-001": { "gems": 0 } },
+      "steps": [
+        { "call": "grant", "account": "account-001", "currency": "rubies", "amount": 5, "reason": "objectives.reward", "key": "k-rubies", "expect": { "error": "unknown_currency" } },
+        { "call": "grant", "account": "account-001", "currency": "gems", "amount": 5, "reason": "rogue.grant", "key": "k-rogue", "expect": { "error": "unknown_reason" } },
+        { "call": "spend", "account": "account-001", "currency": "gems", "amount": 5, "reason": "daily-streak.claim", "key": "k-wrong-direction", "expect": { "error": "unknown_reason" }, "note": "daily-streak.claim is a faucet row only" },
+        { "check": "entry_count", "account": "account-001", "expect": 0 }
+      ]
+    },
+    {
+      "id": "disabled_flow_rejects_new_entries_only",
+      "given": { "account-001": { "gems": 0 } },
+      "steps": [
+        { "call": "grant", "account": "account-001", "currency": "gems", "amount": 10, "reason": "event-calendar.reward", "key": "event-calendar:account-001:e1", "expect": { "applied": true, "balance": 10, "entry": "E1" } },
+        { "admin": "disable_flow", "currency": "gems", "direction": "faucet", "reason": "event-calendar.reward" },
+        { "call": "grant", "account": "account-001", "currency": "gems", "amount": 10, "reason": "event-calendar.reward", "key": "event-calendar:account-001:e2", "expect": { "error": "unknown_reason" } },
+        { "call": "grant", "account": "account-001", "currency": "gems", "amount": 10, "reason": "event-calendar.reward", "key": "event-calendar:account-001:e1", "expect": { "applied": true, "balance": 10, "entry": "E1" }, "note": "a replay of an applied key still returns the original result" }
+      ]
+    },
+    {
+      "id": "item_counts_use_the_same_contract",
+      "given": { "account-001": { "booster_shield": 0 } },
+      "steps": [
+        { "call": "grant", "account": "account-001", "currency": "booster_shield", "amount": 3, "reason": "objectives.reward", "key": "objectives:account-001:o-7", "expect": { "applied": true, "balance": 3, "entry": "E1" } },
+        { "call": "spend", "account": "account-001", "currency": "booster_shield", "amount": 1, "reason": "game-core.use-booster", "key": "game-core:account-001:level-12", "expect": { "applied": true, "balance": 2, "entry": "E2" } }
+      ]
+    },
+    {
+      "id": "balance_limit",
+      "given": { "account-001": { "coins": 9007199254740991 } },
+      "steps": [
+        { "call": "grant", "account": "account-001", "currency": "coins", "amount": 1, "reason": "objectives.reward", "key": "objectives:account-001:o-9", "expect": { "error": "balance_limit_exceeded" } },
+        { "check": "balance", "account": "account-001", "currency": "coins", "expect": 9007199254740991 }
+      ]
+    }
+  ],
+
+  "invalid_amounts": {
+    "_comment": "Each value is sent as `amount` to grant and to spend; every one returns invalid_amount and writes nothing.",
+    "values": [0, -5, 1.5, "10", null, 1000000001, 9007199254740992],
+    "valid_edge": [1, 1000000000]
+  },
+
+  "invalid_requests": {
+    "_comment": "Malformed reason or key returns invalid_request.",
+    "reasons": ["", "daily-streak", "Daily-Streak.claim", "daily streak.claim", "a.b.c"],
+    "key_too_long": 201
+  },
+
+  "concurrency": [
+    {
+      "id": "ten_spends_one_balance",
+      "given": { "account-001": { "gems": 100 } },
+      "calls": { "count": 10, "call": "spend", "currency": "gems", "amount": 70, "reason": "energy-lives.refill", "key_pattern": "energy-lives:account-001:burst-{n}" },
+      "expect": { "applied_count": 1, "rejected_count": 9, "rejected_error": "insufficient_balance", "final_balance": 30, "entry_count": 1 }
+    },
+    {
+      "id": "ten_calls_one_key",
+      "given": { "account-001": { "gems": 100 } },
+      "calls": { "count": 10, "call": "spend", "currency": "gems", "amount": 10, "reason": "energy-lives.refill", "key_pattern": "energy-lives:account-001:same-key" },
+      "expect": { "applied_count": 10, "distinct_entry_ids": 1, "final_balance": 90, "entry_count": 1, "note": "every call answers applied true with the same entry id; only one debit happened" }
+    }
+  ]
+}

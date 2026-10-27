@@ -1,0 +1,103 @@
+{
+  "_comment": "Deterministic vectors for the abuse controls (README section 3.3, backend.md Patterns 1 and 5). Digests were produced by running SHA-256 over the stated input strings. Network addresses are documentation-range examples.",
+  "_usage": "Unit tests for powBits, powValid, canonicalCode and the network bucket rule; scenario data for abuse-controls.feature. `clock` is the test clock.",
+
+  "clock": "2026-10-27T12:00:00Z",
+
+  "config": {
+    "GUEST_POW_BASE_BITS": 14,
+    "GUEST_POW_LOAD_STEP_BITS": 4,
+    "GUEST_POW_MAX_BITS": 22,
+    "GUEST_CREATE_PER_NETWORK_PER_HOUR": 60,
+    "GUEST_CREATE_PER_NETWORK_PER_HOUR_UNATTESTED": 20,
+    "GUEST_CREATE_PER_NETWORK_PER_DAY": 200,
+    "GUEST_CREATE_PER_DEVICE_PER_DAY": 3,
+    "GUEST_MAX_LIVE_PER_DEVICE": 5,
+    "GUEST_CREATE_GLOBAL_PER_MINUTE": 600,
+    "RECOVERY_ATTEMPTS_PER_NETWORK_PER_HOUR": 10
+  },
+
+  "pow": {
+    "input_format": "seed + \":\" + creation_request_id + \":\" + counter (decimal, no leading zeros), UTF-8; SHA-256; count leading zero bits of the digest",
+    "seed": "c2VlZC1mb3ItdGVzdHMtb25seS0wMDAwMDAwMDAwMDA",
+    "cases": [
+      { "name": "8 bits met", "creation_request_id": "req-0001", "counter": "75", "bits": 8, "digest": "003fd2e5bf37ca3db4d4ff5523cf5b1a9120e5e44b1a5c3f13edafc8607ed820", "leading_zero_bits": 10, "valid": true },
+      { "name": "12 bits met exactly", "creation_request_id": "req-0001", "counter": "429", "bits": 12, "digest": "000973dd5c55aa2b776cdfec3f68a31f05793e0f4d96484b8305a4d046d2d90e", "leading_zero_bits": 12, "valid": true },
+      { "name": "16 bits met", "creation_request_id": "req-0001", "counter": "11223", "bits": 16, "digest": "000083139b52a5390b08c38a48be4a4cb536bfb45dc4b62b8cc907ea765f0607", "leading_zero_bits": 16, "valid": true },
+      { "name": "the counter before the solution fails", "creation_request_id": "req-0001", "counter": "428", "bits": 12, "digest": "cbef8eb031d1c499877b183ae9416730f2a3577d8758c11fd49806784a382b68", "leading_zero_bits": 0, "valid": false },
+      { "name": "a solved puzzle does not serve another request id", "creation_request_id": "req-0002", "counter": "429", "bits": 12, "leading_zero_bits": 2, "valid": false },
+      { "name": "counter with a leading zero is rejected by format", "creation_request_id": "req-0001", "counter": "0429", "bits": 4, "valid": false, "reason": "non_canonical_counter" },
+      { "name": "counter that is not decimal is rejected by format", "creation_request_id": "req-0001", "counter": "0x1ad", "bits": 4, "valid": false, "reason": "non_canonical_counter" }
+    ]
+  },
+
+  "pow_bits": [
+    { "name": "quiet",                         "netHits": 0,   "netHourCap": 60, "globalHits": 0,   "globalCap": 600, "expected": 14 },
+    { "name": "just under half the network cap", "netHits": 29,  "netHourCap": 60, "globalHits": 0,   "globalCap": 600, "expected": 14 },
+    { "name": "half the network cap",          "netHits": 30,  "netHourCap": 60, "globalHits": 0,   "globalCap": 600, "expected": 18 },
+    { "name": "global cap reached",            "netHits": 0,   "netHourCap": 60, "globalHits": 600, "globalCap": 600, "expected": 18 },
+    { "name": "both",                          "netHits": 30,  "netHourCap": 60, "globalHits": 600, "globalCap": 600, "expected": 22 },
+    { "name": "ceiling applies",               "netHits": 30,  "netHourCap": 60, "globalHits": 600, "globalCap": 600, "max": 20, "expected": 20 }
+  ],
+
+  "network_bucket": [
+    { "peer": "203.0.113.7", "bucket": "203.0.113.7" },
+    { "peer": "2001:db8:1234:5678:aaaa:bbbb:cccc:dddd", "bucket": "2001:db8:1234:5678::/64" },
+    { "peer": "2001:db8:1234:5678::1", "bucket": "2001:db8:1234:5678::/64", "note": "same /64 as the previous line: one bucket" }
+  ],
+
+  "limits": [
+    { "scope": "create_network_hour", "cap": 60,  "hits_before": 59,  "request_allowed": true,  "hits_after": 60 },
+    { "scope": "create_network_hour", "cap": 60,  "hits_before": 60,  "request_allowed": false, "status": 429, "error": "rate_limited", "hits_after": 61 },
+    { "scope": "create_network_day",  "cap": 200, "hits_before": 200, "request_allowed": false, "status": 429, "error": "rate_limited" },
+    { "scope": "create_device_day",   "cap": 3,   "hits_before": 3,   "request_allowed": false, "status": 429, "error": "device_limit", "applies_to": "attested requests only" },
+    { "scope": "create_global_minute", "cap": 600, "hits_before": 1199, "request_allowed": true,  "note": "between one and two times the cap: allowed at higher difficulty" },
+    { "scope": "create_global_minute", "cap": 600, "hits_before": 1200, "request_allowed": false, "status": 429, "error": "rate_limited", "note": "twice the cap: load is shed" },
+    { "scope": "recovery_network_hour", "cap": 10, "hits_before": 10, "request_allowed": false, "status": 429, "error": "rate_limited" }
+  ],
+
+  "attestation_modes": [
+    { "mode": "off",       "client": "absent",      "status": 201, "stored": "none" },
+    { "mode": "off",       "client": "valid",       "status": 201, "stored": "none", "note": "ignored: not requested" },
+    { "mode": "preferred", "client": "absent",      "status": 201, "stored": "unavailable", "network_limit": "GUEST_CREATE_PER_NETWORK_PER_HOUR_UNATTESTED" },
+    { "mode": "preferred", "client": "unavailable", "status": 201, "stored": "unavailable", "network_limit": "GUEST_CREATE_PER_NETWORK_PER_HOUR_UNATTESTED" },
+    { "mode": "preferred", "client": "invalid",     "status": 403, "error": "attestation_failed" },
+    { "mode": "preferred", "client": "valid",       "status": 201, "stored": "passed", "pow": "skipped when GUEST_POW_SKIP_WHEN_ATTESTED" },
+    { "mode": "required",  "client": "absent",      "status": 403, "error": "attestation_required" },
+    { "mode": "required",  "client": "unavailable", "status": 403, "error": "attestation_required" },
+    { "mode": "required",  "client": "invalid",     "status": 403, "error": "attestation_failed" },
+    { "mode": "required",  "client": "valid",       "status": 201, "stored": "passed" }
+  ],
+
+  "android_verdict_cases": [
+    { "name": "genuine device and recognized app", "appRecognitionVerdict": "PLAY_RECOGNIZED", "deviceRecognitionVerdict": ["MEETS_DEVICE_INTEGRITY"], "requestHash_matches": true, "fresh": true, "result": "passed" },
+    { "name": "empty device verdict", "appRecognitionVerdict": "PLAY_RECOGNIZED", "deviceRecognitionVerdict": [], "requestHash_matches": true, "fresh": true, "result": "failed" },
+    { "name": "unevaluated app verdict (also the result of a reused token)", "appRecognitionVerdict": "UNEVALUATED", "deviceRecognitionVerdict": [], "requestHash_matches": true, "fresh": true, "result": "failed" },
+    { "name": "request hash differs", "appRecognitionVerdict": "PLAY_RECOGNIZED", "deviceRecognitionVerdict": ["MEETS_DEVICE_INTEGRITY"], "requestHash_matches": false, "fresh": true, "result": "failed" },
+    { "name": "activity level above the configured maximum", "appRecognitionVerdict": "PLAY_RECOGNIZED", "deviceRecognitionVerdict": ["MEETS_DEVICE_INTEGRITY"], "requestHash_matches": true, "fresh": true, "deviceActivityLevel": "LEVEL_3", "max_level": "LEVEL_2", "result": "device_limit" }
+  ],
+
+  "secret_hash": {
+    "secret": "device-secret-example-0001",
+    "sha256_hex": "59ae234186b1cbdd657564baf561014a6c37395ebe5f695dfe8ecb68ac47f38f"
+  },
+
+  "recovery": {
+    "alphabet": "0123456789ABCDEFGHJKMNPQRSTVWXYZ",
+    "chars": 24,
+    "bits": 120,
+    "canonical_input_cases": [
+      { "input": "AB0D-EFGH-JKMN-PQRS-TVWX-1Z23", "canonical": "AB0DEFGHJKMNPQRSTVWX1Z23", "sha256_hex": "27a9bda77341d3b712ff98ef437ddbd711439e58835b0e24b74fbb9d4987f164" },
+      { "input": "ab0d-efgh-jkmn-pqrs-tvwx-1z23", "canonical": "AB0DEFGHJKMNPQRSTVWX1Z23", "note": "case ignored" },
+      { "input": "abOd efgh jkmn pqrs tvwx lz23", "canonical": "AB0DEFGHJKMNPQRSTVWX1Z23", "note": "spaces ignored; O read as 0; L read as 1" },
+      { "input": "AB0D-EFGH-JKMN-PQRS-TVWX-IZ23", "canonical": "AB0DEFGHJKMNPQRSTVWX1Z23", "note": "I read as 1" },
+      { "input": "AB0D-EFGH-JKMN-PQRS-TVWX-UZ23", "canonical": null, "note": "U is not in the alphabet" },
+      { "input": "AB0D-EFGH-JKMN", "canonical": null, "note": "wrong length" }
+    ]
+  },
+
+  "log_line_examples": {
+    "allowed": { "hour": "2026-10-27T12:00:00Z", "outcome": "throttled_network", "attestation": "none", "pow_bits": 18, "platform": "android", "app_version": "1.4.0" },
+    "forbidden_fields": ["ip", "network_prefix", "device_id", "key_id", "attestation_token", "secret", "recovery_code", "creation_request_id", "user_agent", "account_id"]
+  }
+}

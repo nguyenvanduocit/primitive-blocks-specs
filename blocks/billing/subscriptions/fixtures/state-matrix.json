@@ -1,0 +1,370 @@
+{
+  "_comment": "Oracle for the pure mapping from one verified store snapshot to the normalized chain state (README section 5, backend.md section 2). Apple rows use the App Store Server API field names with millisecond Unix times; Google rows use the Google Play Developer API `purchases.subscriptionsv2` field names with RFC 3339 times. Google exposes no revoked value in `subscriptionState`; a revocation is the real-time notification of type 12 (`SUBSCRIPTION_REVOKED`) or a voided purchase, carried here as `rtdn_revoked`. Enumerated Apple strings for `offerDiscountType` (`FREE_TRIAL`, `PAY_AS_YOU_GO`, `PAY_UP_FRONT`) and the `Production`/`Sandbox` spelling of `environment` are written from Apple's published type names and are compared case-insensitively.",
+  "clock": "2026-10-27T12:00:00Z",
+  "rows": [
+    {
+      "id": "apple-active",
+      "platform": "apple",
+      "snapshot": { "status": 1, "autoRenewStatus": 1, "expiresDate": 1795176000000, "inAppOwnershipType": "PURCHASED" },
+      "expected": { "state": "active", "active": true, "will_renew": true, "expires_at": "2026-11-20T12:00:00Z", "phase": "regular", "ownership": "purchased" }
+    },
+    {
+      "id": "apple-free-trial",
+      "platform": "apple",
+      "snapshot": { "status": 1, "autoRenewStatus": 1, "expiresDate": 1793361600000, "offerType": 1, "offerDiscountType": "FREE_TRIAL", "inAppOwnershipType": "PURCHASED" },
+      "expected": { "state": "trial", "active": true, "will_renew": true, "expires_at": "2026-10-30T12:00:00Z", "phase": "trial", "ownership": "purchased" }
+    },
+    {
+      "id": "apple-intro-pay-as-you-go",
+      "platform": "apple",
+      "snapshot": { "status": 1, "autoRenewStatus": 1, "expiresDate": 1795176000000, "offerType": 1, "offerDiscountType": "PAY_AS_YOU_GO", "inAppOwnershipType": "PURCHASED" },
+      "expected": { "state": "active", "active": true, "will_renew": true, "expires_at": "2026-11-20T12:00:00Z", "phase": "intro", "ownership": "purchased" }
+    },
+    {
+      "id": "apple-canceled-but-active",
+      "platform": "apple",
+      "snapshot": { "status": 1, "autoRenewStatus": 0, "expiresDate": 1795176000000, "inAppOwnershipType": "PURCHASED" },
+      "expected": { "state": "canceled", "active": true, "will_renew": false, "expires_at": "2026-11-20T12:00:00Z", "phase": "regular", "ownership": "purchased" }
+    },
+    {
+      "id": "apple-canceled-during-trial",
+      "platform": "apple",
+      "snapshot": { "status": 1, "autoRenewStatus": 0, "expiresDate": 1793361600000, "offerType": 1, "offerDiscountType": "FREE_TRIAL", "inAppOwnershipType": "PURCHASED" },
+      "expected": { "state": "canceled", "active": true, "will_renew": false, "expires_at": "2026-10-30T12:00:00Z", "phase": "trial", "ownership": "purchased" }
+    },
+    {
+      "id": "apple-billing-grace-period",
+      "platform": "apple",
+      "snapshot": { "status": 4, "autoRenewStatus": 1, "expiresDate": 1792929600000, "gracePeriodExpiresDate": 1793361600000, "isInBillingRetryPeriod": true, "inAppOwnershipType": "PURCHASED" },
+      "expected": { "state": "grace", "active": true, "will_renew": true, "expires_at": "2026-10-30T12:00:00Z", "phase": "regular", "ownership": "purchased" }
+    },
+    {
+      "id": "apple-billing-retry",
+      "platform": "apple",
+      "snapshot": { "status": 3, "autoRenewStatus": 1, "expiresDate": 1792497600000, "isInBillingRetryPeriod": true, "expirationIntent": 2, "inAppOwnershipType": "PURCHASED" },
+      "expected": { "state": "retry", "active": false, "will_renew": true, "expires_at": "2026-10-20T12:00:00Z", "phase": "regular", "ownership": "purchased" }
+    },
+    {
+      "id": "apple-expired-voluntary",
+      "platform": "apple",
+      "snapshot": { "status": 2, "autoRenewStatus": 0, "expiresDate": 1791633600000, "expirationIntent": 1, "inAppOwnershipType": "PURCHASED" },
+      "expected": { "state": "expired", "active": false, "will_renew": false, "expires_at": "2026-10-10T12:00:00Z", "end_reason": "canceled_by_player" }
+    },
+    {
+      "id": "apple-expired-billing-retry-ended",
+      "platform": "apple",
+      "snapshot": { "status": 2, "autoRenewStatus": 1, "expiresDate": 1791633600000, "expirationIntent": 2, "isInBillingRetryPeriod": false, "inAppOwnershipType": "PURCHASED" },
+      "expected": { "state": "expired", "active": false, "will_renew": false, "expires_at": "2026-10-10T12:00:00Z", "end_reason": "billing" }
+    },
+    {
+      "id": "apple-expired-price-increase-declined",
+      "platform": "apple",
+      "snapshot": { "status": 2, "autoRenewStatus": 1, "expiresDate": 1791633600000, "expirationIntent": 3, "priceIncreaseStatus": 0, "inAppOwnershipType": "PURCHASED" },
+      "expected": { "state": "expired", "active": false, "will_renew": false, "expires_at": "2026-10-10T12:00:00Z", "end_reason": "price_increase_not_accepted" }
+    },
+    {
+      "id": "apple-revoked-refund",
+      "platform": "apple",
+      "snapshot": { "status": 5, "autoRenewStatus": 0, "expiresDate": 1795176000000, "revocationDate": 1793005200000, "revocationReason": 0, "inAppOwnershipType": "PURCHASED" },
+      "expected": { "state": "revoked", "active": false, "will_renew": false, "expires_at": "2026-10-26T09:00:00Z", "end_reason": "refund" }
+    },
+    {
+      "id": "apple-family-shared",
+      "platform": "apple",
+      "snapshot": { "status": 1, "autoRenewStatus": 1, "expiresDate": 1795176000000, "inAppOwnershipType": "FAMILY_SHARED" },
+      "expected": { "state": "active", "active": true, "will_renew": true, "expires_at": "2026-11-20T12:00:00Z", "phase": "regular", "ownership": "family_shared" }
+    },
+    {
+      "id": "apple-assigned-by-organization",
+      "platform": "apple",
+      "snapshot": { "status": 1, "autoRenewStatus": 1, "expiresDate": 1795176000000, "inAppOwnershipType": "ASSIGNED" },
+      "expected": { "ignored": "ownership_assigned" }
+    },
+    {
+      "id": "google-active",
+      "platform": "google",
+      "snapshot": { "subscriptionState": "SUBSCRIPTION_STATE_ACTIVE", "expiryTime": "2026-11-20T12:00:00Z", "autoRenewEnabled": true, "offerPhase": "basePrice" },
+      "expected": { "state": "active", "active": true, "will_renew": true, "expires_at": "2026-11-20T12:00:00Z", "phase": "regular" }
+    },
+    {
+      "id": "google-free-trial",
+      "platform": "google",
+      "snapshot": { "subscriptionState": "SUBSCRIPTION_STATE_ACTIVE", "expiryTime": "2026-10-30T12:00:00Z", "autoRenewEnabled": true, "offerPhase": "freeTrial" },
+      "expected": { "state": "trial", "active": true, "will_renew": true, "expires_at": "2026-10-30T12:00:00Z", "phase": "trial" }
+    },
+    {
+      "id": "google-introductory-price",
+      "platform": "google",
+      "snapshot": { "subscriptionState": "SUBSCRIPTION_STATE_ACTIVE", "expiryTime": "2026-11-20T12:00:00Z", "autoRenewEnabled": true, "offerPhase": "introductoryPrice" },
+      "expected": { "state": "active", "active": true, "will_renew": true, "expires_at": "2026-11-20T12:00:00Z", "phase": "intro" }
+    },
+    {
+      "id": "google-pause-scheduled-still-active",
+      "platform": "google",
+      "snapshot": { "subscriptionState": "SUBSCRIPTION_STATE_ACTIVE", "expiryTime": "2026-11-20T12:00:00Z", "autoRenewEnabled": true, "offerPhase": "basePrice", "rtdn_type_seen": 11 },
+      "expected": { "state": "active", "active": true, "will_renew": true, "expires_at": "2026-11-20T12:00:00Z", "phase": "regular" }
+    },
+    {
+      "id": "google-canceled-but-active",
+      "platform": "google",
+      "snapshot": { "subscriptionState": "SUBSCRIPTION_STATE_CANCELED", "expiryTime": "2026-11-20T12:00:00Z", "autoRenewEnabled": false, "offerPhase": "basePrice" },
+      "expected": { "state": "canceled", "active": true, "will_renew": false, "expires_at": "2026-11-20T12:00:00Z", "phase": "regular" }
+    },
+    {
+      "id": "google-canceled-expiry-in-the-past",
+      "platform": "google",
+      "snapshot": { "subscriptionState": "SUBSCRIPTION_STATE_CANCELED", "expiryTime": "2026-10-20T12:00:00Z", "autoRenewEnabled": false, "offerPhase": "basePrice" },
+      "expected": { "state": "expired", "active": false, "will_renew": false, "expires_at": "2026-10-20T12:00:00Z", "end_reason": "other" }
+    },
+    {
+      "id": "google-grace-period",
+      "platform": "google",
+      "snapshot": { "subscriptionState": "SUBSCRIPTION_STATE_IN_GRACE_PERIOD", "expiryTime": "2026-10-30T12:00:00Z", "autoRenewEnabled": true, "offerPhase": "basePrice" },
+      "expected": { "state": "grace", "active": true, "will_renew": true, "expires_at": "2026-10-30T12:00:00Z", "phase": "regular" }
+    },
+    {
+      "id": "google-account-hold",
+      "platform": "google",
+      "snapshot": { "subscriptionState": "SUBSCRIPTION_STATE_ON_HOLD", "expiryTime": "2026-10-20T12:00:00Z", "autoRenewEnabled": true, "offerPhase": "basePrice" },
+      "expected": { "state": "retry", "active": false, "will_renew": true, "expires_at": "2026-10-20T12:00:00Z", "phase": "regular" }
+    },
+    {
+      "id": "google-paused",
+      "platform": "google",
+      "snapshot": { "subscriptionState": "SUBSCRIPTION_STATE_PAUSED", "expiryTime": "2026-10-25T12:00:00Z", "autoRenewEnabled": true, "autoResumeTime": "2026-11-10T12:00:00Z", "offerPhase": "basePrice" },
+      "expected": { "state": "paused", "active": false, "will_renew": true, "expires_at": "2026-10-25T12:00:00Z", "auto_resume_at": "2026-11-10T12:00:00Z" }
+    },
+    {
+      "id": "google-pending-purchase",
+      "platform": "google",
+      "snapshot": { "subscriptionState": "SUBSCRIPTION_STATE_PENDING" },
+      "expected": { "state": "pending", "active": false, "will_renew": false, "expires_at": null }
+    },
+    {
+      "id": "google-pending-purchase-canceled",
+      "platform": "google",
+      "snapshot": { "subscriptionState": "SUBSCRIPTION_STATE_PENDING_PURCHASE_CANCELED", "linkedPurchaseToken": null },
+      "expected": { "state": "none", "active": false, "will_renew": false, "expires_at": null, "note": "the pending chain is dropped; an existing linked chain keeps its own state" }
+    },
+    {
+      "id": "google-expired",
+      "platform": "google",
+      "snapshot": { "subscriptionState": "SUBSCRIPTION_STATE_EXPIRED", "expiryTime": "2026-10-10T12:00:00Z", "autoRenewEnabled": false },
+      "expected": { "state": "expired", "active": false, "will_renew": false, "expires_at": "2026-10-10T12:00:00Z" }
+    },
+    {
+      "id": "google-revoked-by-notification",
+      "platform": "google",
+      "snapshot": { "subscriptionState": "SUBSCRIPTION_STATE_EXPIRED", "expiryTime": "2026-11-20T12:00:00Z", "autoRenewEnabled": false, "rtdn_revoked": true, "rtdn_revoked_at": "2026-10-26T09:00:00Z" },
+      "expected": { "state": "revoked", "active": false, "will_renew": false, "expires_at": "2026-10-26T09:00:00Z", "end_reason": "revoked" }
+    }
+  ],
+  "read_time_rules": [
+    {
+      "id": "stored-entitled-and-not-yet-expired",
+      "stored": { "state": "active", "expires_at": "2026-11-20T12:00:00Z" },
+      "store_reachable": true,
+      "expected": { "active": true, "refresh_triggered": false }
+    },
+    {
+      "id": "stored-entitled-past-expiry-store-says-renewed",
+      "stored": { "state": "active", "expires_at": "2026-10-27T11:59:00Z" },
+      "store_reachable": true,
+      "refresh_result": { "state": "active", "expires_at": "2026-11-27T11:59:00Z" },
+      "expected": { "active": true, "state": "active", "expires_at": "2026-11-27T11:59:00Z", "refresh_triggered": true }
+    },
+    {
+      "id": "stored-entitled-past-expiry-store-unreachable-inside-allowance",
+      "stored": { "state": "active", "expires_at": "2026-10-27T11:30:00Z" },
+      "store_reachable": false,
+      "allowance_seconds": 3600,
+      "expected": { "active": true, "refresh_triggered": true }
+    },
+    {
+      "id": "stored-entitled-past-expiry-store-unreachable-outside-allowance",
+      "stored": { "state": "active", "expires_at": "2026-10-27T10:00:00Z" },
+      "store_reachable": false,
+      "allowance_seconds": 3600,
+      "expected": { "active": false, "refresh_triggered": true }
+    },
+    {
+      "id": "stored-canceled-past-expiry-store-says-expired",
+      "stored": { "state": "canceled", "expires_at": "2026-10-27T11:59:00Z" },
+      "store_reachable": true,
+      "refresh_result": { "state": "expired", "expires_at": "2026-10-27T11:59:00Z" },
+      "expected": { "active": false, "state": "expired", "refresh_triggered": true }
+    }
+  ],
+  "composition": [
+    {
+      "id": "two-stores-higher-level-wins-for-lower-product",
+      "chains": [
+        { "chain": "c1", "platform": "apple", "plan_code": "vip-monthly-apple", "state": "canceled", "expires_at": "2026-11-20T12:00:00Z", "will_renew": false },
+        { "chain": "c2", "platform": "google", "plan_code": "vip-plus-monthly-google", "state": "active", "expires_at": "2026-11-27T12:00:00Z", "will_renew": true }
+      ],
+      "asks": [
+        { "product_code": "vip", "expected": { "active": true, "state": "active", "expires_at": "2026-11-27T12:00:00Z", "will_renew": true } },
+        { "product_code": "vip-plus", "expected": { "active": true, "state": "active", "expires_at": "2026-11-27T12:00:00Z", "will_renew": true } }
+      ]
+    },
+    {
+      "id": "lower-level-does-not-satisfy-higher-product",
+      "chains": [
+        { "chain": "c1", "platform": "apple", "plan_code": "vip-monthly-apple", "state": "active", "expires_at": "2026-11-20T12:00:00Z", "will_renew": true }
+      ],
+      "asks": [
+        { "product_code": "vip-plus", "expected": { "active": false, "state": "none", "expires_at": null, "will_renew": false } }
+      ]
+    },
+    {
+      "id": "retry-outranks-expired-when-nothing-is-entitled",
+      "chains": [
+        { "chain": "c1", "platform": "apple", "plan_code": "vip-monthly-apple", "state": "retry", "expires_at": "2026-10-20T12:00:00Z", "will_renew": true },
+        { "chain": "c2", "platform": "google", "plan_code": "vip-monthly-google", "state": "expired", "expires_at": "2026-10-01T12:00:00Z", "will_renew": false }
+      ],
+      "asks": [
+        { "product_code": "vip", "expected": { "active": false, "state": "retry", "expires_at": "2026-10-20T12:00:00Z", "will_renew": true } }
+      ]
+    },
+    {
+      "id": "grace-keeps-access",
+      "chains": [
+        { "chain": "c1", "platform": "apple", "plan_code": "vip-monthly-apple", "state": "grace", "expires_at": "2026-10-30T12:00:00Z", "will_renew": true }
+      ],
+      "asks": [
+        { "product_code": "vip", "expected": { "active": true, "state": "grace", "expires_at": "2026-10-30T12:00:00Z", "will_renew": true } }
+      ]
+    },
+    {
+      "id": "revoked-outranks-expired",
+      "chains": [
+        { "chain": "c1", "platform": "google", "plan_code": "vip-monthly-google", "state": "revoked", "expires_at": "2026-10-26T09:00:00Z", "will_renew": false },
+        { "chain": "c2", "platform": "apple", "plan_code": "vip-monthly-apple", "state": "expired", "expires_at": "2026-09-20T12:00:00Z", "will_renew": false }
+      ],
+      "asks": [
+        { "product_code": "vip", "expected": { "active": false, "state": "revoked", "expires_at": "2026-10-26T09:00:00Z", "will_renew": false } }
+      ]
+    },
+    {
+      "id": "no-chain-at-all",
+      "chains": [],
+      "asks": [
+        { "product_code": "vip", "expected": { "active": false, "state": "none", "expires_at": null, "will_renew": false } }
+      ]
+    }
+  ],
+  "trial_reminders": {
+    "_comment": "Oracle for the trial-ending reminder (backend.md section 10). The hand-off event follows the contract of messaging.push-reengagement (subject_key, state, fire_at, expires_at, params). `stored` is the reminder state kept on the trial term before the evaluation. An armed event uses reminder_seq (plus one when a resolved event was emitted first); a resolved event uses the stored reminder_seq. A free trial of a purchased, production term arms; every other term does not. `renewal_price` is the renewal price the chain holds in every case except `price-unknown-omits-price-params`, where the chain has none.",
+    "config": {"TRIAL_REMINDER_LEAD_SECONDS": 172800, "TRIAL_REMINDER_MIN_NOTICE_SECONDS": 21600},
+    "renewal_price": {"price_milliunits": 9990, "currency_code": "USD"},
+    "cases": [
+      {
+        "id": "seven-day-trial-starts",
+        "now": "2026-10-27T12:00:00Z",
+        "term": {"term_id": "term-001", "starts_at": "2026-10-27T12:00:00Z", "ends_at": "2026-11-03T12:00:00Z", "phase": "trial", "ownership": "purchased", "environment": "production"},
+        "chain": {"state": "trial", "will_renew": true, "term_is_newest": true},
+        "stored": {"reminder_seq": 0, "reminder_ends_at": null},
+        "expected_events": [{"subject_key": "trial:term-001:0", "state": "armed", "fire_at": "2026-11-01T12:00:00Z", "expires_at": "2026-11-03T12:00:00Z", "params": {"plan_code": "vip-monthly-apple", "product_code": "vip", "platform": "apple", "period": "P1M", "renews_at": "2026-11-03T12:00:00Z", "price_milliunits": 9990, "currency_code": "USD"}}]
+      },
+      {
+        "id": "three-day-trial-lead-capped-at-half-length",
+        "now": "2026-10-27T12:00:00Z",
+        "term": {"term_id": "term-001", "starts_at": "2026-10-27T12:00:00Z", "ends_at": "2026-10-30T12:00:00Z", "phase": "trial", "ownership": "purchased", "environment": "production"},
+        "chain": {"state": "trial", "will_renew": true, "term_is_newest": true},
+        "stored": {"reminder_seq": 0, "reminder_ends_at": null},
+        "expected_events": [{"subject_key": "trial:term-001:0", "state": "armed", "fire_at": "2026-10-29T00:00:00Z", "expires_at": "2026-10-30T12:00:00Z", "params": {"plan_code": "vip-monthly-apple", "product_code": "vip", "platform": "apple", "period": "P1M", "renews_at": "2026-10-30T12:00:00Z", "price_milliunits": 9990, "currency_code": "USD"}}]
+      },
+      {
+        "id": "already-armed-nothing-to-do",
+        "now": "2026-11-02T00:00:00Z",
+        "term": {"term_id": "term-001", "starts_at": "2026-10-27T12:00:00Z", "ends_at": "2026-11-03T12:00:00Z", "phase": "trial", "ownership": "purchased", "environment": "production"},
+        "chain": {"state": "trial", "will_renew": true, "term_is_newest": true},
+        "stored": {"reminder_seq": 0, "reminder_ends_at": "2026-11-03T12:00:00Z"},
+        "expected_events": []
+      },
+      {
+        "id": "player-cancels-during-trial",
+        "now": "2026-10-28T12:00:00Z",
+        "term": {"term_id": "term-001", "starts_at": "2026-10-27T12:00:00Z", "ends_at": "2026-11-03T12:00:00Z", "phase": "trial", "ownership": "purchased", "environment": "production"},
+        "chain": {"state": "canceled", "will_renew": false, "term_is_newest": true},
+        "stored": {"reminder_seq": 0, "reminder_ends_at": "2026-11-03T12:00:00Z"},
+        "expected_events": [{"subject_key": "trial:term-001:0", "state": "resolved"}]
+      },
+      {
+        "id": "player-turns-renewal-back-on",
+        "now": "2026-10-28T12:00:00Z",
+        "term": {"term_id": "term-001", "starts_at": "2026-10-27T12:00:00Z", "ends_at": "2026-11-03T12:00:00Z", "phase": "trial", "ownership": "purchased", "environment": "production"},
+        "chain": {"state": "trial", "will_renew": true, "term_is_newest": true},
+        "stored": {"reminder_seq": 1, "reminder_ends_at": null},
+        "expected_events": [{"subject_key": "trial:term-001:1", "state": "armed", "fire_at": "2026-11-01T12:00:00Z", "expires_at": "2026-11-03T12:00:00Z", "params": {"plan_code": "vip-monthly-apple", "product_code": "vip", "platform": "apple", "period": "P1M", "renews_at": "2026-11-03T12:00:00Z", "price_milliunits": 9990, "currency_code": "USD"}}]
+      },
+      {
+        "id": "trial-converts-to-paid",
+        "now": "2026-11-03T12:00:00Z",
+        "term": {"term_id": "term-001", "starts_at": "2026-10-27T12:00:00Z", "ends_at": "2026-11-03T12:00:00Z", "phase": "trial", "ownership": "purchased", "environment": "production"},
+        "chain": {"state": "active", "will_renew": true, "term_is_newest": false},
+        "stored": {"reminder_seq": 1, "reminder_ends_at": "2026-11-03T12:00:00Z"},
+        "expected_events": [{"subject_key": "trial:term-001:1", "state": "resolved"}]
+      },
+      {
+        "id": "trial-extended-by-the-store",
+        "now": "2026-10-30T12:00:00Z",
+        "term": {"term_id": "term-001", "starts_at": "2026-10-27T12:00:00Z", "ends_at": "2026-11-10T12:00:00Z", "phase": "trial", "ownership": "purchased", "environment": "production"},
+        "chain": {"state": "trial", "will_renew": true, "term_is_newest": true},
+        "stored": {"reminder_seq": 0, "reminder_ends_at": "2026-11-03T12:00:00Z"},
+        "expected_events": [
+          {"subject_key": "trial:term-001:0", "state": "resolved"},
+          {"subject_key": "trial:term-001:1", "state": "armed", "fire_at": "2026-11-08T12:00:00Z", "expires_at": "2026-11-10T12:00:00Z", "params": {"plan_code": "vip-monthly-apple", "product_code": "vip", "platform": "apple", "period": "P1M", "renews_at": "2026-11-10T12:00:00Z", "price_milliunits": 9990, "currency_code": "USD"}}
+        ]
+      },
+      {
+        "id": "too-late-to-be-useful",
+        "now": "2026-10-27T12:00:00Z",
+        "term": {"term_id": "term-001", "starts_at": "2026-10-24T17:00:00Z", "ends_at": "2026-10-27T17:00:00Z", "phase": "trial", "ownership": "purchased", "environment": "production"},
+        "chain": {"state": "trial", "will_renew": true, "term_is_newest": true},
+        "stored": {"reminder_seq": 0, "reminder_ends_at": null},
+        "expected_events": []
+      },
+      {
+        "id": "late-arming-fire-at-is-now",
+        "now": "2026-10-27T12:00:00Z",
+        "term": {"term_id": "term-001", "starts_at": "2026-10-24T08:00:00Z", "ends_at": "2026-10-28T08:00:00Z", "phase": "trial", "ownership": "purchased", "environment": "production"},
+        "chain": {"state": "trial", "will_renew": true, "term_is_newest": true},
+        "stored": {"reminder_seq": 0, "reminder_ends_at": null},
+        "expected_events": [{"subject_key": "trial:term-001:0", "state": "armed", "fire_at": "2026-10-27T12:00:00Z", "expires_at": "2026-10-28T08:00:00Z", "params": {"plan_code": "vip-monthly-apple", "product_code": "vip", "platform": "apple", "period": "P1M", "renews_at": "2026-10-28T08:00:00Z", "price_milliunits": 9990, "currency_code": "USD"}}]
+      },
+      {
+        "id": "paid-introductory-price-is-not-a-trial",
+        "now": "2026-10-27T12:00:00Z",
+        "term": {"term_id": "term-001", "starts_at": "2026-10-27T12:00:00Z", "ends_at": "2026-11-03T12:00:00Z", "phase": "intro", "ownership": "purchased", "environment": "production"},
+        "chain": {"state": "active", "will_renew": true, "term_is_newest": true},
+        "stored": {"reminder_seq": 0, "reminder_ends_at": null},
+        "expected_events": []
+      },
+      {
+        "id": "family-shared-trial-pays-nothing",
+        "now": "2026-10-27T12:00:00Z",
+        "term": {"term_id": "term-001", "starts_at": "2026-10-27T12:00:00Z", "ends_at": "2026-11-03T12:00:00Z", "phase": "trial", "ownership": "family_shared", "environment": "production"},
+        "chain": {"state": "trial", "will_renew": true, "term_is_newest": true},
+        "stored": {"reminder_seq": 0, "reminder_ends_at": null},
+        "expected_events": []
+      },
+      {
+        "id": "sandbox-trial",
+        "now": "2026-10-27T12:00:00Z",
+        "term": {"term_id": "term-001", "starts_at": "2026-10-27T12:00:00Z", "ends_at": "2026-11-03T12:00:00Z", "phase": "trial", "ownership": "purchased", "environment": "sandbox"},
+        "chain": {"state": "trial", "will_renew": true, "term_is_newest": true},
+        "stored": {"reminder_seq": 0, "reminder_ends_at": null},
+        "expected_events": []
+      },
+      {
+        "id": "price-unknown-omits-price-params",
+        "now": "2026-10-27T12:00:00Z",
+        "term": {"term_id": "term-001", "starts_at": "2026-10-27T12:00:00Z", "ends_at": "2026-11-03T12:00:00Z", "phase": "trial", "ownership": "purchased", "environment": "production"},
+        "chain": {"state": "trial", "will_renew": true, "term_is_newest": true},
+        "stored": {"reminder_seq": 0, "reminder_ends_at": null},
+        "expected_events": [{"subject_key": "trial:term-001:0", "state": "armed", "fire_at": "2026-11-01T12:00:00Z", "expires_at": "2026-11-03T12:00:00Z", "params": {"plan_code": "vip-monthly-apple", "product_code": "vip", "platform": "apple", "period": "P1M", "renews_at": "2026-11-03T12:00:00Z"}}]
+      }
+    ]
+  }
+}

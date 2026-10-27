@@ -1,0 +1,94 @@
+{
+  "_comment": "Oracle for the stipend schedule (README section 3, backend.md section 5). Slice k of a term starts at `starts_at + k * slice_days` days of 86400 seconds; the slice count is `max(1, floor(term_length / slice_days))`, and a plan with `stipend_slice_days: null` has exactly one slice that starts with the term. A slice is `due` when `due_at <= clock`. The ledger idempotency key carries no account id on purpose.",
+  "key_format": "subscriptions.stipend:{platform}:{store_transaction_id}:{slice_index}",
+  "reversal_key_format": "subscriptions.stipend-reversal:{platform}:{store_transaction_id}:{slice_index}",
+  "defaults": {"STIPEND_DURING_TRIAL":false,"STIPEND_FOR_FAMILY_SHARED":false,"STIPEND_REVERSAL":"none"},
+  "ledger_reason": "subscriptions.stipend",
+  "cases": [
+    {
+      "id": "monthly-plan-one-slice-per-term",
+      "clock": "2026-10-27T12:00:00Z",
+      "term": {"account_id":"acct-001","phase":"regular","ownership":"purchased","platform":"apple","store_transaction_id":"2000000000000002","plan_code":"vip-monthly-apple","starts_at":"2026-10-27T12:00:00Z","ends_at":"2026-11-27T12:00:00Z"},
+      "plan_slice_days": null,
+      "notes": "the single slice starts with the term, so it is due at the clock instant",
+      "total_slices": 1,
+      "expected_slices": [{"slice_index":0,"due_at":"2026-10-27T12:00:00Z","status":"due","amount":300,"currency":"gems","idempotency_key":"subscriptions.stipend:apple:2000000000000002:0"}],
+      "expected_due_now": [0]
+    },
+    {
+      "id": "yearly-plan-thirty-day-slices",
+      "clock": "2026-10-27T12:00:00Z",
+      "term": {"account_id":"acct-001","phase":"regular","ownership":"purchased","platform":"apple","store_transaction_id":"2000000000000202","plan_code":"vip-yearly-apple","starts_at":"2026-09-27T12:00:00Z","ends_at":"2027-09-27T12:00:00Z"},
+      "plan_slice_days": 30,
+      "notes": "twelve slices; slices 0 and 1 are due at the clock (slice 1 starts exactly at the clock); only slices 0, 1, 2 and 11 are listed",
+      "total_slices": 12,
+      "expected_slices": [
+        {"slice_index":0,"due_at":"2026-09-27T12:00:00Z","status":"due","amount":300,"currency":"gems","idempotency_key":"subscriptions.stipend:apple:2000000000000202:0"},
+        {"slice_index":1,"due_at":"2026-10-27T12:00:00Z","status":"due","amount":300,"currency":"gems","idempotency_key":"subscriptions.stipend:apple:2000000000000202:1"},
+        {"slice_index":2,"due_at":"2026-11-26T12:00:00Z","status":"scheduled","amount":300,"currency":"gems","idempotency_key":"subscriptions.stipend:apple:2000000000000202:2"},
+        {"slice_index":11,"due_at":"2027-08-23T12:00:00Z","status":"scheduled","amount":300,"currency":"gems","idempotency_key":"subscriptions.stipend:apple:2000000000000202:11"}
+      ],
+      "expected_due_now": [0,1]
+    },
+    {
+      "id": "term-shorter-than-one-slice-still-gets-one",
+      "clock": "2026-10-27T12:00:00Z",
+      "term": {"account_id":"acct-001","phase":"regular","ownership":"purchased","platform":"google","store_transaction_id":"GPA.0000-0000-0000-00031","plan_code":"vip-yearly-google","starts_at":"2026-10-20T12:00:00Z","ends_at":"2026-11-18T12:00:00Z"},
+      "plan_slice_days": 30,
+      "notes": "a 29-day term with a 30-day slice yields max(1, floor(29/30)) = 1 slice",
+      "total_slices": 1,
+      "expected_slices": [{"slice_index":0,"due_at":"2026-10-20T12:00:00Z","status":"due","amount":300,"currency":"gems","idempotency_key":"subscriptions.stipend:google:GPA.0000-0000-0000-00031:0"}],
+      "expected_due_now": [0]
+    },
+    {
+      "id": "free-trial-term-skipped",
+      "clock": "2026-10-27T12:00:00Z",
+      "term": {"account_id":"acct-001","phase":"trial","ownership":"purchased","platform":"google","store_transaction_id":"GPA.0000-0000-0000-00041","plan_code":"vip-monthly-google","starts_at":"2026-10-27T10:00:00Z","ends_at":"2026-11-03T10:00:00Z"},
+      "plan_slice_days": null,
+      "notes": "STIPEND_DURING_TRIAL is false; the slice row is written as skipped so the decision is auditable",
+      "total_slices": 1,
+      "expected_slices": [{"slice_index":0,"due_at":"2026-10-27T10:00:00Z","status":"skipped","amount":300,"currency":"gems","idempotency_key":"subscriptions.stipend:google:GPA.0000-0000-0000-00041:0","skip_reason":"trial"}],
+      "expected_due_now": []
+    },
+    {
+      "id": "family-shared-term-skipped",
+      "clock": "2026-10-27T12:00:00Z",
+      "term": {"account_id":"acct-002","phase":"regular","ownership":"family_shared","platform":"apple","store_transaction_id":"2000000000000302","plan_code":"vip-plus-monthly-apple","starts_at":"2026-10-27T12:00:00Z","ends_at":"2026-11-27T12:00:00Z"},
+      "plan_slice_days": null,
+      "notes": "STIPEND_FOR_FAMILY_SHARED is false",
+      "total_slices": 1,
+      "expected_slices": [{"slice_index":0,"due_at":"2026-10-27T12:00:00Z","status":"skipped","amount":800,"currency":"gems","idempotency_key":"subscriptions.stipend:apple:2000000000000302:0","skip_reason":"family_shared"}],
+      "expected_due_now": []
+    },
+    {
+      "id": "revoked-term-stops-future-slices",
+      "clock": "2026-12-01T12:00:00Z",
+      "term": {"account_id":"acct-001","phase":"regular","ownership":"purchased","platform":"apple","store_transaction_id":"2000000000000202","plan_code":"vip-yearly-apple","starts_at":"2026-09-27T12:00:00Z","ends_at":"2027-09-27T12:00:00Z"},
+      "plan_slice_days": 30,
+      "notes": "revoked at 2026-11-10: slices 0 and 1 were granted before the revocation and stay granted (no claw back by default); slice 2 would start 2026-11-26 and is skipped",
+      "total_slices": 12,
+      "expected_slices": [
+        {"slice_index":0,"due_at":"2026-09-27T12:00:00Z","status":"due","amount":300,"currency":"gems","idempotency_key":"subscriptions.stipend:apple:2000000000000202:0"},
+        {"slice_index":1,"due_at":"2026-10-27T12:00:00Z","status":"due","amount":300,"currency":"gems","idempotency_key":"subscriptions.stipend:apple:2000000000000202:1"},
+        {"slice_index":2,"due_at":"2026-11-26T12:00:00Z","status":"skipped","amount":300,"currency":"gems","idempotency_key":"subscriptions.stipend:apple:2000000000000202:2","skip_reason":"revoked"},
+        {"slice_index":3,"due_at":"2026-12-26T12:00:00Z","status":"skipped","amount":300,"currency":"gems","idempotency_key":"subscriptions.stipend:apple:2000000000000202:3","skip_reason":"revoked"}
+      ],
+      "expected_due_now": [0,1],
+      "already_applied": [0,1]
+    }
+  ],
+  "replay_cases": [
+    {
+      "id": "same-slice-granted-twice-by-two-workers",
+      "first": {"account_id":"acct-001","key":"subscriptions.stipend:apple:2000000000000002:0","amount":300,"currency":"gems"},
+      "second": {"account_id":"acct-001","key":"subscriptions.stipend:apple:2000000000000002:0","amount":300,"currency":"gems"},
+      "expected": "second call returns the original result; balance changes once; one stipend_grants row, status applied"
+    },
+    {
+      "id": "slice-after-chain-moves-to-another-account",
+      "first": {"account_id":"acct-001","key":"subscriptions.stipend:apple:2000000000000002:0","amount":300,"currency":"gems"},
+      "second": {"account_id":"acct-002","key":"subscriptions.stipend:apple:2000000000000002:0","amount":300,"currency":"gems"},
+      "expected": "ledger answers idempotency_conflict; the block treats it as already granted and writes nothing; acct-002 balance is unchanged"
+    }
+  ]
+}

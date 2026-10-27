@@ -1,0 +1,682 @@
+{
+  "_comment": "Decoded store payloads reduced to the fields the block reads. Apple field names follow JWSTransactionDecodedPayload and responseBodyV2DecodedPayload; Google field names follow ProductPurchaseV2 and the real-time developer notification messages. Signatures are not included: tests inject these as the output of the signature and API verification step, and test signature failure separately with a real library and a tampered token. Timestamps: Apple purchaseDate, revocationDate and signedDate are epoch milliseconds.",
+  "_usage": "Identifiers are placeholders: bundle `com.example.acmegame`, package `com.example.acmegame`, products `acme_*`, accounts `account-001` and `account-002`. The account tokens are UUIDs mapped in `account_tokens` (with STORE_ACCOUNT_TOKEN_SOURCE = account_id each token equals its account id; these test accounts use the wallet_token mode so that ids like account-001 can stay readable). Clock 2026-10-27T12:00:00Z. `expected_plans` gives the output of planPurchase (backend.md section 6) for each payload.",
+  "config": {
+    "apple_bundle_id": "com.example.acmegame",
+    "google_package_name": "com.example.acmegame",
+    "APPLE_ACCEPT_SANDBOX": true,
+    "GOOGLE_ACCEPT_TEST_PURCHASES": true,
+    "MAX_PURCHASE_QUANTITY": 1
+  },
+  "account_tokens": {
+    "account-001": "0b1c2d3e-0000-4000-8000-000000000001",
+    "account-002": "0b1c2d3e-0000-4000-8000-000000000002",
+    "erased-or-unknown": "0b1c2d3e-0000-4000-8000-0000000000ff"
+  },
+  "apple_transactions": {
+    "gems_medium_purchase": {
+      "transactionId": "2000000100000001",
+      "originalTransactionId": "2000000100000001",
+      "bundleId": "com.example.acmegame",
+      "productId": "acme_gems_medium",
+      "type": "Consumable",
+      "quantity": 1,
+      "purchaseDate": 1793102280000,
+      "signedDate": 1793102285000,
+      "environment": "Production",
+      "appAccountToken": "0b1c2d3e-0000-4000-8000-000000000001",
+      "price": 4990,
+      "currency": "USD",
+      "storefront": "USA",
+      "inAppOwnershipType": "PURCHASED",
+      "transactionReason": "PURCHASE"
+    },
+    "gems_medium_sandbox": {
+      "transactionId": "2000000100000002",
+      "originalTransactionId": "2000000100000002",
+      "bundleId": "com.example.acmegame",
+      "productId": "acme_gems_medium",
+      "type": "Consumable",
+      "quantity": 1,
+      "purchaseDate": 1793102280000,
+      "signedDate": 1793102285000,
+      "environment": "Sandbox",
+      "appAccountToken": "0b1c2d3e-0000-4000-8000-000000000001",
+      "price": 4990,
+      "currency": "USD"
+    },
+    "gems_medium_no_token": {
+      "transactionId": "2000000100000003",
+      "originalTransactionId": "2000000100000003",
+      "bundleId": "com.example.acmegame",
+      "productId": "acme_gems_medium",
+      "type": "Consumable",
+      "quantity": 1,
+      "purchaseDate": 1793102280000,
+      "signedDate": 1793102285000,
+      "environment": "Production",
+      "price": 4990,
+      "currency": "USD"
+    },
+    "gems_medium_unknown_token": {
+      "transactionId": "2000000100000004",
+      "originalTransactionId": "2000000100000004",
+      "bundleId": "com.example.acmegame",
+      "productId": "acme_gems_medium",
+      "type": "Consumable",
+      "quantity": 1,
+      "purchaseDate": 1793102280000,
+      "signedDate": 1793102285000,
+      "environment": "Production",
+      "appAccountToken": "0b1c2d3e-0000-4000-8000-0000000000ff",
+      "price": 4990,
+      "currency": "USD"
+    },
+    "gems_medium_refunded": {
+      "transactionId": "2000000100000005",
+      "originalTransactionId": "2000000100000005",
+      "bundleId": "com.example.acmegame",
+      "productId": "acme_gems_medium",
+      "type": "Consumable",
+      "quantity": 1,
+      "purchaseDate": 1792486800000,
+      "signedDate": 1793001600000,
+      "environment": "Production",
+      "appAccountToken": "0b1c2d3e-0000-4000-8000-000000000001",
+      "revocationDate": 1793001600000,
+      "revocationReason": 0,
+      "price": 4990,
+      "currency": "USD"
+    },
+    "gems_medium_wrong_type": {
+      "transactionId": "2000000100000006",
+      "originalTransactionId": "2000000100000006",
+      "bundleId": "com.example.acmegame",
+      "productId": "acme_gems_medium",
+      "type": "Non-Consumable",
+      "quantity": 1,
+      "purchaseDate": 1793102280000,
+      "signedDate": 1793102285000,
+      "environment": "Production",
+      "appAccountToken": "0b1c2d3e-0000-4000-8000-000000000001"
+    },
+    "gems_medium_quantity_2": {
+      "transactionId": "2000000100000007",
+      "originalTransactionId": "2000000100000007",
+      "bundleId": "com.example.acmegame",
+      "productId": "acme_gems_medium",
+      "type": "Consumable",
+      "quantity": 2,
+      "purchaseDate": 1793102280000,
+      "signedDate": 1793102285000,
+      "environment": "Production",
+      "appAccountToken": "0b1c2d3e-0000-4000-8000-000000000001"
+    },
+    "unknown_product": {
+      "transactionId": "2000000100000008",
+      "originalTransactionId": "2000000100000008",
+      "bundleId": "com.example.acmegame",
+      "productId": "acme_gems_unlisted",
+      "type": "Consumable",
+      "quantity": 1,
+      "purchaseDate": 1793102280000,
+      "signedDate": 1793102285000,
+      "environment": "Production",
+      "appAccountToken": "0b1c2d3e-0000-4000-8000-000000000001"
+    },
+    "other_bundle": {
+      "transactionId": "2000000100000009",
+      "originalTransactionId": "2000000100000009",
+      "bundleId": "com.example.othergame",
+      "productId": "acme_gems_medium",
+      "type": "Consumable",
+      "quantity": 1,
+      "purchaseDate": 1793102280000,
+      "signedDate": 1793102285000,
+      "environment": "Production",
+      "appAccountToken": "0b1c2d3e-0000-4000-8000-000000000001",
+      "_note": "Fails verification (bundleId): proof_invalid, no row."
+    },
+    "season_premium_purchase": {
+      "transactionId": "2000000100000010",
+      "originalTransactionId": "2000000100000010",
+      "bundleId": "com.example.acmegame",
+      "productId": "acme_season_premium",
+      "type": "Consumable",
+      "quantity": 1,
+      "purchaseDate": 1793102280000,
+      "signedDate": 1793102285000,
+      "environment": "Production",
+      "appAccountToken": "0b1c2d3e-0000-4000-8000-000000000001",
+      "price": 9990,
+      "currency": "USD"
+    }
+  },
+  "apple_notifications": {
+    "one_time_charge": {
+      "notificationType": "ONE_TIME_CHARGE",
+      "notificationUUID": "a1000000-0000-4000-8000-000000000001",
+      "version": "2.0",
+      "signedDate": 1793102290000,
+      "data": {
+        "bundleId": "com.example.acmegame",
+        "environment": "Production",
+        "transaction": "gems_medium_purchase"
+      }
+    },
+    "refund": {
+      "notificationType": "REFUND",
+      "notificationUUID": "a1000000-0000-4000-8000-000000000002",
+      "version": "2.0",
+      "signedDate": 1793001601000,
+      "data": {
+        "bundleId": "com.example.acmegame",
+        "environment": "Production",
+        "transaction": "gems_medium_refunded"
+      }
+    },
+    "refund_reversed": {
+      "notificationType": "REFUND_REVERSED",
+      "notificationUUID": "a1000000-0000-4000-8000-000000000003",
+      "version": "2.0",
+      "signedDate": 1793102300000,
+      "data": {
+        "bundleId": "com.example.acmegame",
+        "environment": "Production",
+        "transaction": "gems_medium_purchase",
+        "_note": "The transaction read from Get Transaction Info has no revocationDate."
+      }
+    },
+    "refund_declined": {
+      "notificationType": "REFUND_DECLINED",
+      "notificationUUID": "a1000000-0000-4000-8000-000000000004",
+      "version": "2.0",
+      "signedDate": 1793102301000,
+      "data": {
+        "bundleId": "com.example.acmegame",
+        "environment": "Production",
+        "transaction": "gems_medium_purchase"
+      }
+    },
+    "consumption_request": {
+      "notificationType": "CONSUMPTION_REQUEST",
+      "notificationUUID": "a1000000-0000-4000-8000-000000000005",
+      "version": "2.0",
+      "signedDate": 1793102302000,
+      "data": {
+        "bundleId": "com.example.acmegame",
+        "environment": "Production",
+        "transaction": "gems_medium_purchase"
+      }
+    },
+    "test": {
+      "notificationType": "TEST",
+      "notificationUUID": "a1000000-0000-4000-8000-000000000006",
+      "version": "2.0",
+      "signedDate": 1793102303000,
+      "data": {
+        "bundleId": "com.example.acmegame",
+        "environment": "Production"
+      }
+    },
+    "subscription_family": {
+      "notificationType": "DID_RENEW",
+      "notificationUUID": "a1000000-0000-4000-8000-000000000007",
+      "version": "2.0",
+      "signedDate": 1793102304000,
+      "data": {
+        "bundleId": "com.example.acmegame",
+        "environment": "Production"
+      },
+      "_note": "Routed to the handler registered for (apple, subscription); ignored when none is registered."
+    },
+    "wrong_bundle": {
+      "notificationType": "REFUND",
+      "notificationUUID": "a1000000-0000-4000-8000-000000000008",
+      "version": "2.0",
+      "signedDate": 1793102305000,
+      "data": {
+        "bundleId": "com.example.othergame",
+        "environment": "Production",
+        "transaction": "other_bundle"
+      },
+      "_note": "Fails verification (bundleId): 401, nothing processed."
+    }
+  },
+  "google_purchases": {
+    "gems_medium_purchased": {
+      "_token": "google-token-0001",
+      "productLineItem": [
+        {
+          "productId": "acme_gems_medium",
+          "productOfferDetails": {
+            "quantity": 1,
+            "refundableQuantity": 1,
+            "consumptionState": "CONSUMPTION_STATE_YET_TO_BE_CONSUMED"
+          }
+        }
+      ],
+      "purchaseStateContext": {
+        "purchaseState": "PURCHASED"
+      },
+      "orderId": "GPA.0000-0000-0000-00001",
+      "obfuscatedExternalAccountId": "0b1c2d3e-0000-4000-8000-000000000001",
+      "purchaseCompletionTime": "2026-10-27T11:58:00Z",
+      "acknowledgementState": "ACKNOWLEDGEMENT_STATE_PENDING",
+      "regionCode": "US"
+    },
+    "gems_medium_pending": {
+      "_token": "google-token-0002",
+      "productLineItem": [
+        {
+          "productId": "acme_gems_medium",
+          "productOfferDetails": {
+            "quantity": 1,
+            "refundableQuantity": 1,
+            "consumptionState": "CONSUMPTION_STATE_YET_TO_BE_CONSUMED"
+          }
+        }
+      ],
+      "purchaseStateContext": {
+        "purchaseState": "PENDING"
+      },
+      "orderId": "GPA.0000-0000-0000-00002",
+      "obfuscatedExternalAccountId": "0b1c2d3e-0000-4000-8000-000000000001",
+      "acknowledgementState": "ACKNOWLEDGEMENT_STATE_PENDING",
+      "regionCode": "US"
+    },
+    "gems_medium_pending_completed": {
+      "_token": "google-token-0002",
+      "_note": "The same token after payment completes.",
+      "productLineItem": [
+        {
+          "productId": "acme_gems_medium",
+          "productOfferDetails": {
+            "quantity": 1,
+            "refundableQuantity": 1,
+            "consumptionState": "CONSUMPTION_STATE_YET_TO_BE_CONSUMED"
+          }
+        }
+      ],
+      "purchaseStateContext": {
+        "purchaseState": "PURCHASED"
+      },
+      "orderId": "GPA.0000-0000-0000-00002",
+      "obfuscatedExternalAccountId": "0b1c2d3e-0000-4000-8000-000000000001",
+      "purchaseCompletionTime": "2026-10-27T11:59:00Z",
+      "acknowledgementState": "ACKNOWLEDGEMENT_STATE_PENDING",
+      "regionCode": "US"
+    },
+    "gems_medium_cancelled": {
+      "_token": "google-token-0003",
+      "productLineItem": [
+        {
+          "productId": "acme_gems_medium",
+          "productOfferDetails": {
+            "quantity": 1,
+            "refundableQuantity": 1,
+            "consumptionState": "CONSUMPTION_STATE_YET_TO_BE_CONSUMED"
+          }
+        }
+      ],
+      "purchaseStateContext": {
+        "purchaseState": "CANCELLED"
+      },
+      "orderId": "GPA.0000-0000-0000-00003",
+      "obfuscatedExternalAccountId": "0b1c2d3e-0000-4000-8000-000000000001",
+      "acknowledgementState": "ACKNOWLEDGEMENT_STATE_PENDING",
+      "regionCode": "US"
+    },
+    "gems_medium_consumed_by_client": {
+      "_token": "google-token-0004",
+      "_note": "Purchased, already consumed by a client, no local record.",
+      "productLineItem": [
+        {
+          "productId": "acme_gems_medium",
+          "productOfferDetails": {
+            "quantity": 1,
+            "refundableQuantity": 1,
+            "consumptionState": "CONSUMPTION_STATE_CONSUMED"
+          }
+        }
+      ],
+      "purchaseStateContext": {
+        "purchaseState": "PURCHASED"
+      },
+      "orderId": "GPA.0000-0000-0000-00004",
+      "obfuscatedExternalAccountId": "0b1c2d3e-0000-4000-8000-000000000001",
+      "purchaseCompletionTime": "2026-10-27T11:40:00Z",
+      "acknowledgementState": "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+      "regionCode": "US"
+    },
+    "gems_medium_test": {
+      "_token": "google-token-0005",
+      "productLineItem": [
+        {
+          "productId": "acme_gems_medium",
+          "productOfferDetails": {
+            "quantity": 1,
+            "refundableQuantity": 1,
+            "consumptionState": "CONSUMPTION_STATE_YET_TO_BE_CONSUMED"
+          }
+        }
+      ],
+      "purchaseStateContext": {
+        "purchaseState": "PURCHASED"
+      },
+      "testPurchaseContext": {
+        "fopType": "TEST"
+      },
+      "orderId": "GPA.0000-0000-0000-00005",
+      "obfuscatedExternalAccountId": "0b1c2d3e-0000-4000-8000-000000000001",
+      "purchaseCompletionTime": "2026-10-27T11:58:00Z",
+      "acknowledgementState": "ACKNOWLEDGEMENT_STATE_PENDING",
+      "regionCode": "US"
+    },
+    "gems_medium_promo_no_order_id": {
+      "_token": "google-token-0006",
+      "_note": "Promo-code purchases have no orderId; the purchase token is the key.",
+      "productLineItem": [
+        {
+          "productId": "acme_gems_medium",
+          "productOfferDetails": {
+            "quantity": 1,
+            "refundableQuantity": 1,
+            "consumptionState": "CONSUMPTION_STATE_YET_TO_BE_CONSUMED"
+          }
+        }
+      ],
+      "purchaseStateContext": {
+        "purchaseState": "PURCHASED"
+      },
+      "obfuscatedExternalAccountId": "0b1c2d3e-0000-4000-8000-000000000001",
+      "purchaseCompletionTime": "2026-10-27T11:58:00Z",
+      "acknowledgementState": "ACKNOWLEDGEMENT_STATE_PENDING",
+      "regionCode": "US"
+    },
+    "two_line_items": {
+      "_token": "google-token-0007",
+      "productLineItem": [
+        {
+          "productId": "acme_gems_medium",
+          "productOfferDetails": {
+            "quantity": 1,
+            "refundableQuantity": 1,
+            "consumptionState": "CONSUMPTION_STATE_YET_TO_BE_CONSUMED"
+          }
+        },
+        {
+          "productId": "acme_gems_small",
+          "productOfferDetails": {
+            "quantity": 1,
+            "refundableQuantity": 1,
+            "consumptionState": "CONSUMPTION_STATE_YET_TO_BE_CONSUMED"
+          }
+        }
+      ],
+      "purchaseStateContext": {
+        "purchaseState": "PURCHASED"
+      },
+      "orderId": "GPA.0000-0000-0000-00007",
+      "obfuscatedExternalAccountId": "0b1c2d3e-0000-4000-8000-000000000001",
+      "acknowledgementState": "ACKNOWLEDGEMENT_STATE_PENDING"
+    },
+    "season_premium_purchased": {
+      "_token": "google-token-0008",
+      "productLineItem": [
+        {
+          "productId": "acme_season_premium",
+          "productOfferDetails": {
+            "quantity": 1,
+            "refundableQuantity": 1,
+            "consumptionState": "CONSUMPTION_STATE_YET_TO_BE_CONSUMED"
+          }
+        }
+      ],
+      "purchaseStateContext": {
+        "purchaseState": "PURCHASED"
+      },
+      "orderId": "GPA.0000-0000-0000-00008",
+      "obfuscatedExternalAccountId": "0b1c2d3e-0000-4000-8000-000000000001",
+      "purchaseCompletionTime": "2026-10-27T11:58:00Z",
+      "acknowledgementState": "ACKNOWLEDGEMENT_STATE_PENDING",
+      "regionCode": "US"
+    }
+  },
+  "google_rtdn": {
+    "one_time_purchased": {
+      "message_id": "pubsub-msg-0001",
+      "developer_notification": {
+        "version": "1.0",
+        "packageName": "com.example.acmegame",
+        "eventTimeMillis": 1793102280000,
+        "oneTimeProductNotification": {
+          "version": "1.0",
+          "notificationType": 1,
+          "purchaseToken": "google-token-0002",
+          "sku": "acme_gems_medium"
+        }
+      }
+    },
+    "one_time_canceled": {
+      "message_id": "pubsub-msg-0002",
+      "developer_notification": {
+        "version": "1.0",
+        "packageName": "com.example.acmegame",
+        "eventTimeMillis": 1793102281000,
+        "oneTimeProductNotification": {
+          "version": "1.0",
+          "notificationType": 2,
+          "purchaseToken": "google-token-0003",
+          "sku": "acme_gems_medium"
+        }
+      }
+    },
+    "voided_full_refund": {
+      "message_id": "pubsub-msg-0003",
+      "developer_notification": {
+        "version": "1.0",
+        "packageName": "com.example.acmegame",
+        "eventTimeMillis": 1793102282000,
+        "voidedPurchaseNotification": {
+          "purchaseToken": "google-token-0001",
+          "orderId": "GPA.0000-0000-0000-00001",
+          "productType": 2,
+          "refundType": 1
+        }
+      }
+    },
+    "test_message": {
+      "message_id": "pubsub-msg-0004",
+      "developer_notification": {
+        "version": "1.0",
+        "packageName": "com.example.acmegame",
+        "eventTimeMillis": 1793102283000,
+        "testNotification": {
+          "version": "1.0"
+        }
+      }
+    },
+    "subscription_family": {
+      "message_id": "pubsub-msg-0005",
+      "developer_notification": {
+        "version": "1.0",
+        "packageName": "com.example.acmegame",
+        "eventTimeMillis": 1793102284000,
+        "subscriptionNotification": {
+          "version": "1.0",
+          "notificationType": 2,
+          "purchaseToken": "google-sub-token-0001",
+          "subscriptionId": "acme_monthly"
+        }
+      },
+      "_note": "Routed to the handler registered for (google, subscription); ignored when none is registered."
+    },
+    "other_package": {
+      "message_id": "pubsub-msg-0006",
+      "developer_notification": {
+        "version": "1.0",
+        "packageName": "com.example.othergame",
+        "eventTimeMillis": 1793102285000,
+        "voidedPurchaseNotification": {
+          "purchaseToken": "google-token-0001",
+          "orderId": "GPA.0000-0000-0000-00001",
+          "productType": 2,
+          "refundType": 1
+        }
+      },
+      "_note": "packageName mismatch: acknowledged without action and logged."
+    }
+  },
+  "google_push_auth_cases": [
+    {
+      "case": "valid token",
+      "email": "push-sa",
+      "email_verified": true,
+      "aud": "https://game.example.com/api/store/google/notifications",
+      "expect_status": 200
+    },
+    {
+      "case": "wrong service account email",
+      "email": "other-sa",
+      "email_verified": true,
+      "aud": "https://game.example.com/api/store/google/notifications",
+      "expect_status": 401
+    },
+    {
+      "case": "email not verified",
+      "email": "push-sa",
+      "email_verified": false,
+      "aud": "https://game.example.com/api/store/google/notifications",
+      "expect_status": 401
+    },
+    {
+      "case": "wrong audience",
+      "email": "push-sa",
+      "email_verified": true,
+      "aud": "https://elsewhere.example.com/hook",
+      "expect_status": 401
+    },
+    {
+      "case": "no Authorization header",
+      "email": null,
+      "email_verified": null,
+      "aud": null,
+      "expect_status": 401
+    }
+  ],
+  "google_voided_purchases": [
+    {
+      "purchaseToken": "google-token-0001",
+      "orderId": "GPA.0000-0000-0000-00001",
+      "purchaseTimeMillis": "1793102280000",
+      "voidedTimeMillis": "1793102500000",
+      "voidedSource": 0,
+      "voidedReason": 1
+    },
+    {
+      "purchaseToken": "google-token-0009",
+      "orderId": "GPA.0000-0000-0000-00009",
+      "purchaseTimeMillis": "1792486800000",
+      "voidedTimeMillis": "1792746000000",
+      "voidedSource": 2,
+      "voidedReason": 8
+    }
+  ],
+  "expected_plans": [
+    {
+      "payload": "apple_transactions.gems_medium_purchase",
+      "expect": {
+        "state": "verified",
+        "environment": "production"
+      }
+    },
+    {
+      "payload": "apple_transactions.gems_medium_sandbox",
+      "expect": {
+        "state": "verified",
+        "environment": "sandbox"
+      }
+    },
+    {
+      "payload": "apple_transactions.gems_medium_sandbox",
+      "config": {
+        "APPLE_ACCEPT_SANDBOX": false
+      },
+      "expect": {
+        "state": "rejected",
+        "reason": "environment_not_accepted"
+      }
+    },
+    {
+      "payload": "apple_transactions.gems_medium_refunded",
+      "expect": {
+        "state": "refunded"
+      }
+    },
+    {
+      "payload": "apple_transactions.gems_medium_wrong_type",
+      "expect": {
+        "state": "rejected",
+        "reason": "type_mismatch"
+      }
+    },
+    {
+      "payload": "apple_transactions.gems_medium_quantity_2",
+      "expect": {
+        "state": "rejected",
+        "reason": "quantity_unsupported"
+      }
+    },
+    {
+      "payload": "apple_transactions.unknown_product",
+      "expect": {
+        "state": "rejected",
+        "reason": "unknown_product"
+      }
+    },
+    {
+      "payload": "google_purchases.gems_medium_purchased",
+      "expect": {
+        "state": "verified",
+        "environment": "production"
+      }
+    },
+    {
+      "payload": "google_purchases.gems_medium_pending",
+      "expect": {
+        "state": "pending"
+      }
+    },
+    {
+      "payload": "google_purchases.gems_medium_cancelled",
+      "expect": {
+        "state": "canceled"
+      }
+    },
+    {
+      "payload": "google_purchases.gems_medium_test",
+      "expect": {
+        "state": "verified",
+        "environment": "sandbox"
+      }
+    },
+    {
+      "payload": "google_purchases.gems_medium_test",
+      "config": {
+        "GOOGLE_ACCEPT_TEST_PURCHASES": false
+      },
+      "expect": {
+        "state": "rejected",
+        "reason": "environment_not_accepted"
+      }
+    },
+    {
+      "payload": "google_purchases.two_line_items",
+      "expect": {
+        "state": "rejected",
+        "reason": "line_items_unsupported"
+      }
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "_comment": "Purchase records as engagement.season-pass reads them from the purchase contract owned by billing.virtual-currency: purchase_record(store_transaction_id) returns { store_transaction_id, platform, account_id, product_code, product_kind, state, purchased_at, refunded_at }. state is one of pending, unclaimed, verified, canceled, refunded, rejected, and only verified is paid. purchased_at is the store's purchase instant in UTC; account_id is null after account erasure. This block never verifies receipts. All ids are placeholders; 'recorded_at' on one record is scenario information, not a field of the record.",
+  "tenant_id": "tenant-001",
+  "records": [
+    {
+      "_comment": "Valid purchase by acc-cy twenty seconds before the fixed clock; used for mid-season activation.",
+      "store_transaction_id": "txn-2001",
+      "platform": "android",
+      "account_id": "acc-cy",
+      "product_code": "season_pass_premium",
+      "product_kind": "consumable",
+      "state": "verified",
+      "purchased_at": "2026-10-21T11:59:40Z",
+      "refunded_at": null
+    },
+    {
+      "store_transaction_id": "txn-1001",
+      "platform": "ios",
+      "account_id": "acc-bob",
+      "product_code": "season_pass_premium",
+      "product_kind": "consumable",
+      "state": "verified",
+      "purchased_at": "2026-10-12T14:00:00Z",
+      "refunded_at": null
+    },
+    {
+      "_comment": "Eve's purchase; the refund scenarios flip it to state 'refunded' at refunded_at, then back to 'verified' for the reversal scenario.",
+      "store_transaction_id": "txn-3001",
+      "platform": "ios",
+      "account_id": "acc-eve",
+      "product_code": "season_pass_premium",
+      "product_kind": "consumable",
+      "state": "verified",
+      "purchased_at": "2026-10-05T09:00:00Z",
+      "refunded_at": null
+    },
+    {
+      "_comment": "Wrong product: a currency pack, not the pass.",
+      "store_transaction_id": "txn-4001",
+      "platform": "android",
+      "account_id": "acc-cy",
+      "product_code": "currency_pack_small",
+      "product_kind": "consumable",
+      "state": "verified",
+      "purchased_at": "2026-10-21T11:59:00Z",
+      "refunded_at": null
+    },
+    {
+      "_comment": "Purchased before any season window: no season contains purchased_at.",
+      "store_transaction_id": "txn-5001",
+      "platform": "android",
+      "account_id": "acc-ann",
+      "product_code": "season_pass_premium",
+      "product_kind": "consumable",
+      "state": "verified",
+      "purchased_at": "2026-09-30T23:59:59Z",
+      "refunded_at": null
+    },
+    {
+      "_comment": "Bought in the last ten seconds of the season; recorded by the purchase contract only at 2026-11-01T00:30:00Z, after claim_until. Must still be honored.",
+      "store_transaction_id": "txn-6001",
+      "platform": "ios",
+      "account_id": "acc-ann",
+      "product_code": "season_pass_premium",
+      "product_kind": "consumable",
+      "state": "verified",
+      "purchased_at": "2026-10-31T23:59:50Z",
+      "refunded_at": null,
+      "recorded_at": "2026-11-01T00:30:00Z"
+    },
+    {
+      "_comment": "Already refunded when looked up.",
+      "store_transaction_id": "txn-7001",
+      "platform": "android",
+      "account_id": "acc-ann",
+      "product_code": "season_pass_premium",
+      "product_kind": "consumable",
+      "state": "refunded",
+      "purchased_at": "2026-10-10T08:00:00Z",
+      "refunded_at": "2026-10-11T08:00:00Z"
+    },
+    {
+      "store_transaction_id": "txn-8001",
+      "platform": "android",
+      "account_id": "acc-fay",
+      "product_code": "season_pass_premium",
+      "product_kind": "consumable",
+      "state": "verified",
+      "purchased_at": "2026-10-03T10:00:00Z",
+      "refunded_at": null
+    },
+    {
+      "_comment": "Account erased after the purchase: account_id is null, so it matches no caller.",
+      "store_transaction_id": "txn-9001",
+      "platform": "android",
+      "account_id": null,
+      "product_code": "season_pass_premium",
+      "product_kind": "consumable",
+      "state": "verified",
+      "purchased_at": "2026-10-08T10:00:00Z",
+      "refunded_at": null
+    },
+    {
+      "_comment": "Not paid yet: the store reports the purchase as pending.",
+      "store_transaction_id": "txn-9002",
+      "platform": "ios",
+      "account_id": "acc-cy",
+      "product_code": "season_pass_premium",
+      "product_kind": "consumable",
+      "state": "pending",
+      "purchased_at": "2026-10-21T11:58:00Z",
+      "refunded_at": null
+    }
+  ],
+  "unknown_store_transaction_id": "txn-0000"
+}

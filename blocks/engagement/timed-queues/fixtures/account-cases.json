@@ -1,0 +1,248 @@
+{
+  "_comment": "Account-level vectors for engagement.timed-queues: extra slots (progression, currency, money), the idle-slot nudge, hand-off events, clock handling and erasure. Content from fixtures/catalog.json. Fixed clock now = 2026-10-21T12:00:00Z. Account acct-001, timezone Asia/Ho_Chi_Minh (UTC+7): the local day 2026-10-21 runs from 2026-10-20T17:00:00Z to 2026-10-21T17:00:00Z. Store transaction ids and product ids are examples.",
+  "_usage": "`purchase_record` mirrors the shape returned by `billing.virtual-currency` purchase_record(store_transaction_id): store_transaction_id, platform, account_id, product_code, product_kind, state, purchased_at, refunded_at. Only state `verified` counts as paid.",
+
+  "slot_cases": [
+    {
+      "name": "flag-unlock-persists",
+      "given": { "flags": { "tier_2": false } },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "list" }, "expect": { "craft_lanes": 1, "slot_1": { "status": "locked", "options": ["flag:tier_2", "store_product:slot_craft_plus"] } } },
+        { "at": "2026-10-21T12:10:00Z", "given": { "flags": { "tier_2": true } }, "do": { "op": "list" }, "expect": { "craft_lanes": 2, "slot_unlock_row": { "queue_id": "craft", "slot_index": 1, "source": "progression", "source_ref": "tier_2", "status": "active" }, "events": ["queue_slot_unlocked"] } },
+        { "at": "2026-10-21T12:20:00Z", "given": { "flags": { "tier_2": false } }, "do": { "op": "list" }, "expect": { "craft_lanes": 2, "note": "an earned slot never relocks" } }
+      ]
+    },
+    {
+      "name": "currency-unlock",
+      "given": { "slot_rows": [{ "queue_id": "craft", "slot_index": 1, "source": "progression", "status": "active" }], "balances": { "gems": 200 } },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "do": { "op": "unlock-slot", "queue_id": "craft", "slot_index": 2, "via": "currency" },
+          "expect": {
+            "slot_unlock_row": { "slot_index": 2, "source": "currency", "status": "active" },
+            "ledger": [{ "op": "spend", "currency": "gems", "amount": 150, "reason": "timed-queues.slot-unlock", "key": "timed-queues:acct-001:slot:craft:2" }],
+            "balances": { "gems": 50 }
+          }
+        },
+        { "at": "2026-10-21T12:00:03Z", "do": { "op": "unlock-slot", "queue_id": "craft", "slot_index": 2, "via": "currency", "device": "tablet" }, "expect": { "already_unlocked": true, "ledger": [], "balances": { "gems": 50 } } }
+      ]
+    },
+    {
+      "name": "currency-unlock-out-of-order",
+      "given": { "slot_rows": [], "balances": { "gems": 200 } },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "unlock-slot", "queue_id": "craft", "slot_index": 2, "via": "currency" }, "expect": { "error": "slot_out_of_order", "next_unlockable_index": 1, "ledger": [] } }
+      ]
+    },
+    {
+      "name": "currency-unlock-insufficient",
+      "given": { "slot_rows": [{ "queue_id": "craft", "slot_index": 1, "source": "progression", "status": "active" }], "balances": { "gems": 100 } },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "unlock-slot", "queue_id": "craft", "slot_index": 2, "via": "currency" }, "expect": { "error": "insufficient_balance", "currency": "gems", "needed": 150, "balance": 100, "shortfall": 50, "slot_unlock_row": null } }
+      ]
+    },
+    {
+      "name": "purchase-unlock",
+      "given": { "purchase_records": { "txn-1001": { "store_transaction_id": "txn-1001", "platform": "apple", "account_id": "acct-001", "product_code": "slot_craft_plus", "product_kind": "non_consumable", "state": "verified", "purchased_at": "2026-10-21T11:59:30Z", "refunded_at": null } } },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "do": { "op": "on_purchase_state_changed", "store_transaction_id": "txn-1001" },
+          "expect": { "slot_unlock_row": { "queue_id": "craft", "slot_index": 1, "source": "purchase", "store_transaction_id": "txn-1001", "status": "active" }, "ledger": [], "events": ["queue_slot_unlocked"] }
+        },
+        { "at": "2026-10-21T12:00:02Z", "do": { "op": "claim-purchase", "store_transaction_id": "txn-1001" }, "expect": { "already_unlocked": true, "rows_for_txn": 1, "note": "the hook and the client call race; the unique store_transaction_id makes the second a replay" } }
+      ]
+    },
+    {
+      "name": "purchase-from-another-account",
+      "given": { "purchase_records": { "txn-1002": { "store_transaction_id": "txn-1002", "platform": "google", "account_id": "acct-002", "product_code": "slot_craft_plus", "product_kind": "non_consumable", "state": "verified" } } },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "claim-purchase", "store_transaction_id": "txn-1002" }, "expect": { "error": "purchase_mismatch", "slot_unlock_row": null } }
+      ]
+    },
+    {
+      "name": "purchase-pending-then-verified",
+      "given": { "purchase_records": { "txn-1003": { "store_transaction_id": "txn-1003", "account_id": "acct-001", "product_code": "slot_craft_plus", "product_kind": "non_consumable", "state": "pending" } } },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "claim-purchase", "store_transaction_id": "txn-1003" }, "expect": { "error": "purchase_not_verified", "state": "pending", "slot_unlock_row": null } },
+        { "at": "2026-10-21T12:05:00Z", "given": { "purchase_records": { "txn-1003": { "state": "verified" } } }, "do": { "op": "on_purchase_state_changed", "store_transaction_id": "txn-1003" }, "expect": { "slot_unlock_row": { "slot_index": 1, "source": "purchase", "status": "active" } } }
+      ]
+    },
+    {
+      "name": "purchase-for-a-product-that-is-not-a-slot",
+      "given": { "purchase_records": { "txn-1004": { "store_transaction_id": "txn-1004", "account_id": "acct-001", "product_code": "gems_small", "product_kind": "consumable", "state": "verified" } } },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "claim-purchase", "store_transaction_id": "txn-1004" }, "expect": { "error": "no_slot_for_product", "slot_unlock_row": null } }
+      ]
+    },
+    {
+      "name": "second-purchase-with-no-locked-slot-left",
+      "given": { "slot_rows": [{ "queue_id": "craft", "slot_index": 1, "source": "purchase", "store_transaction_id": "txn-1001", "status": "active" }], "purchase_records": { "txn-1005": { "store_transaction_id": "txn-1005", "account_id": "acct-001", "product_code": "slot_craft_plus", "product_kind": "non_consumable", "state": "verified" } } },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "claim-purchase", "store_transaction_id": "txn-1005" }, "expect": { "error": "no_slot_for_product", "unplaced_purchase_reported_to_operator": true, "note": "no slot opens for a product whose slot is already unlocked; the purchase record stays with billing.virtual-currency for support" } }
+      ]
+    },
+    {
+      "name": "refund-revokes-new-starts-only",
+      "given": { "slot_rows": [{ "queue_id": "craft", "slot_index": 1, "source": "purchase", "store_transaction_id": "txn-1001", "status": "active" }], "items": [{ "id": "item-0001", "queue_id": "craft", "slot_index": 1, "state": "running", "ends_at": "2026-10-21T12:30:00Z" }], "purchase_records": { "txn-1001": { "state": "verified" } } },
+      "steps": [
+        {
+          "at": "2026-10-21T12:10:00Z",
+          "given": { "purchase_records": { "txn-1001": { "state": "refunded", "refunded_at": "2026-10-21T12:09:00Z" } } },
+          "do": { "op": "on_purchase_state_changed", "store_transaction_id": "txn-1001" },
+          "expect": { "slot_unlock_row": { "slot_index": 1, "status": "revoked" }, "item-0001": { "state": "running", "ends_at": "2026-10-21T12:30:00Z" }, "events": ["queue_slot_revoked"] }
+        },
+        { "at": "2026-10-21T12:31:00Z", "do": { "op": "collect", "item_id": "item-0001" }, "expect": { "item": { "state": "collected" }, "note": "the work in the revoked slot is paid" } },
+        { "at": "2026-10-21T12:32:00Z", "do": { "op": "start", "queue_id": "craft", "job_id": "craft.bread", "attempt_id": "att-090", "slot_index": 1 }, "expect": { "error": "slot_locked", "reason": "revoked", "ledger": [] } },
+        { "at": "2026-10-21T12:40:00Z", "given": { "purchase_records": { "txn-1001": { "state": "verified", "refunded_at": null } } }, "do": { "op": "on_purchase_state_changed", "store_transaction_id": "txn-1001" }, "expect": { "slot_unlock_row": { "slot_index": 1, "status": "active" } } }
+      ]
+    },
+    {
+      "name": "start-into-a-locked-slot",
+      "given": { "slot_rows": [] },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "start", "queue_id": "craft", "job_id": "craft.bread", "attempt_id": "att-091", "slot_index": 1 }, "expect": { "error": "slot_locked", "reason": "not_unlocked", "unlock_options": ["flag:tier_2", "store_product:slot_craft_plus"], "ledger": [] } }
+      ]
+    },
+    {
+      "name": "slot-survives-reinstall-and-second-device",
+      "given": { "slot_rows": [{ "queue_id": "craft", "slot_index": 1, "source": "purchase", "store_transaction_id": "txn-1001", "status": "active" }] },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "list", "device": "new install, same account" }, "expect": { "craft_lanes": 2, "note": "slot state is server-side; no restore call is needed for the slot itself, and the store restore path of billing.virtual-currency re-verifies the purchase" } }
+      ]
+    }
+  ],
+
+  "nudge_cases": [
+    {
+      "name": "caps-per-open-gap-and-day",
+      "given": { "queue_id": "craft", "balances": { "flour": 9 }, "slot_idle": true, "config": { "IDLE_NUDGE_PER_DAY": 2, "IDLE_NUDGE_MIN_GAP_SECONDS": 14400, "IDLE_NUDGE_PER_OPEN": 1 } },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "list", "open": 1 }, "expect": { "idle_nudge": { "eligible": true, "slot_index": 0, "job_id": "craft.bread" } } },
+        { "at": "2026-10-21T12:00:01Z", "do": { "op": "nudge", "event": "shown" }, "expect": { "nudge_shown_today": 1 } },
+        { "at": "2026-10-21T12:05:00Z", "do": { "op": "list", "open": 1 }, "expect": { "idle_nudge": { "eligible": false, "why": "per_open" } } },
+        { "at": "2026-10-21T13:00:00Z", "do": { "op": "list", "open": 2 }, "expect": { "idle_nudge": { "eligible": false, "why": "gap" } } },
+        { "at": "2026-10-21T16:00:01Z", "do": { "op": "list", "open": 3 }, "expect": { "idle_nudge": { "eligible": true } } },
+        { "at": "2026-10-21T16:00:02Z", "do": { "op": "nudge", "event": "shown" }, "expect": { "nudge_shown_today": 2 } },
+        { "at": "2026-10-21T16:30:00Z", "do": { "op": "list", "open": 4 }, "expect": { "idle_nudge": { "eligible": false, "why": "per_day" } } },
+        { "at": "2026-10-21T16:59:00Z", "do": { "op": "list", "open": 5 }, "expect": { "idle_nudge": { "eligible": false, "why": "per_day" }, "note": "two nudges were shown on the local day 2026-10-21, which ends at 17:00:00Z" } },
+        { "at": "2026-10-21T17:00:01Z", "do": { "op": "list", "open": 6 }, "expect": { "day_key": "2026-10-22", "idle_nudge": { "eligible": false, "why": "gap" }, "nudge_shown_today": 0, "note": "the day counter reset; the four-hour gap since 16:00:02 has not passed" } },
+        { "at": "2026-10-21T20:00:03Z", "do": { "op": "list", "open": 7 }, "expect": { "day_key": "2026-10-22", "idle_nudge": { "eligible": true } } }
+      ]
+    },
+    {
+      "name": "three-dismissals-suppress-for-a-week",
+      "given": { "queue_id": "craft", "balances": { "flour": 9 }, "slot_idle": true },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "nudge", "event": "dismissed", "after_shown": true }, "expect": { "nudge_dismissals_in_row": 1 } },
+        { "at": "2026-10-21T16:00:01Z", "do": { "op": "nudge", "event": "dismissed", "after_shown": true }, "expect": { "nudge_dismissals_in_row": 2 } },
+        { "at": "2026-10-22T12:00:00Z", "do": { "op": "nudge", "event": "dismissed", "after_shown": true }, "expect": { "nudge_dismissals_in_row": 3, "nudge_suppressed_until": "2026-10-29T12:00:00Z" } },
+        { "at": "2026-10-25T12:00:00Z", "do": { "op": "list" }, "expect": { "idle_nudge": { "eligible": false, "why": "suppressed" } } },
+        { "at": "2026-10-29T12:00:00Z", "do": { "op": "list" }, "expect": { "idle_nudge": { "eligible": true } } }
+      ]
+    },
+    {
+      "name": "acting-resets-the-dismissal-run",
+      "given": { "queue_id": "craft", "slot_idle": true, "nudge_dismissals_in_row": 2 },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "nudge", "event": "acted" }, "expect": { "nudge_dismissals_in_row": 0, "nudge_suppressed_until": null } }
+      ]
+    },
+    {
+      "name": "nothing-affordable-no-nudge-and-a-way-forward",
+      "given": { "queue_id": "craft", "balances": { "flour": 0, "coins": 0, "berries": 0 }, "slot_idle": true },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "list" }, "expect": { "idle_nudge": { "eligible": false, "why": "nothing_affordable" }, "suggestions": [], "missing": [{ "job_id": "craft.bread", "currency": "flour", "needed": 3, "balance": 0 }], "note": "the panel names what is missing; the faucets are registered in the ledger (V4), so the way forward is real" } }
+      ]
+    },
+    {
+      "name": "no-nudge-while-the-queue-is-busy",
+      "given": { "queue_id": "craft", "balances": { "flour": 9 }, "slot_idle": false },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "list" }, "expect": { "idle_nudge": { "eligible": false, "why": "no_idle_slot" } } }
+      ]
+    },
+    {
+      "name": "counters-live-on-the-server",
+      "given": { "queue_id": "craft", "balances": { "flour": 9 }, "slot_idle": true, "config": { "IDLE_NUDGE_PER_OPEN": 1, "IDLE_NUDGE_PER_DAY": 1 } },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "nudge", "event": "shown", "device": "phone" }, "expect": { "nudge_shown_today": 1 } },
+        { "at": "2026-10-21T16:00:00Z", "do": { "op": "list", "device": "tablet" }, "expect": { "idle_nudge": { "eligible": false, "why": "per_day" } } }
+      ]
+    },
+    {
+      "name": "an-idle-slot-never-sends-a-push",
+      "given": { "queue_id": "craft", "slot_idle": true, "balances": { "flour": 9 } },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "list" }, "expect": { "events_emitted_to_push": [], "note": "queue_item_ready is the only hand-off event of this block; an idle slot is an in-app card only" } }
+      ]
+    }
+  ],
+
+  "handoff_cases": [
+    {
+      "name": "event-shape",
+      "event": { "event_name": "queue_item_ready", "account_id": "acct-001", "subject_key": "queue-item:item-0001", "state": "armed", "ends_at": "2026-10-21T12:15:00Z", "fire_at": "2026-10-21T12:15:00Z", "expires_at": "2026-10-21T18:15:00Z", "revision": 1, "params": { "queue_code": "craft", "queue_kind": "craft", "job_id": "craft.bread", "slot_index": 0 } },
+      "note": "expires_at = ends_at + READY_NOTICE_TTL_SECONDS (21600). queue_code matches ^[A-Za-z0-9._:-]{1,64}$"
+    },
+    { "name": "armed-on-start", "when": "T2 of a start", "emits": [{ "subject_key": "queue-item:item-0001", "state": "armed", "revision": 1 }] },
+    { "name": "reserved-item-is-not-armed", "when": "T1 only, input_status pending", "emits": [] },
+    { "name": "re-armed-when-ends-at-moves-earlier", "when": "speed-up, chain shift or rebase", "emits": [{ "subject_key": "queue-item:item-0002", "state": "armed", "revision": 2 }], "rule": "same subject_key, larger revision, new fire_at; the consumer upserts" },
+    { "name": "resolved-on-collect", "when": "collect applied", "emits": [{ "subject_key": "queue-item:item-0001", "state": "resolved" }] },
+    { "name": "resolved-on-cancel", "when": "cancel applied", "emits": [{ "subject_key": "queue-item:item-0002", "state": "resolved" }] },
+    { "name": "resolved-when-a-speed-up-finishes-the-item", "when": "finish reduction while the player is in the app", "emits": [{ "subject_key": "queue-item:item-0001", "state": "resolved" }] },
+    {
+      "name": "list-returns-the-armed-set-for-reconciliation",
+      "given": { "running_items": ["item-0001", "item-0002"], "ready_items": ["item-0000"] },
+      "expect": { "armed": [{ "subject_key": "queue-item:item-0001", "fire_at": "2026-10-21T12:15:00Z", "revision": 1 }, { "subject_key": "queue-item:item-0002", "fire_at": "2026-10-21T12:30:00Z", "revision": 1 }], "note": "an item already ready has no armed notice; a device that restarted rebuilds its local schedule from this list" }
+    },
+    { "name": "remote-lane-outbox", "when": "EVENT_ROUTES maps queue_item_ready to the remote lane", "rule": "the same events leave through a transactional outbox at least once; the consumer dedupes by (account, event, subject_key) and keeps the highest revision" },
+    { "name": "stale-notice-after-another-device-collected", "rule": "a local notification can fire for an item collected on another device while this one was closed; the push block cancels local notifications on session start and reconciles with GET; the copy stays generic" },
+    { "name": "local-pending-capacity", "rule": "sum of max_slots * lane_depth over queues = 18, at most the push block LOCAL_MAX_PENDING of 20 (validation V6)" }
+  ],
+
+  "clock_cases": [
+    {
+      "name": "device-clock-forward-one-day",
+      "given": { "item": { "id": "item-0001", "ends_at": "2026-10-21T12:15:00Z", "state": "running" }, "device_now": "2026-10-22T12:01:00Z", "server_now": "2026-10-21T12:01:00Z" },
+      "steps": [
+        { "do": { "op": "collect", "item_id": "item-0001" }, "expect": { "error": "not_ready", "ends_at": "2026-10-21T12:15:00Z", "ledger": [] } }
+      ],
+      "client": "the client shows a stale countdown until the response arrives, then recomputes server_offset and shows 14 minutes left"
+    },
+    {
+      "name": "device-clock-back",
+      "given": { "item": { "id": "item-0001", "ends_at": "2026-10-21T12:15:00Z" }, "device_now": "2026-10-20T12:01:00Z", "server_now": "2026-10-21T12:16:00Z" },
+      "steps": [{ "do": { "op": "collect", "item_id": "item-0001" }, "expect": { "item": { "state": "collected" }, "note": "a clock set back delays nothing the server owes" } }]
+    },
+    {
+      "name": "countdown-from-server-offset",
+      "given": { "response": { "server_now": "2026-10-21T12:00:00Z", "device_now_at_response": "2026-10-21T12:00:30Z" }, "item": { "ends_at": "2026-10-21T12:15:00Z" } },
+      "expect": { "server_offset_seconds": -30, "at_device_now": "2026-10-21T12:01:30Z", "remaining_seconds": 840 }
+    },
+    {
+      "name": "countdown-correction-event",
+      "given": { "previous_remaining_seconds": 840, "response_remaining_seconds": 820 },
+      "expect": { "drift_seconds": 20, "event": "queue_countdown_corrected", "threshold_seconds": 5 }
+    },
+    {
+      "name": "request-with-a-time-field",
+      "steps": [{ "do": { "op": "start", "body": { "job_id": "craft.bread", "attempt_id": "att-100", "ends_at": "2026-10-21T12:00:01Z" } }, "expect": { "error": "unexpected_field", "field": "ends_at", "ledger": [], "items_created": 0 } }]
+    },
+    {
+      "name": "countdown-at-zero-asks-the-server",
+      "given": { "item": { "ends_at": "2026-10-21T12:15:00Z" }, "client_corrected_now": "2026-10-21T12:15:00Z" },
+      "expect": { "client_action": "GET queues", "ready_ui_only_after_server_says_ready": true }
+    }
+  ],
+
+  "erasure_cases": [
+    {
+      "name": "delete-account",
+      "given": { "rows": { "queue_states": 4, "queue_items": 7, "slot_unlocks": 2, "speed_up_quotes": 3, "time_reductions": 2, "merge_log": 1 } },
+      "do": { "op": "deleteAccount", "account_id": "acct-001" },
+      "repeat": "a second deleteAccount call changes nothing and raises no error", "expect": { "rows_after": { "queue_states": 0, "queue_items": 0, "slot_unlocks": 0, "speed_up_quotes": 0, "time_reductions": 0, "merge_log": 0 }, "definition_tables_touched": false, "ledger_touched": false, "armed_notices": "resolved" }
+    }
+  ]
+}

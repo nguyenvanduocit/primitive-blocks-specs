@@ -1,0 +1,336 @@
+{
+  "_comment": "Progress-ingestion vectors. Default clock now = 2026-10-21T12:00:00Z; content from fixtures/definitions.json; EVENT_MAX_AGE_SECONDS 172800 (48 hours), EVENT_BATCH_MAX 50, ACCOUNT_EVENTS_PER_DAY_MAX 5000. A case that sets `now` overrides the clock for that case only.",
+  "_usage": "Every case starts from the preset below unless `given` changes it. Metrics with requires_attempt true (level_completed, round_played, match_won, run_score) need an `attempt_id`: an HTTP event without an explicit `attempt_id` key is sent with \"att-confirmed\", and `\"attempt_id\": null` means the field is omitted. `path` is `http` (client batch endpoint) or `server` (ingest_server_event called by another block). `expected.results` lists one entry per event in order; `expected.instances` lists only the instances the case asserts; every other instance and every counter not named stays as in the preset. The block's own server events `active_day` and `session_started` (backend.md, Settle) and the board metrics the completion cascade emits (`daily_board_points`, `daily_board_cleared`) are not compared unless a case names them.",
+
+  "attempts": { "att-confirmed": "confirmed", "att-won": "won", "att-failed": "failed", "att-open": "open", "att-cancelled": "cancelled", "att-expired": "expired", "att-rejected": "rejected", "att-unknown": null, "_comment": "What attemptState(account_id, attempt_id) returns for acct-001; null means no such attempt. Accepted states: confirmed, won, failed." },
+
+  "preset": {
+    "description": "acct-001 has finished the starter plan. Live daily set (window 2026-10-21): daily.win-3, daily.collect-20, daily.score-5000, all active at 0. Live weekly set (window 2026-10-19): weekly.active-5-days, weekly.win-20, weekly.clear-25-levels, all active at 0. All metric counters are 0 and no event has been recorded today.",
+    "instances": {
+      "daily.win-3@2026-10-21":          { "state": "active", "progress": 0, "target": 3 },
+      "daily.collect-20@2026-10-21":     { "state": "active", "progress": 0, "target": 20 },
+      "daily.score-5000@2026-10-21":     { "state": "active", "progress": 0, "target": 5000 },
+      "weekly.active-5-days@2026-10-19": { "state": "active", "progress": 0, "target": 5 },
+      "weekly.win-20@2026-10-19":        { "state": "active", "progress": 0, "target": 20 },
+      "weekly.clear-25-levels@2026-10-19": { "state": "active", "progress": 0, "target": 25 }
+    }
+  },
+
+  "cases": [
+    {
+      "name": "counted-simple",
+      "path": "http",
+      "events": [{ "event_id": "evt-001", "metric": "match_won", "amount": 1, "occurred_at": "2026-10-21T11:59:00Z" }],
+      "expected": {
+        "results": [{ "event_id": "evt-001", "outcome": "counted", "counted_amount": 1 }],
+        "instances": { "daily.win-3@2026-10-21": { "state": "active", "progress": 1 }, "weekly.win-20@2026-10-19": { "state": "active", "progress": 1 } },
+        "counters": { "match_won": 1 }
+      }
+    },
+    {
+      "name": "duplicate-event-id",
+      "path": "http",
+      "events": [
+        { "event_id": "evt-002", "metric": "match_won", "amount": 1, "occurred_at": "2026-10-21T11:59:00Z" },
+        { "event_id": "evt-002", "metric": "match_won", "amount": 1, "occurred_at": "2026-10-21T11:59:00Z" }
+      ],
+      "expected": {
+        "results": [{ "event_id": "evt-002", "outcome": "counted", "counted_amount": 1 }, { "event_id": "evt-002", "outcome": "duplicate", "counted_amount": 1 }],
+        "instances": { "daily.win-3@2026-10-21": { "state": "active", "progress": 1 } },
+        "counters": { "match_won": 1 }
+      },
+      "replay": "Sending the same two-event request again returns two `duplicate` results with counted_amount 1 and changes nothing."
+    },
+    {
+      "name": "per-event-cap",
+      "path": "http",
+      "_comment": "match_won max_amount_per_event is 5: the amount 50 is clamped, not rejected",
+      "events": [{ "event_id": "evt-003", "metric": "match_won", "amount": 50, "occurred_at": "2026-10-21T11:59:00Z" }],
+      "expected": {
+        "results": [{ "event_id": "evt-003", "outcome": "capped", "counted_amount": 5 }],
+        "instances": { "daily.win-3@2026-10-21": { "state": "completed", "progress": 3 }, "weekly.win-20@2026-10-19": { "state": "active", "progress": 5 } },
+        "counters": { "match_won": 5 }
+      }
+    },
+    {
+      "name": "day-cap-partial-then-zero",
+      "path": "http",
+      "_comment": "match_won day_cap is 50 per local day; 48 were already counted today (earlier events are outside this case)",
+      "given": { "counted_today": { "match_won": 48 } },
+      "events": [
+        { "event_id": "evt-004", "metric": "match_won", "amount": 5, "occurred_at": "2026-10-21T11:59:00Z" },
+        { "event_id": "evt-005", "metric": "match_won", "amount": 1, "occurred_at": "2026-10-21T11:59:10Z" }
+      ],
+      "expected": {
+        "results": [{ "event_id": "evt-004", "outcome": "capped", "counted_amount": 2 }, { "event_id": "evt-005", "outcome": "capped", "counted_amount": 0 }],
+        "counted_today_after": { "match_won": 50 }
+      }
+    },
+    {
+      "name": "max-aggregation-keeps-the-highest",
+      "path": "http",
+      "_comment": "run_score aggregates by max: the instance holds the highest value seen, a lower score changes nothing, progress is clamped at the target",
+      "events": [
+        { "event_id": "evt-006", "metric": "run_score", "amount": 4000, "occurred_at": "2026-10-21T11:50:00Z" },
+        { "event_id": "evt-007", "metric": "run_score", "amount": 3000, "occurred_at": "2026-10-21T11:51:00Z" },
+        { "event_id": "evt-008", "metric": "run_score", "amount": 6000, "occurred_at": "2026-10-21T11:52:00Z" }
+      ],
+      "expected": {
+        "results": [
+          { "event_id": "evt-006", "outcome": "counted", "counted_amount": 4000 },
+          { "event_id": "evt-007", "outcome": "counted", "counted_amount": 3000 },
+          { "event_id": "evt-008", "outcome": "counted", "counted_amount": 6000 }
+        ],
+        "progress_after_each_event": [4000, 4000, 5000],
+        "instances": { "daily.score-5000@2026-10-21": { "state": "completed", "progress": 5000 } },
+        "counters": { "run_score": 6000 }
+      }
+    },
+    {
+      "name": "completion-clamps-progress",
+      "path": "http",
+      "given": { "instances": { "daily.win-3@2026-10-21": { "progress": 2 }, "weekly.win-20@2026-10-19": { "progress": 2 } } },
+      "events": [{ "event_id": "evt-013", "metric": "match_won", "amount": 5, "occurred_at": "2026-10-21T11:59:00Z" }],
+      "expected": {
+        "results": [{ "event_id": "evt-013", "outcome": "counted", "counted_amount": 5 }],
+        "instances": { "daily.win-3@2026-10-21": { "state": "completed", "progress": 3 }, "weekly.win-20@2026-10-19": { "state": "active", "progress": 7 } },
+        "counters": { "match_won": 5 },
+        "completed": ["daily.win-3@2026-10-21"]
+      }
+    },
+    {
+      "name": "server-only-metric-from-client",
+      "path": "http",
+      "events": [{ "event_id": "evt-009", "metric": "streak_length", "amount": 5, "occurred_at": "2026-10-21T11:59:00Z" }],
+      "expected": { "results": [{ "event_id": "evt-009", "outcome": "rejected", "reason": "metric_not_client_reportable" }], "counters": {} }
+    },
+    {
+      "name": "unknown-metric",
+      "path": "http",
+      "events": [{ "event_id": "evt-010", "metric": "dragons_slain", "amount": 1, "occurred_at": "2026-10-21T11:59:00Z" }],
+      "expected": { "results": [{ "event_id": "evt-010", "outcome": "rejected", "reason": "unknown_metric" }], "counters": {} }
+    },
+    {
+      "name": "invalid-amounts",
+      "path": "http",
+      "_comment": "One event per amount; every one is rejected with invalid_amount and nothing is recorded",
+      "amounts": [0, -1, 1.5, "3", null],
+      "event_template": { "metric": "match_won", "occurred_at": "2026-10-21T11:59:00Z" },
+      "expected": { "each_result": { "outcome": "rejected", "reason": "invalid_amount" }, "counters": {} }
+    },
+    {
+      "name": "event-age-boundary",
+      "path": "http",
+      "_comment": "EVENT_MAX_AGE_SECONDS is 172800 (48 hours): exactly 48 hours old is accepted, one second older is not",
+      "events": [
+        { "event_id": "evt-011", "metric": "match_won", "amount": 1, "occurred_at": "2026-10-19T12:00:00Z" },
+        { "event_id": "evt-012", "metric": "match_won", "amount": 1, "occurred_at": "2026-10-19T11:59:59Z" },
+        { "event_id": "evt-014", "metric": "match_won", "amount": 1, "occurred_at": "2026-10-18T11:59:00Z" }
+      ],
+      "expected": {
+        "results": [
+          { "event_id": "evt-011", "outcome": "counted", "counted_amount": 1 },
+          { "event_id": "evt-012", "outcome": "rejected", "reason": "event_too_old" },
+          { "event_id": "evt-014", "outcome": "rejected", "reason": "event_too_old" }
+        ],
+        "counters": { "match_won": 1 }
+      }
+    },
+    {
+      "name": "future-timestamp-is-informational",
+      "path": "http",
+      "_comment": "The client clock is never an authority: a timestamp ahead of the server is accepted and stored as the server receive time",
+      "events": [{ "event_id": "evt-015", "metric": "match_won", "amount": 1, "occurred_at": "2026-10-21T13:00:00Z" }],
+      "expected": {
+        "results": [{ "event_id": "evt-015", "outcome": "counted", "counted_amount": 1 }],
+        "stored_occurred_at": { "evt-015": "2026-10-21T12:00:00Z" }
+      }
+    },
+    {
+      "name": "client-validated-metric",
+      "path": "http",
+      "_comment": "level_completed is client_validated; the validator accepts refs starting run-ok- only (definitions.json config.validator_rule)",
+      "events": [
+        { "event_id": "evt-016", "metric": "level_completed", "amount": 1, "ref": "run-ok-1", "occurred_at": "2026-10-21T11:59:00Z" },
+        { "event_id": "evt-017", "metric": "level_completed", "amount": 1, "ref": "run-bad-1", "occurred_at": "2026-10-21T11:59:10Z" },
+        { "event_id": "evt-018", "metric": "level_completed", "amount": 1, "occurred_at": "2026-10-21T11:59:20Z" }
+      ],
+      "expected": {
+        "results": [
+          { "event_id": "evt-016", "outcome": "counted", "counted_amount": 1 },
+          { "event_id": "evt-017", "outcome": "rejected", "reason": "validation_failed" },
+          { "event_id": "evt-018", "outcome": "rejected", "reason": "validation_failed" }
+        ],
+        "instances": { "weekly.clear-25-levels@2026-10-19": { "state": "active", "progress": 1 } },
+        "counters": { "level_completed": 1 }
+      }
+    },
+    {
+      "name": "event-after-midnight-counts-in-the-new-window",
+      "path": "http",
+      "_comment": "Work counts when the server learns of it. The weekly boundary is Monday 00:00 local = Sunday 17:00Z for Asia/Ho_Chi_Minh. weekly.win-20 has reset_policy carry_over, but 12 of 20 is 60 percent, below CARRY_OVER_MIN_PERCENT 80, so nothing carries.",
+      "now": "2026-10-25T17:00:30Z",
+      "given": { "instances": { "weekly.win-20@2026-10-19": { "progress": 12 } } },
+      "events": [{ "event_id": "evt-019", "metric": "match_won", "amount": 1, "occurred_at": "2026-10-25T16:59:50Z" }],
+      "expected": {
+        "results": [{ "event_id": "evt-019", "outcome": "counted", "counted_amount": 1 }],
+        "instances": {
+          "weekly.win-20@2026-10-19": { "state": "expired", "progress": 12 },
+          "weekly.win-20@2026-10-26": { "state": "active", "progress": 1, "carried_in": 0 }
+        }
+      }
+    },
+    {
+      "name": "server-event-is-idempotent-by-source-ref",
+      "path": "server",
+      "_comment": "event_id is built as <source>:<source_ref>",
+      "events": [
+        { "source": "ledger.soft-spend", "source_ref": "entry-77", "metric": "soft_currency_spent", "amount": 50 },
+        { "source": "ledger.soft-spend", "source_ref": "entry-77", "metric": "soft_currency_spent", "amount": 50 }
+      ],
+      "expected": {
+        "results": [{ "event_id": "ledger.soft-spend:entry-77", "outcome": "counted", "counted_amount": 50 }, { "event_id": "ledger.soft-spend:entry-77", "outcome": "duplicate", "counted_amount": 50 }],
+        "counters": { "soft_currency_spent": 50 }
+      }
+    },
+    {
+      "name": "ledger-rewards-do-not-feed-themselves",
+      "path": "server",
+      "events": [
+        { "source": "ledger.soft-grant", "source_ref": "entry-80", "metric": "soft_currency_earned", "amount": 100, "reason": "objectives.reward" },
+        { "source": "ledger.soft-grant", "source_ref": "entry-81", "metric": "soft_currency_earned", "amount": 100, "reason": "daily-streak.claim" }
+      ],
+      "expected": {
+        "results": [{ "event_id": "ledger.soft-grant:entry-80", "outcome": "ignored", "reason": "self_feeding" }, { "event_id": "ledger.soft-grant:entry-81", "outcome": "counted", "counted_amount": 100 }],
+        "counters": { "soft_currency_earned": 100 }
+      }
+    },
+    {
+      "name": "batch-too-large",
+      "path": "http",
+      "events_generated": { "count": 51, "metric": "match_won", "amount": 1, "event_id_pattern": "evt-big-{n}" },
+      "expected": { "http_status": 422, "error": "batch_too_large", "counters": {}, "events_recorded": 0 }
+    },
+    {
+      "name": "account-rate-limit",
+      "path": "http",
+      "given": { "events_recorded_today": 5000 },
+      "events": [{ "event_id": "evt-020", "metric": "match_won", "amount": 1, "occurred_at": "2026-10-21T11:59:00Z" }],
+      "expected": { "http_status": 429, "error": "rate_limited", "counters": {}, "events_recorded": 0 }
+    },
+    {
+      "name": "alternate-source-substitutes-for-the-mission-metric",
+      "path": "http",
+      "_comment": "daily.play-3-rounds counts round_played and also match_won (alt source, multiplier 1): a win is a round and counts twice. The alt contribution is the counted amount of the win after its own caps",
+      "given": { "extra_instances": { "daily.play-3-rounds@2026-10-21": { "state": "active", "progress": 0, "target": 3 } } },
+      "events": [
+        { "event_id": "evt-021", "metric": "round_played", "amount": 1, "occurred_at": "2026-10-21T11:58:00Z" },
+        { "event_id": "evt-022", "metric": "match_won", "amount": 1, "occurred_at": "2026-10-21T11:59:00Z" }
+      ],
+      "expected": {
+        "results": [{ "event_id": "evt-021", "outcome": "counted", "counted_amount": 1 }, { "event_id": "evt-022", "outcome": "counted", "counted_amount": 1 }],
+        "instances": { "daily.play-3-rounds@2026-10-21": { "state": "active", "progress": 2 }, "daily.win-3@2026-10-21": { "state": "active", "progress": 1 } },
+        "counters": { "round_played": 1, "match_won": 1 }
+      }
+    },
+    {
+      "name": "board-ladder-and-completion-bonus",
+      "path": "http",
+      "_comment": "Daily board play-3-rounds (20 points), win-3 (30), collect-20 (20); rungs at 20, 40, 60 points and the whole-board bonus. Total task points 70 stay above the top rung 60, so a player can leave one task undone and still reach every rung. Points are added when a task completes, never when it is claimed.",
+      "given": {
+        "daily_set": ["daily.play-3-rounds", "daily.win-3", "daily.collect-20"],
+        "ladder_instances": ["daily.ladder-20", "daily.ladder-40", "daily.ladder-60", "daily.board-cleared"]
+      },
+      "steps": [
+        {
+          "events": [{ "event_id": "evt-b1", "metric": "round_played", "amount": 3, "occurred_at": "2026-10-21T11:50:00Z" }],
+          "expected": { "completed": ["daily.play-3-rounds"], "board": { "points": 20, "done": false }, "instances": { "daily.ladder-20": { "state": "completed", "progress": 20 }, "daily.ladder-40": { "state": "active", "progress": 20 } } }
+        },
+        {
+          "events": [{ "event_id": "evt-b2", "metric": "match_won", "amount": 3, "occurred_at": "2026-10-21T11:55:00Z" }],
+          "expected": { "completed": ["daily.win-3"], "board": { "points": 50, "done": false }, "instances": { "daily.ladder-40": { "state": "completed", "progress": 40 }, "daily.ladder-60": { "state": "active", "progress": 50 } } }
+        },
+        {
+          "events": [{ "event_id": "evt-b3", "metric": "item_collected", "amount": 20, "occurred_at": "2026-10-21T11:58:00Z" }],
+          "expected": { "completed": ["daily.collect-20", "daily.ladder-60", "daily.board-cleared"], "board": { "points": 70, "done": true }, "instances": { "daily.ladder-60": { "state": "completed", "progress": 60 }, "daily.board-cleared": { "state": "completed", "progress": 1 } }, "claimable_count": 7 }
+        }
+      ],
+      "_note": "match_won amount 3 also reaches daily.play-3-rounds through its alt source, but that instance is already completed and does not change. Nothing was granted by any step: the seven completed instances await claims."
+    },
+    {
+      "name": "rerolled-away-task-does-not-hold-the-board-open",
+      "path": "http",
+      "_comment": "A replaced instance is not a task of the board: with play-3-rounds and win-3 completed and collect-20 rerolled into daily.clear-3-levels, the board is done only after clear-3-levels completes",
+      "given": { "daily_set": ["daily.play-3-rounds", "daily.win-3", "daily.collect-20"], "completed": ["daily.play-3-rounds", "daily.win-3"], "reroll": "daily.collect-20 replaced by daily.clear-3-levels" },
+      "events": [{ "event_id": "evt-b4", "metric": "level_completed", "amount": 3, "ref": "run-ok-9", "occurred_at": "2026-10-21T11:58:00Z" }],
+      "expected": { "completed": ["daily.clear-3-levels", "daily.board-cleared"], "board": { "done": true } }
+    },
+    {
+      "name": "queue-completions-count-through-a-server-event",
+      "path": "server",
+      "_comment": "queue_item_collected comes from engagement.timed-queues (that block's event name); this block only maps it to a metric",
+      "events": [{ "source": "engagement.timed-queues", "source_ref": "queue-item-31", "metric": "queue_item_collected", "amount": 1 }],
+      "expected": { "results": [{ "event_id": "engagement.timed-queues:queue-item-31", "outcome": "counted", "counted_amount": 1 }], "counters": { "queue_item_collected": 1 } }
+    },
+    {
+      "name": "proof-of-play",
+      "path": "http",
+      "_comment": "match_won, round_played, level_completed and run_score require an attempt that attemptState reports as confirmed, won or failed. item_collected does not require one. The attempt is checked before the validator.",
+      "events": [
+        { "event_id": "evt-p1",  "metric": "match_won",       "amount": 1, "attempt_id": "att-confirmed", "occurred_at": "2026-10-21T11:50:00Z" },
+        { "event_id": "evt-p2",  "metric": "match_won",       "amount": 1, "attempt_id": "att-won",       "occurred_at": "2026-10-21T11:51:00Z" },
+        { "event_id": "evt-p3",  "metric": "match_won",       "amount": 1, "attempt_id": "att-failed",    "occurred_at": "2026-10-21T11:52:00Z" },
+        { "event_id": "evt-p4",  "metric": "match_won",       "amount": 1, "attempt_id": "att-open",      "occurred_at": "2026-10-21T11:53:00Z" },
+        { "event_id": "evt-p5",  "metric": "match_won",       "amount": 1, "attempt_id": "att-cancelled", "occurred_at": "2026-10-21T11:54:00Z" },
+        { "event_id": "evt-p6",  "metric": "match_won",       "amount": 1, "attempt_id": "att-expired",   "occurred_at": "2026-10-21T11:55:00Z" },
+        { "event_id": "evt-p7",  "metric": "match_won",       "amount": 1, "attempt_id": "att-rejected",  "occurred_at": "2026-10-21T11:56:00Z" },
+        { "event_id": "evt-p8",  "metric": "match_won",       "amount": 1, "attempt_id": "att-unknown",   "occurred_at": "2026-10-21T11:57:00Z" },
+        { "event_id": "evt-p9",  "metric": "match_won",       "amount": 1, "attempt_id": null,            "occurred_at": "2026-10-21T11:58:00Z" },
+        { "event_id": "evt-p10", "metric": "level_completed", "amount": 1, "attempt_id": "att-open", "ref": "run-ok-1", "occurred_at": "2026-10-21T11:58:30Z" },
+        { "event_id": "evt-p11", "metric": "item_collected",  "amount": 5, "attempt_id": null,            "occurred_at": "2026-10-21T11:59:00Z" }
+      ],
+      "expected": {
+        "results": [
+          { "event_id": "evt-p1",  "outcome": "counted", "counted_amount": 1 },
+          { "event_id": "evt-p2",  "outcome": "counted", "counted_amount": 1 },
+          { "event_id": "evt-p3",  "outcome": "counted", "counted_amount": 1 },
+          { "event_id": "evt-p4",  "outcome": "rejected", "reason": "attempt_not_proven" },
+          { "event_id": "evt-p5",  "outcome": "rejected", "reason": "attempt_not_proven" },
+          { "event_id": "evt-p6",  "outcome": "rejected", "reason": "attempt_not_proven" },
+          { "event_id": "evt-p7",  "outcome": "rejected", "reason": "attempt_not_proven" },
+          { "event_id": "evt-p8",  "outcome": "rejected", "reason": "attempt_not_proven" },
+          { "event_id": "evt-p9",  "outcome": "rejected", "reason": "attempt_required" },
+          { "event_id": "evt-p10", "outcome": "rejected", "reason": "attempt_not_proven" },
+          { "event_id": "evt-p11", "outcome": "counted", "counted_amount": 5 }
+        ],
+        "instances": { "daily.win-3@2026-10-21": { "state": "completed", "progress": 3 }, "daily.collect-20@2026-10-21": { "state": "active", "progress": 5 } },
+        "counters": { "match_won": 3, "item_collected": 5, "level_completed": 0 },
+        "stored_attempt_ids": { "evt-p1": "att-confirmed", "evt-p2": "att-won", "evt-p3": "att-failed", "evt-p11": null }
+      }
+    },
+    {
+      "name": "items-and-queue-adapters-filter-paid-and-self-fed-events",
+      "path": "server",
+      "_comment": "engagement.items events item_granted, item_upgraded and item_equipped, and engagement.timed-queues queue_item_collected, arrive through the adapter table. Grants bought with money, grants paid by this block, and upgrades paid with a premium currency (gems) are ignored; speed-up use has no metric.",
+      "events": [
+        { "source": "engagement.items", "source_ref": "grant-1", "metric": "item_granted",  "amount": 2, "properties": { "source_kind": "fixed", "reason": "daily-streak.claim", "applied_quantity": 2 } },
+        { "source": "engagement.items", "source_ref": "grant-2", "metric": "item_granted",  "amount": 1, "properties": { "source_kind": "purchase", "reason": "virtual-currency.pack-purchase", "applied_quantity": 1 } },
+        { "source": "engagement.items", "source_ref": "grant-3", "metric": "item_granted",  "amount": 1, "properties": { "source_kind": "fixed", "reason": "objectives.reward", "applied_quantity": 1 } },
+        { "source": "engagement.items", "source_ref": "up-1",    "metric": "item_upgraded", "amount": 1, "properties": { "cost_lines": [{ "currency": "coins", "amount": 100 }] } },
+        { "source": "engagement.items", "source_ref": "up-2",    "metric": "item_upgraded", "amount": 1, "properties": { "cost_lines": [{ "currency": "gems", "amount": 10 }] } },
+        { "source": "engagement.items", "source_ref": "eq-1",    "metric": "item_equipped", "amount": 1, "properties": { "slot": "main" } }
+      ],
+      "expected": {
+        "results": [
+          { "event_id": "engagement.items:grant-1", "outcome": "counted", "counted_amount": 2 },
+          { "event_id": "engagement.items:grant-2", "outcome": "ignored", "reason": "paid_source" },
+          { "event_id": "engagement.items:grant-3", "outcome": "ignored", "reason": "self_feeding" },
+          { "event_id": "engagement.items:up-1", "outcome": "counted", "counted_amount": 1 },
+          { "event_id": "engagement.items:up-2", "outcome": "ignored", "reason": "paid_with_premium" },
+          { "event_id": "engagement.items:eq-1", "outcome": "counted", "counted_amount": 1 }
+        ],
+        "counters": { "item_granted": 2, "item_upgraded": 1, "item_equipped": 1 }
+      }
+    }
+  ]
+}

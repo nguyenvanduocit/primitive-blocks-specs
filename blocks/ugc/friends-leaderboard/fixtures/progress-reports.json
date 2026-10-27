@@ -1,5 +1,5 @@
 {
-  "_comment": "Progress report fold vectors. Fixed clock now = 2026-10-21T12:00:00Z, current week_start_day 20745. Constants: BURST_XP 500, XP_PER_HOUR 2000, MAX_XP 1000000. cap = 500 + floor(hours since previous updated_at * 2000); credit = min(xp gain, cap); first report (stored xp 0 and answered 0) credits 0; a previous week_start_day starts the week base at 0.",
+  "_comment": "Progress report fold vectors. Fixed clock now = 2026-10-21T12:00:00Z, current week_start_day 20745. Constants: BURST_XP 500, XP_PER_HOUR 2000, MAX_XP 1000000. cap = 500 + floor(hours since previous updated_at * 2000); credit = min(xp gain, cap); first report (stored xp 0 and answered 0) credits 0; a previous week_start_day starts the week base at 0. A case with require_attempt_proof true also names attempt_state, the state that attemptState (engagement.energy-lives) returns for the report's attempt_id (null when the id is unknown); cases without the key run with REQUIRE_ATTEMPT_PROOF off.",
   "now": "2026-10-21T12:00:00Z",
   "current_week_start_day": 20745,
   "valid": [
@@ -44,6 +44,15 @@
       "prev": { "xp": 8000, "level": 9, "answered": 150, "week_xp": 1500, "week_start_day": 20738, "updated_at": "2026-10-20T12:00:00Z" },
       "report": { "xp": 8100, "level": 9, "streak_days": 10, "answered": 155, "accuracy": 90 },
       "after": { "xp": 8100, "level": 9, "answered": 155, "streak_days": 10, "accuracy": 90, "week_xp": 100, "week_start_day": 20745 }
+    },
+    {
+      "name": "unplayed-attempt-credits-nothing",
+      "_comment": "Same numbers as gain-below-cap (credit would be 400), but the named attempt is only 'open': totals fold, the week credit is 0. A 'confirmed', 'won' or 'failed' attempt gives the credit of gain-below-cap (week_xp 500).",
+      "require_attempt_proof": true,
+      "attempt_state": "open",
+      "prev": { "xp": 1000, "level": 3, "answered": 20, "week_xp": 100, "week_start_day": 20745, "updated_at": "2026-10-21T11:30:00Z" },
+      "report": { "xp": 1400, "level": 3, "streak_days": 4, "answered": 28, "accuracy": 85, "attempt_id": "att-0001" },
+      "after": { "xp": 1400, "level": 3, "answered": 28, "streak_days": 4, "accuracy": 85, "week_xp": 100, "week_start_day": 20745 }
     }
   ],
   "invalid": [
@@ -56,6 +65,7 @@
     { "name": "fractional-xp", "report": { "xp": 12.5, "level": 1, "streak_days": 0, "answered": 1, "accuracy": 50 }, "error": "invalid_stats" },
     { "name": "string-xp", "report": { "xp": "100", "level": 1, "streak_days": 0, "answered": 1, "accuracy": 50 }, "error": "invalid_stats" },
     { "name": "client-sent-week-xp", "_comment": "Weekly XP is never accepted from the client", "report": { "xp": 10, "level": 1, "streak_days": 0, "answered": 1, "accuracy": 50, "week_xp": 5000 }, "error": "invalid_stats" },
-    { "name": "client-sent-account-id", "report": { "xp": 10, "level": 1, "streak_days": 0, "answered": 1, "accuracy": 50, "account_id": "acc-other" }, "error": "invalid_stats" }
+    { "name": "client-sent-account-id", "report": { "xp": 10, "level": 1, "streak_days": 0, "answered": 1, "accuracy": 50, "account_id": "acc-other" }, "error": "invalid_stats" },
+    { "name": "attempt-id-bad-shape", "_comment": "attempt_id must match ^[A-Za-z0-9_-]{2,64}$", "report": { "xp": 10, "level": 1, "streak_days": 0, "answered": 1, "accuracy": 50, "attempt_id": "a b" }, "error": "invalid_stats" }
   ]
 }

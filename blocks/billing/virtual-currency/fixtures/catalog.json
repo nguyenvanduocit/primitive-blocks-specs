@@ -1,0 +1,164 @@
+{
+  "_comment": "Catalog rows for a sample game: currencies, the faucet and sink registry, packs with contents, and the reference pack that defines the undiscounted rate. Product ids are placeholders (acme_*). Amounts only: the catalog holds no price. Used by ledger.feature, pack-purchase.feature, spending-controls.feature and the catalog startup check.",
+  "_usage": "Flows of sibling blocks follow the reasons in their READMEs (README section 6, Flows registered by the calling blocks); the rows for engagement.items follow expected_flows in blocks/engagement/items/fixtures/definitions.json, plus a convert sink row for a count code. Load into currencies, currency_flows, store_products and store_product_contents for tenant-001. `device_store_prices` simulates what the store's product details return on the device (numeric price in micro-units plus the display string); it is test input for the client, never server data. `approx_money_cases` are the expected outputs of approxMoney (frontend.md).",
+
+  "tenant_id": "tenant-001",
+  "clock": "2026-10-27T12:00:00Z",
+
+  "currencies": [
+    { "code": "coins", "kind": "soft", "display_name_key": "currency.coins", "sort_order": 0, "reference_product_code": null },
+    { "code": "gems", "kind": "hard", "display_name_key": "currency.gems", "sort_order": 1, "reference_product_code": "gems_small" },
+    { "code": "booster_shield", "kind": "item", "display_name_key": "item.booster_shield", "sort_order": 2, "reference_product_code": null },
+    { "code": "shards_ember", "kind": "item", "display_name_key": "item.shards_ember", "sort_order": 3, "reference_product_code": null },
+    { "code": "booster_double_xp", "kind": "item", "display_name_key": "item.booster_double_xp", "sort_order": 4, "reference_product_code": null },
+    { "code": "key_frost", "kind": "item", "display_name_key": "item.key_frost", "sort_order": 5, "reference_product_code": null }
+  ],
+
+  "flows": [
+    { "currency_code": "coins", "direction": "faucet", "reason": "daily-streak.claim", "source_block": "engagement.daily-streak", "description": "The player claims the daily streak reward." },
+    { "currency_code": "coins", "direction": "faucet", "reason": "objectives.reward", "source_block": "engagement.objectives", "description": "The player completes an objective and claims its reward." },
+    { "currency_code": "coins", "direction": "faucet", "reason": "virtual-currency.pack-purchase", "source_block": "billing.virtual-currency", "description": "A verified pack purchase includes coins." },
+    { "currency_code": "coins", "direction": "faucet", "reason": "virtual-currency.pack-refund-reversed", "source_block": "billing.virtual-currency", "description": "Apple reverses a refund and the clawed-back coins are returned." },
+    { "currency_code": "coins", "direction": "faucet", "reason": "virtual-currency.wallet-merge-in", "source_block": "billing.virtual-currency", "description": "A guest wallet is merged into this account." },
+    { "currency_code": "coins", "direction": "faucet", "reason": "virtual-currency.support-grant", "source_block": "billing.virtual-currency", "description": "Support corrects a balance upward." },
+    { "currency_code": "coins", "direction": "sink", "reason": "virtual-currency.pack-refund", "source_block": "billing.virtual-currency", "description": "The store refunded a pack and its coins are taken back." },
+    { "currency_code": "coins", "direction": "sink", "reason": "virtual-currency.wallet-merge-out", "source_block": "billing.virtual-currency", "description": "A guest wallet is merged into another account." },
+    { "currency_code": "coins", "direction": "sink", "reason": "virtual-currency.support-debit", "source_block": "billing.virtual-currency", "description": "Support corrects a balance downward." },
+
+    { "currency_code": "gems", "direction": "faucet", "reason": "daily-streak.claim", "source_block": "engagement.daily-streak", "description": "The player claims the daily streak reward." },
+    { "currency_code": "gems", "direction": "faucet", "reason": "season-pass.tier-reward", "source_block": "engagement.season-pass", "description": "The player claims a pass tier reward." },
+    { "currency_code": "gems", "direction": "faucet", "reason": "season-pass.refund-restore", "source_block": "engagement.season-pass", "description": "A refunded premium unlock is reinstated and its rewards are restored." },
+    { "currency_code": "gems", "direction": "faucet", "reason": "event-calendar.reward", "source_block": "engagement.event-calendar", "description": "The player claims a live event reward." },
+    { "currency_code": "gems", "direction": "faucet", "reason": "subscriptions.stipend", "source_block": "billing.subscriptions", "description": "A subscription slice pays its currency stipend." },
+    { "currency_code": "gems", "direction": "faucet", "reason": "virtual-currency.pack-purchase", "source_block": "billing.virtual-currency", "description": "A verified pack purchase credits the pack contents." },
+    { "currency_code": "gems", "direction": "faucet", "reason": "virtual-currency.pack-refund-reversed", "source_block": "billing.virtual-currency", "description": "Apple reverses a refund and the clawed-back gems are returned." },
+    { "currency_code": "gems", "direction": "faucet", "reason": "virtual-currency.wallet-merge-in", "source_block": "billing.virtual-currency", "description": "A guest wallet is merged into this account." },
+    { "currency_code": "gems", "direction": "faucet", "reason": "virtual-currency.support-grant", "source_block": "billing.virtual-currency", "description": "Support corrects a balance upward." },
+    { "currency_code": "gems", "direction": "sink", "reason": "energy-lives.refill", "source_block": "engagement.energy-lives", "description": "The player refills energy with gems." },
+    { "currency_code": "gems", "direction": "sink", "reason": "season-pass.tier-skip", "source_block": "engagement.season-pass", "description": "The player buys a tier skip with gems." },
+    { "currency_code": "gems", "direction": "sink", "reason": "season-pass.xp-boost", "source_block": "engagement.season-pass", "description": "The player buys a pass XP boost with gems." },
+    { "currency_code": "gems", "direction": "sink", "reason": "season-pass.refund-clawback", "source_block": "engagement.season-pass", "description": "A refunded premium unlock takes back its tier rewards." },
+    { "currency_code": "gems", "direction": "sink", "reason": "subscriptions.stipend-reversal", "source_block": "billing.subscriptions", "description": "A refunded subscription term takes back its stipend." },
+    { "currency_code": "gems", "direction": "sink", "reason": "virtual-currency.pack-refund", "source_block": "billing.virtual-currency", "description": "The store refunded a pack and its gems are taken back." },
+    { "currency_code": "gems", "direction": "sink", "reason": "virtual-currency.wallet-merge-out", "source_block": "billing.virtual-currency", "description": "A guest wallet is merged into another account." },
+    { "currency_code": "gems", "direction": "sink", "reason": "virtual-currency.support-debit", "source_block": "billing.virtual-currency", "description": "Support corrects a balance downward." },
+
+    { "currency_code": "booster_shield", "direction": "faucet", "reason": "objectives.reward", "source_block": "engagement.objectives", "description": "The player completes an objective that rewards a shield." },
+    { "currency_code": "booster_shield", "direction": "faucet", "reason": "virtual-currency.pack-purchase", "source_block": "billing.virtual-currency", "description": "The starter bundle includes shields." },
+    { "currency_code": "booster_shield", "direction": "faucet", "reason": "virtual-currency.pack-refund-reversed", "source_block": "billing.virtual-currency", "description": "Apple reverses a refund and the clawed-back shields are returned." },
+    { "currency_code": "booster_shield", "direction": "sink", "reason": "game-core.use-booster", "source_block": "game-core", "description": "The player uses a shield in a level." },
+    { "currency_code": "booster_shield", "direction": "sink", "reason": "virtual-currency.pack-refund", "source_block": "billing.virtual-currency", "description": "The store refunded the starter bundle and its shields are taken back." },
+    { "currency_code": "coins", "direction": "sink", "reason": "daily-streak.freeze-purchase", "source_block": "engagement.daily-streak", "description": "The player buys a streak freeze with coins." },
+    { "currency_code": "coins", "direction": "sink", "reason": "daily-streak.repair-purchase", "source_block": "engagement.daily-streak", "description": "The player repairs a broken streak with coins." },
+    { "currency_code": "coins", "direction": "faucet", "reason": "daily-streak.repair-refund", "source_block": "engagement.daily-streak", "description": "A repair that the server finds invalid after the spend is refunded." },
+    { "currency_code": "coins", "direction": "sink", "reason": "timed-queues.start", "source_block": "engagement.timed-queues", "description": "The player starts a queue item and pays its input lines." },
+    { "currency_code": "coins", "direction": "faucet", "reason": "timed-queues.collect", "source_block": "engagement.timed-queues", "description": "The player collects the output lines of a finished queue item." },
+    { "currency_code": "coins", "direction": "faucet", "reason": "timed-queues.cancel-refund", "source_block": "engagement.timed-queues", "description": "A canceled or rejected queue start returns its input lines." },
+    { "currency_code": "gems", "direction": "sink", "reason": "timed-queues.speed-up", "source_block": "engagement.timed-queues", "description": "The player speeds up a queue item with gems." },
+    { "currency_code": "gems", "direction": "sink", "reason": "timed-queues.slot-unlock", "source_block": "engagement.timed-queues", "description": "The player unlocks a queue slot with gems." },
+    { "currency_code": "gems", "direction": "faucet", "reason": "timed-queues.cancel-refund", "source_block": "engagement.timed-queues", "description": "A voided speed-up is refunded." },
+    { "currency_code": "gems", "direction": "faucet", "reason": "energy-lives.refill-refund", "source_block": "engagement.energy-lives", "description": "A paid refill that cannot be delivered is refunded." },
+    { "currency_code": "gems", "direction": "faucet", "reason": "push-reengagement.comeback-reward", "source_block": "messaging.push-reengagement", "description": "A returning player claims the comeback reward." },
+    { "currency_code": "coins", "direction": "sink", "reason": "items.upgrade", "source_block": "engagement.items", "description": "The player upgrades an item and pays coins." },
+    { "currency_code": "coins", "direction": "faucet", "reason": "items.upgrade-refund", "source_block": "engagement.items", "description": "An upgrade that cannot complete refunds its cost." },
+    { "currency_code": "coins", "direction": "faucet", "reason": "items.duplicate", "source_block": "engagement.items", "description": "A duplicate of an owned item converts to coins." },
+    { "currency_code": "coins", "direction": "faucet", "reason": "items.convert", "source_block": "engagement.items", "description": "The player converts an item and receives coins." },
+    { "currency_code": "coins", "direction": "faucet", "reason": "items.expire", "source_block": "engagement.items", "description": "An expiring stack pays its expiry value in coins." },
+    { "currency_code": "shards_ember", "direction": "faucet", "reason": "objectives.reward", "source_block": "engagement.objectives", "description": "The player completes an objective that rewards ember shards." },
+    { "currency_code": "shards_ember", "direction": "faucet", "reason": "items.duplicate", "source_block": "engagement.items", "description": "A duplicate converts to ember shards." },
+    { "currency_code": "shards_ember", "direction": "faucet", "reason": "items.upgrade-refund", "source_block": "engagement.items", "description": "An upgrade that cannot complete refunds its shards." },
+    { "currency_code": "shards_ember", "direction": "sink", "reason": "items.upgrade", "source_block": "engagement.items", "description": "The player upgrades an item and pays ember shards." },
+    { "currency_code": "shards_ember", "direction": "sink", "reason": "items.discard", "source_block": "engagement.items", "description": "The player discards a stack of ember shards." },
+    { "currency_code": "booster_double_xp", "direction": "faucet", "reason": "objectives.reward", "source_block": "engagement.objectives", "description": "The player completes an objective that rewards a double-XP booster." },
+    { "currency_code": "booster_double_xp", "direction": "faucet", "reason": "season-pass.tier-reward", "source_block": "engagement.season-pass", "description": "The player claims a pass tier that rewards a double-XP booster." },
+    { "currency_code": "booster_double_xp", "direction": "faucet", "reason": "items.consume-refund", "source_block": "engagement.items", "description": "A consume that cannot complete returns the booster." },
+    { "currency_code": "booster_double_xp", "direction": "sink", "reason": "items.consume", "source_block": "engagement.items", "description": "The player consumes a double-XP booster." },
+    { "currency_code": "booster_double_xp", "direction": "sink", "reason": "items.discard", "source_block": "engagement.items", "description": "The player discards a stack of double-XP boosters." },
+    { "currency_code": "booster_double_xp", "direction": "sink", "reason": "items.convert", "source_block": "engagement.items", "description": "The player converts a count item that has a conversion value (engagement.items backend, flow table)." },
+    { "currency_code": "key_frost", "direction": "faucet", "reason": "event-calendar.reward", "source_block": "engagement.event-calendar", "description": "The player claims a live event reward of frost keys." },
+    { "currency_code": "key_frost", "direction": "sink", "reason": "items.consume", "source_block": "engagement.items", "description": "The player spends a frost key." },
+    { "currency_code": "key_frost", "direction": "sink", "reason": "items.discard", "source_block": "engagement.items", "description": "The player discards frost keys." },
+    { "currency_code": "key_frost", "direction": "sink", "reason": "items.expire", "source_block": "engagement.items", "description": "An expiring stack of frost keys is removed." }
+  ],
+
+  "packs": [
+    {
+      "product_code": "gems_small", "product_kind": "consumable", "fulfilment": "ledger", "owner_block": "billing.virtual-currency",
+      "offer_kind": "standard", "apple_product_id": "acme_gems_small", "google_product_id": "acme_gems_small",
+      "max_purchases_per_account": null, "window_seconds": null, "sort_order": 1, "active": true,
+      "contents": [{ "currency": "gems", "amount": 100, "bonus_amount": 0, "first_purchase_bonus_amount": 100 }]
+    },
+    {
+      "product_code": "gems_medium", "product_kind": "consumable", "fulfilment": "ledger", "owner_block": "billing.virtual-currency",
+      "offer_kind": "standard", "apple_product_id": "acme_gems_medium", "google_product_id": "acme_gems_medium",
+      "max_purchases_per_account": null, "window_seconds": null, "sort_order": 2, "active": true,
+      "contents": [{ "currency": "gems", "amount": 500, "bonus_amount": 50, "first_purchase_bonus_amount": 500 }]
+    },
+    {
+      "product_code": "gems_large", "product_kind": "consumable", "fulfilment": "ledger", "owner_block": "billing.virtual-currency",
+      "offer_kind": "standard", "apple_product_id": "acme_gems_large", "google_product_id": "acme_gems_large",
+      "max_purchases_per_account": null, "window_seconds": null, "sort_order": 3, "active": true,
+      "contents": [{ "currency": "gems", "amount": 1200, "bonus_amount": 200, "first_purchase_bonus_amount": 1200 }]
+    },
+    {
+      "product_code": "starter_bundle", "product_kind": "consumable", "fulfilment": "ledger", "owner_block": "billing.virtual-currency",
+      "offer_kind": "starter", "apple_product_id": "acme_starter_bundle", "google_product_id": "acme_starter_bundle",
+      "max_purchases_per_account": 1, "window_seconds": null, "sort_order": 0, "active": true,
+      "contents": [
+        { "currency": "gems", "amount": 300, "bonus_amount": 0, "first_purchase_bonus_amount": 0 },
+        { "currency": "coins", "amount": 5000, "bonus_amount": 0, "first_purchase_bonus_amount": 0 },
+        { "currency": "booster_shield", "amount": 3, "bonus_amount": 0, "first_purchase_bonus_amount": 0 }
+      ]
+    },
+    {
+      "product_code": "season_premium", "product_kind": "consumable", "fulfilment": "external", "owner_block": "engagement.season-pass",
+      "offer_kind": "standard", "apple_product_id": "acme_season_premium", "google_product_id": "acme_season_premium",
+      "max_purchases_per_account": null, "window_seconds": null, "sort_order": 10, "active": true,
+      "contents": []
+    },
+    {
+      "product_code": "shield_direct", "product_kind": "consumable", "fulfilment": "external", "owner_block": "engagement.items",
+      "offer_kind": "standard", "apple_product_id": "acme_shield_direct", "google_product_id": "acme_shield_direct",
+      "max_purchases_per_account": null, "window_seconds": null, "random_reward": false, "odds_url": null, "sort_order": 11, "active": true,
+      "contents": [],
+      "_note": "A direct purchase of an item for its exact price, listed by the insufficient-balance sheet through GET /api/shop/packs?codes=shield_direct."
+    },
+    {
+      "product_code": "chest_key", "product_kind": "consumable", "fulfilment": "external", "owner_block": "engagement.items",
+      "offer_kind": "standard", "apple_product_id": "acme_chest_key", "google_product_id": "acme_chest_key",
+      "max_purchases_per_account": null, "window_seconds": null, "random_reward": true, "odds_url": "https://game.example.com/odds/chest", "sort_order": 12, "active": true,
+      "contents": [],
+      "_note": "A product that sells a randomized reward owned by another block: the odds link is required and is shown on the card and the confirmation step."
+    }
+  ],
+
+  "reference_packs": [{ "currency": "gems", "product_code": "gems_small", "base_amount": 100 }],
+
+  "device_store_prices": {
+    "gems_small": { "display_price": "$0.99", "price_micros": 990000, "currency": "USD" },
+    "gems_medium": { "display_price": "$4.99", "price_micros": 4990000, "currency": "USD" },
+    "gems_large": { "display_price": "$9.99", "price_micros": 9990000, "currency": "USD" },
+    "starter_bundle": { "display_price": "$2.99", "price_micros": 2990000, "currency": "USD" }
+  },
+
+  "approx_money_cases": [
+    { "amount": 120, "ref": { "priceMicros": 990000, "baseAmount": 100, "currency": "USD" }, "locale": "en-US", "expected": "$1.19", "note": "1.188 rounds up to the cent" },
+    { "amount": 100, "ref": { "priceMicros": 990000, "baseAmount": 100, "currency": "USD" }, "locale": "en-US", "expected": "$0.99", "note": "exact" },
+    { "amount": 1, "ref": { "priceMicros": 990000, "baseAmount": 100, "currency": "USD" }, "locale": "en-US", "expected": "$0.01", "note": "0.0099 rounds up to one cent" },
+    { "amount": 120, "ref": { "priceMicros": 150000000, "baseAmount": 100, "currency": "JPY" }, "locale": "en-US", "expected": "¥180", "note": "currency with zero fraction digits" },
+    { "amount": 120, "ref": null, "locale": "en-US", "expected": null, "note": "reference price not loaded: show nothing and a Pack prices link" },
+    { "amount": 0, "ref": { "priceMicros": 990000, "baseAmount": 100, "currency": "USD" }, "locale": "en-US", "expected": null, "note": "no amount, no value" }
+  ],
+
+  "expected": {
+    "startup_check_errors": [
+      { "case": "content row names a missing currency", "error": "unknown_currency_in_contents" },
+      { "case": "two products share one store product id", "error": "duplicate_store_product_id" },
+      { "case": "reference_product_code names a pack with no row for that currency", "error": "reference_pack_without_currency" },
+      { "case": "fulfilment ledger with no content row", "error": "ledger_product_without_contents" },
+      { "case": "packs grant two distinct hard currencies while MAX_PURCHASABLE_CURRENCIES is 1", "error": "too_many_purchasable_currencies" },
+      { "case": "random_reward true without odds_url", "error": "random_reward_without_odds_url" },
+      { "case": "random_reward true on a fulfilment ledger row", "error": "random_reward_on_ledger_pack" }
+    ]
+  }
+}

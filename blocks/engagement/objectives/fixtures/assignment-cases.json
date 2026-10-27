@@ -1,0 +1,218 @@
+{
+  "_comment": "Window, draw, reroll, reroll-bank and difficulty-scaling vectors. Default clock now = 2026-10-21T12:00:00Z; content from fixtures/definitions.json (daily plan: draw_count 3, reroll_earn_per_window 1, reroll_bank_cap 2, avoid_repeat true). A draw is asserted by properties, not by exact members, because the PRNG is the implementer's choice; only the cases that leave one valid answer name exact members.",
+  "_usage": "window_vectors: compute the window for the account timezone at the instant; starts_at and ends_at come from the timezone database (a local day is 23, 24 or 25 hours long). draw_cases, reroll_cases and bank_cases: assert `expected` as written. scaling_cases: SCALING_ENABLED true, SCALE_MIN 0.5, SCALE_MAX 2.0, SCALING_LOOKBACK_WINDOWS 7, SCALING_MIN_HISTORY_WINDOWS 3, SCALING_INPUT recent_activity, REROLL_TIER_POLICY same_tier, MAX_OCCUPIES_PER_BOARD 1 unless the case says otherwise. Normal-play objectives in the daily pool: daily.play-3-rounds and daily.clear-3-levels. Tiers in the pool: tier 1 play-3-rounds and collect-20; tier 2 win-3, clear-3-levels, spend-100; tier 3 win-5 and score-5000.",
+
+  "window_vectors": [
+    { "name": "vn-daily-midday",        "timezone": "Asia/Ho_Chi_Minh",    "scope": "daily",  "instant": "2026-10-21T12:00:00Z", "window_key": "2026-10-21", "starts_at": "2026-10-20T17:00:00Z", "ends_at": "2026-10-21T17:00:00Z" },
+    { "name": "vn-daily-last-second",   "timezone": "Asia/Ho_Chi_Minh",    "scope": "daily",  "instant": "2026-10-21T16:59:59Z", "window_key": "2026-10-21", "starts_at": "2026-10-20T17:00:00Z", "ends_at": "2026-10-21T17:00:00Z" },
+    { "name": "vn-daily-first-second",  "timezone": "Asia/Ho_Chi_Minh",    "scope": "daily",  "instant": "2026-10-21T17:00:00Z", "window_key": "2026-10-22", "starts_at": "2026-10-21T17:00:00Z", "ends_at": "2026-10-22T17:00:00Z" },
+    { "name": "vn-weekly-midweek",      "timezone": "Asia/Ho_Chi_Minh",    "scope": "weekly", "instant": "2026-10-21T12:00:00Z", "window_key": "2026-10-19", "starts_at": "2026-10-18T17:00:00Z", "ends_at": "2026-10-25T17:00:00Z" },
+    { "name": "vn-weekly-last-second",  "timezone": "Asia/Ho_Chi_Minh",    "scope": "weekly", "instant": "2026-10-25T16:59:59Z", "window_key": "2026-10-19", "starts_at": "2026-10-18T17:00:00Z", "ends_at": "2026-10-25T17:00:00Z" },
+    { "name": "vn-weekly-first-second", "timezone": "Asia/Ho_Chi_Minh",    "scope": "weekly", "instant": "2026-10-25T17:00:00Z", "window_key": "2026-10-26", "starts_at": "2026-10-25T17:00:00Z", "ends_at": "2026-11-01T17:00:00Z" },
+    { "name": "ny-daily-25-hour-day",   "timezone": "America/New_York",    "scope": "daily",  "instant": "2026-11-01T12:00:00Z", "window_key": "2026-11-01", "starts_at": "2026-11-01T04:00:00Z", "ends_at": "2026-11-02T05:00:00Z", "note": "US clocks go back at 06:00Z; this local day lasts 25 hours" },
+    { "name": "ny-weekly-across-dst",   "timezone": "America/New_York",    "scope": "weekly", "instant": "2026-11-01T12:00:00Z", "window_key": "2026-10-26", "starts_at": "2026-10-26T04:00:00Z", "ends_at": "2026-11-02T05:00:00Z", "note": "Sunday 2026-11-01 still belongs to the week that started on Monday 2026-10-26" }
+  ],
+
+  "timezone_change": {
+    "name": "new-day-key-closes-the-previous-window",
+    "now": "2026-10-21T12:00:00Z",
+    "given": "acct-001 timezone Asia/Ho_Chi_Minh, live daily window 2026-10-21 holding daily.win-3 (completed, unclaimed), daily.collect-20 (active, 8 of 20), daily.play-3-rounds (active, 0 of 3)",
+    "change": "the account timezone becomes Pacific/Auckland (UTC+13 on this date; the change is accepted by the daily-streak block's rate limit)",
+    "expected": {
+      "new_window": { "window_key": "2026-10-22", "starts_at": "2026-10-21T11:00:00Z", "ends_at": "2026-10-22T11:00:00Z" },
+      "old_window_instances": { "daily.win-3": "completed (still claimable)", "daily.collect-20": "expired at 8 of 20", "daily.play-3-rounds": "expired at 0 of 3" },
+      "live_windows_for_plan_daily": 1
+    }
+  },
+
+  "draw_cases": [
+    {
+      "name": "draw-no-history-shop-locked",
+      "given": { "unlocked_features": [], "previous_window_picks": [] },
+      "expected": {
+        "size": 3,
+        "distinct_exclusive_groups": true,
+        "at_least_one_of": ["daily.play-3-rounds", "daily.clear-3-levels"],
+        "every_pick_in": ["daily.play-3-rounds", "daily.win-3", "daily.win-5", "daily.collect-20", "daily.clear-3-levels", "daily.score-5000"],
+        "never": ["daily.spend-100"]
+      }
+    },
+    {
+      "name": "draw-no-history-shop-unlocked",
+      "given": { "unlocked_features": ["shop"], "previous_window_picks": [] },
+      "expected": {
+        "size": 3,
+        "distinct_exclusive_groups": true,
+        "at_least_one_of": ["daily.play-3-rounds", "daily.clear-3-levels"],
+        "every_pick_in": ["daily.play-3-rounds", "daily.win-3", "daily.win-5", "daily.collect-20", "daily.clear-3-levels", "daily.score-5000", "daily.spend-100"]
+      }
+    },
+    {
+      "name": "avoid-repeat-leaves-exactly-three",
+      "_comment": "Non-repeat candidates are play-3-rounds, win-5 and score-5000, one per exclusive group, and each of the three slots takes one",
+      "given": { "unlocked_features": [], "previous_window_picks": ["daily.win-3", "daily.collect-20", "daily.clear-3-levels"] },
+      "expected": { "exact_set": ["daily.play-3-rounds", "daily.win-5", "daily.score-5000"] }
+    },
+    {
+      "name": "avoid-repeat-fills-from-repeats",
+      "_comment": "The previous window held four instances (one was rerolled). Only clear-3-levels and collect-20 are non-repeats, so the third slot is filled from the repeats, one per exclusive group",
+      "given": { "unlocked_features": [], "previous_window_picks": ["daily.win-3", "daily.win-5", "daily.score-5000", "daily.play-3-rounds"] },
+      "expected": { "size": 3, "must_include": ["daily.clear-3-levels", "daily.collect-20"], "third_pick_in": ["daily.win-3", "daily.win-5", "daily.score-5000", "daily.play-3-rounds"], "never": ["daily.spend-100"] }
+    },
+    {
+      "name": "normal-play-slot-falls-back-to-repeats",
+      "_comment": "Both normal-play objectives were on the previous board; the normal-play slot is still filled, from them",
+      "given": { "unlocked_features": [], "previous_window_picks": ["daily.win-3", "daily.collect-20", "daily.clear-3-levels", "daily.play-3-rounds"] },
+      "expected": { "size": 3, "must_include": ["daily.win-5", "daily.score-5000"], "third_pick_in": ["daily.clear-3-levels", "daily.play-3-rounds"], "never": ["daily.collect-20", "daily.win-3", "daily.spend-100"] }
+    },
+    {
+      "name": "occupying-objectives-are-capped",
+      "config": { "MAX_OCCUPIES_PER_BOARD": 0 },
+      "given": { "unlocked_features": [], "previous_window_picks": [], "draws": 50, "different_window_keys": true },
+      "expected": { "never": ["daily.collect-20"], "every_draw_size": 3 },
+      "_note": "daily.collect-20 is the only deepen_test occupies member; with a cap of 0 it is never drawn. With the default cap of 1 it may be drawn but never together with another occupying member"
+    },
+    {
+      "name": "same-inputs-same-set",
+      "given": { "unlocked_features": ["shop"], "window_key": "2026-10-21", "calls": 2, "devices": ["device-A", "device-B"] },
+      "expected": { "identical_instance_ids": true, "identical_objective_ids_in_order": true, "assignment_windows_rows": 1 }
+    }
+  ],
+
+  "reroll_cases": [
+    {
+      "name": "reroll-replaces-one-objective-of-the-same-tier",
+      "given": {
+        "unlocked_features": [],
+        "live_set": { "daily.win-3": { "progress": 2 }, "daily.collect-20": { "progress": 0 }, "daily.play-3-rounds": { "progress": 0 } },
+        "bank_balance": 1
+      },
+      "request": "reroll the instance of daily.win-3 (tier 2)",
+      "expected": {
+        "http_status": 200,
+        "replaced": { "objective_id": "daily.win-3", "state": "replaced", "progress": 2 },
+        "replacement": { "objective_id": "daily.clear-3-levels", "tier": 2, "state": "active", "progress": 0 },
+        "never_drawn_again_in_this_window": ["daily.win-3"],
+        "bank_balance": 0
+      },
+      "_comment": "Tier 2 candidates outside the window are clear-3-levels and spend-100; spend-100 needs the shop feature, so the answer is exact"
+    },
+    {
+      "name": "reroll-without-bank-balance",
+      "given": { "bank_balance": 0 },
+      "request": "reroll the instance of daily.collect-20",
+      "expected": { "http_status": 409, "error": "no_reroll_available", "set_unchanged": true, "bank_balance": 0 }
+    },
+    {
+      "name": "same-tier-without-candidate",
+      "given": { "unlocked_features": [], "live_set": { "daily.win-3": { "progress": 0 }, "daily.collect-20": { "progress": 0 }, "daily.play-3-rounds": { "progress": 0 } }, "bank_balance": 1 },
+      "request": "reroll the instance of daily.collect-20 (tier 1; the only other tier 1 objective is already in the window)",
+      "expected": { "http_status": 409, "error": "no_replacement_available", "set_unchanged": true, "bank_balance": 1 }
+    },
+    {
+      "name": "any-tier-policy-may-change-the-reward-tier",
+      "config": { "REROLL_TIER_POLICY": "any_tier" },
+      "given": { "unlocked_features": [], "live_set": { "daily.win-3": { "progress": 0 }, "daily.collect-20": { "progress": 0 }, "daily.play-3-rounds": { "progress": 0 } }, "bank_balance": 1 },
+      "request": "reroll the instance of daily.win-3",
+      "expected": { "http_status": 200, "replacement_objective_in": ["daily.win-5", "daily.clear-3-levels", "daily.score-5000"], "never": ["daily.spend-100", "daily.win-3"], "response_carries": ["from_tier", "to_tier"], "bank_balance": 0 }
+    },
+    {
+      "name": "repeat-request-is-idempotent",
+      "given": { "bank_balance": 0, "instance_state": "replaced", "replaced_by": "the replacement from reroll-replaces-one-objective-of-the-same-tier" },
+      "request": "reroll the already replaced instance of daily.win-3 again",
+      "expected": { "http_status": 200, "returns": "the same replacement instance", "bank_balance": 0 }
+    },
+    {
+      "name": "completed-objective-cannot-be-rerolled",
+      "given": { "bank_balance": 1, "instance_state": "completed" },
+      "request": "reroll the completed instance of daily.win-3",
+      "expected": { "http_status": 409, "error": "not_active", "bank_balance": 1 }
+    },
+    {
+      "name": "fixed-plan-cannot-be-rerolled",
+      "given": { "instance_of": "weekly.win-20" },
+      "request": "reroll the instance of weekly.win-20",
+      "expected": { "http_status": 409, "error": "not_rerollable" }
+    },
+    {
+      "name": "other-accounts-instance",
+      "given": { "instance_of_account": "acct-002" },
+      "request": "reroll an instance id that belongs to acct-002 while authenticated as acct-001",
+      "expected": { "http_status": 404, "error": "not_found" }
+    }
+  ],
+
+  "bank_cases": [
+    {
+      "name": "first-window-credits-one",
+      "_comment": "reroll_earn_per_window 1, reroll_bank_cap 2",
+      "given": { "bank_row": null, "first_daily_window": "2026-10-21" },
+      "expected": { "balance": 1, "credited_through_key": "2026-10-21" }
+    },
+    {
+      "name": "away-for-five-days-fills-the-bank-to-the-cap",
+      "given": { "balance": 0, "credited_through_key": "2026-10-16", "returns_on_window": "2026-10-21" },
+      "expected": { "balance": 2, "credited_through_key": "2026-10-21", "board": "today's board only, no backlog of the missed days", "currency_deducted": 0 }
+    },
+    {
+      "name": "bank-never-exceeds-the-cap",
+      "given": { "balance": 2, "credited_through_key": "2026-10-20", "returns_on_window": "2026-10-21" },
+      "expected": { "balance": 2 }
+    },
+    {
+      "name": "missed-day-costs-nothing",
+      "given": { "balance": 1, "credited_through_key": "2026-10-21", "no_request_on": "2026-10-22", "returns_on_window": "2026-10-23" },
+      "expected": { "balance": 2, "instances_created_for": ["2026-10-23"], "instances_created_for_not": ["2026-10-22"], "expired_events_for_missed_day": 0, "currency_deducted": 0 }
+    },
+    {
+      "name": "plans-without-a-bank-have-none",
+      "given": { "plan_id": "weekly" },
+      "expected": { "bank_row": null, "reroll_endpoint": "409 not_rerollable" }
+    }
+  ],
+
+  "scaling_cases": [
+    {
+      "name": "heavy-history-is-capped-at-max",
+      "_comment": "daily.collect-20: nominal target 20, reward coins 40, scaling_reference 20. factor = clamp(median / reference, SCALE_MIN, SCALE_MAX); target and reward are rounded half up",
+      "history": [50, 50, 50, 50, 50],
+      "expected": { "factor": 2.0, "target": 40, "reward": [{ "currency": "coins", "amount": 80 }] }
+    },
+    { "name": "above-nominal",       "history": [30, 30, 30, 30, 30],  "expected": { "factor": 1.5,  "target": 30, "reward": [{ "currency": "coins", "amount": 60 }] } },
+    { "name": "fractional-factor",   "history": [27, 27, 27],          "expected": { "factor": 1.35, "target": 27, "reward": [{ "currency": "coins", "amount": 54 }] } },
+    { "name": "at-nominal",          "history": [20, 20, 20],          "expected": { "factor": 1.0,  "target": 20, "reward": [{ "currency": "coins", "amount": 40 }] } },
+    { "name": "light-history-is-floored-at-min", "history": [5, 5, 5],  "expected": { "factor": 0.5,  "target": 10, "reward": [{ "currency": "coins", "amount": 20 }] } },
+    { "name": "too-little-history",  "history": [50, 50],              "expected": { "factor": 1.0,  "target": 20, "reward": [{ "currency": "coins", "amount": 40 }] }, "note": "fewer than SCALING_MIN_HISTORY_WINDOWS (3) windows: nominal" },
+    { "name": "median-not-mean",     "history": [10, 10, 10, 10, 200], "expected": { "factor": 0.5,  "target": 10, "reward": [{ "currency": "coins", "amount": 20 }] }, "note": "the mean is 48 and would give 2.0; one outlier window must not move the target" },
+    {
+      "name": "scaling-switched-off",
+      "config": { "SCALING_ENABLED": false },
+      "history": [50, 50, 50, 50, 50],
+      "expected": { "factor": 1.0, "target": 20, "reward": [{ "currency": "coins", "amount": 40 }] }
+    },
+    {
+      "name": "player-level-input",
+      "_comment": "SCALING_INPUT player_level: the input is the account's level and scaling_reference is the level at which the nominal target is calibrated (20 in this synthetic content)",
+      "config": { "SCALING_INPUT": "player_level" },
+      "levels": [{ "level": 30, "expected": { "factor": 1.5, "target": 30, "reward": [{ "currency": "coins", "amount": 60 }] } }, { "level": 5, "expected": { "factor": 0.5, "target": 10, "reward": [{ "currency": "coins", "amount": 20 }] } }, { "level": null, "expected": { "factor": 1.0, "target": 20, "reward": [{ "currency": "coins", "amount": 40 }] } }]
+    },
+    {
+      "name": "payer-state-is-not-an-input",
+      "history": [30, 30, 30],
+      "accounts": [{ "account_id": "acct-001", "entitlement_active": true, "premium_balance": 500 }, { "account_id": "acct-002", "entitlement_active": false, "premium_balance": 0 }],
+      "expected": { "identical_for_both_accounts": true, "factor": 1.5, "target": 30, "reward": [{ "currency": "coins", "amount": 60 }] }
+    },
+    {
+      "name": "scaled-target-is-frozen",
+      "history": [50, 50, 50, 50, 50],
+      "then": "the account completes a window with 5 items and the daily window is re-read",
+      "expected": { "stored_target": 40, "stored_reward": [{ "currency": "coins", "amount": 80 }], "scale_factor": 2.0 }
+    },
+    {
+      "name": "unscalable-definitions-keep-nominal",
+      "history": [50, 50, 50, 50, 50],
+      "objective_id": "daily.win-3",
+      "expected": { "factor": 1.0, "target": 3, "reward": [{ "currency": "coins", "amount": 40 }] }
+    }
+  ]
+}

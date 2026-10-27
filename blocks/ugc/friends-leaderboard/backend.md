@@ -18,7 +18,7 @@ Response: `{ period, week_start_day, rows: [{ id, rank, display_name, level, xp,
 |--------|------|---------|------|
 | `PUT` | `/api/board/me` | Ensure the profile exists (idempotent); body `{ display_name_hint? }` is the sign-in name | Session |
 | `GET` | `/api/board/me?period=week\|all` | Own profile, `listed`, `rank` (null when hidden or 0 XP), `count_above` | Session |
-| `POST` | `/api/board/me/report` | Report progress `{ xp, level, streak_days, answered, accuracy }` | Session |
+| `POST` | `/api/board/me/report` | Report progress `{ xp, level, streak_days, answered, accuracy, attempt_id? }`; `attempt_id` is the proof of play (see "Proof of play" below) | Session |
 | `PATCH` | `/api/board/me` | Change `{ public_board }` | Session |
 | `POST` | `/api/board/me/reset` | "Erase my data": zero the stats (invariant I-9) | Session |
 | `GET` | `/api/friends` | Viewer plus friends ranked on `week`, with `gap` to the next row above | Session |
@@ -70,7 +70,7 @@ export const periodXp = (p: Profile, period: "week" | "all", now: number) =>
 ### Fold a progress report
 
 <!-- PATTERN: fold-progress-report -->
-<!-- PURPOSE: Apply a reported stat set to the stored profile: monotonic totals, baseline on first report, capped weekly credit -->
+<!-- PURPOSE: Apply a reported stat set to the stored profile: monotonic totals, baseline on first report, capped weekly credit, no credit without a played attempt -->
 <!-- REFERENCE: language=typescript framework=agnostic -->
 <!-- ADAPT:
        - Types `Profile` / `Report` come from the project; `report` is already range-validated (see security.md Input Validation Rules)
@@ -79,13 +79,13 @@ export const periodXp = (p: Profile, period: "week" | "all", now: number) =>
        - No client clock-skew allowance is needed because the server computes the cap with its own clock -->
 
 ```typescript
-export function foldReport(prev: Profile, r: Report, nowMs: number): Profile {
+export function foldReport(prev: Profile, r: Report, nowMs: number, played: boolean): Profile {
   const week = weekStart(nowMs);
   const xp = Math.max(prev.xp, r.xp);                     // totals never go down (I-7)
   const baseline = prev.xp === 0 && prev.answered === 0;  // first report earns no weekly XP (I-8)
   const hours = Math.max(0, nowMs - prev.updatedAtMs) / 3_600_000;
   const cap = config.BURST_XP + Math.floor(hours * config.XP_PER_HOUR);
-  const credit = baseline ? 0 : Math.min(xp - prev.xp, cap);
+  const credit = baseline || !played ? 0 : Math.min(xp - prev.xp, cap); // no play, no credit
   const base = prev.weekStartDay === week ? prev.weekXp : 0; // nothing carries over a Monday
   return {
     ...prev,
@@ -215,12 +215,14 @@ export function toPublicProfile(p: Profile, period: "week" | "all", now: number)
 <!-- ADAPT:
        - `FOR UPDATE` → MySQL InnoDB supports it; SQLite has no row locks, run the transaction as `BEGIN IMMEDIATE`
        - `ctx.accountId` / `ctx.tenantId` come from the verified session, never from the body (I-1)
-       - `parseReport`: any validator that throws 422 `invalid_stats` on a non-integer or out-of-range value and rejects unknown keys
+       - `parseReport`: any validator that throws 422 `invalid_stats` on a non-integer or out-of-range value and rejects unknown keys; `attempt_id` is the one optional key
        - Persist all folded columns in one UPDATE; `updated_at` gets the same `nowMs` the fold used -->
 
 ```typescript
 async function reportProgress(ctx: Ctx, body: unknown): Promise<Profile> {
   const report = parseReport(body);
+  const played = !config.REQUIRE_ATTEMPT_PROOF
+    || await isPlayedAttempt(ctx.accountId, report.attemptId); // before the row lock
   return db.transaction(async (tx) => {
     const prev = await tx.one<Profile>(
       `SELECT * FROM board_profiles WHERE tenant_id = $1 AND account_id = $2 FOR UPDATE`,
@@ -228,7 +230,7 @@ async function reportProgress(ctx: Ctx, body: unknown): Promise<Profile> {
     );
     if (!prev) throw new HttpError(404, "profile_missing");
     const now = Date.now();
-    const next = foldReport(prev, report, now);
+    const next = foldReport(prev, report, now, played);
     await tx.exec(
       `UPDATE board_profiles
           SET xp=$1, level=$2, answered=$3, streak_days=$4, accuracy=$5,
@@ -243,6 +245,25 @@ async function reportProgress(ctx: Ctx, body: unknown): Promise<Profile> {
 ```
 
 If `REPORT_MIN_INTERVAL_SECONDS > 0` and `now - prev.updatedAtMs` is smaller, respond `429 rate_limited` before folding (extrapolated hardening, see `security.md` T-1.2).
+
+### Proof of play
+
+With `REQUIRE_ATTEMPT_PROOF = true` the weekly credit needs a played session. `attemptState(account_id, attempt_id)` of `engagement.energy-lives` answers `{state}` or `null`; only `confirmed`, `won` and `failed` count (its INV-13). Everything else, including `open`, `cancelled`, `expired`, `rejected`, an unknown id and a missing id, gives `played = false`: the report is still folded, the credit is `0` and no error is returned (a stale or offline report must not fail). The call takes the account id from the session, so another account's attempt id reads as `null`. `reportProgress` computes `played` before it takes the row lock (`played` is `true` when the setting is off) and passes it to `foldReport`, which stays free of I/O.
+
+<!-- PATTERN: played-attempt-check -->
+<!-- PURPOSE: Decide whether a report names a session that was really played, from the energy block's attempt state -->
+<!-- REFERENCE: language=typescript framework=agnostic -->
+<!-- ADAPT: `attemptState` is the in-process operation of `engagement.energy-lives` (its `backend.md` section 3), never a player route; call it before the report transaction so the row lock is not held across it; a project that tracks sessions in another block maps that block's played states here; `parseReport` rejects an `attempt_id` outside `^[A-Za-z0-9_-]{2,64}$` (`ID_PATTERN` of the energy block) as `invalid_stats` -->
+
+```typescript
+const PLAYED_STATES = new Set(["confirmed", "won", "failed"]);
+
+async function isPlayedAttempt(accountId: string, attemptId?: string): Promise<boolean> {
+  if (!attemptId) return false;
+  const attempt = await attemptState(accountId, attemptId); // { state } | null
+  return attempt !== null && PLAYED_STATES.has(attempt.state);
+}
+```
 
 ### Ensure profile (friend code claim)
 
@@ -328,7 +349,7 @@ Order of checks matters for the error the learner sees: format, not found, self,
 | `unauthorized` | 401 | No valid session on an endpoint that needs one |
 | `invalid_friend_code` | 422 | Code fails normalization or shape |
 | `cannot_add_self` | 422 | The code belongs to the caller |
-| `invalid_stats` | 422 | Report has a non-integer, out-of-range value or unknown key |
+| `invalid_stats` | 422 | Report has a non-integer, out-of-range value, unknown key or malformed `attempt_id` |
 | `invalid_period` | 422 | `period` is not `week` or `all` |
 | `invalid_request` | 422 | Malformed body (for example `public_board` not boolean) |
 | `profile_missing` | 404 | Report/patch before `PUT /api/board/me` |

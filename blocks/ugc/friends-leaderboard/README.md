@@ -64,6 +64,8 @@ If the project already has login, do **not** implement `auth.google-login`. Map 
 
 For this block specifically: `board_profiles` and `friend_links` reference the project's user id; only the whitelisted profile fields in this block are ever read by other users, whatever the identity system stores about the person.
 
+**Guests.** With `auth.guest-account`, `account_id` is `accounts.id`, and the foreign key of `board_profiles.account_id` points at `accounts.id`, not at the login block's `users.id`: a guest has no `users` row until it links, so a key to `users.id` would keep guests off the board. The link inserts the `users` row with the same id, so the profile survives it unchanged (`auth.guest-account` README, "Identity precondition").
+
 ---
 
 ## 2. Data Model
@@ -74,7 +76,7 @@ For this block specifically: `board_profiles` and `friend_links` reference the p
 
 ```mermaid
 erDiagram
-    users ||--o| board_profiles : "owns at most one"
+    accounts ||--o| board_profiles : "owns at most one"
     board_profiles ||--o{ friend_links : "owner of"
     board_profiles ||--o{ friend_links : "is friend in"
 
@@ -114,7 +116,7 @@ One row per account: the public profile, the leaderboard row and the friend-code
 |--------|------|-------------|-------|
 | `id` | `unique_id` | PK | Public handle used in every response and in `friend_links`. Not the account id |
 | `tenant_id` | `unique_id` | NOT NULL, indexed | Tenant isolation. Single-app deployments use one constant value |
-| `account_id` | `unique_id` | NOT NULL, UNIQUE per tenant, FK → `users.id`, ON DELETE CASCADE | **Server-only**; never serialized into any response |
+| `account_id` | `unique_id` | NOT NULL, UNIQUE per tenant, FK → `accounts.id`, ON DELETE CASCADE | **Server-only**; never serialized into any response. A guest account holds a row here (Identity precondition) |
 | `display_name` | `text` | NOT NULL, 1 to `MAX_DISPLAY_NAME` characters | Set from the sign-in identity, whitespace collapsed, truncated; fallback `Learner` |
 | `friend_code` | `text_short` | NOT NULL, UNIQUE per tenant, exactly `FRIEND_CODE_LENGTH` characters from `FRIEND_CODE_ALPHABET` | **Immutable after insert.** The capability to find this profile |
 | `public_board` | `boolean` | NOT NULL, default `true` | `true` = may appear in board queries. Does **not** govern friend-code lookups (I-3) |
@@ -189,13 +191,14 @@ These four rules are the shared definition used by the board, the friends list a
        - `boolean` → MySQL `TINYINT(1)`; SQLite `INTEGER 0/1`
        - `bigint` → MySQL `BIGINT`; SQLite `INTEGER`
        - `friend_code ~ '^[...]{8}$'` regex CHECK → MySQL 8.0.16+ `REGEXP_LIKE` in CHECK; SQLite has no regex by default, validate in the app (the normalization step already does)
-       - Partial indexes `WHERE public_board AND ...` → SQLite supports; MySQL has none, use full indexes and keep the predicate in the query -->
+       - Partial indexes `WHERE public_board AND ...` → SQLite supports; MySQL has none, use full indexes and keep the predicate in the query
+       - `account_id uuid ... REFERENCES accounts(id)`: `accounts` is the table of `auth.guest-account`, whose `id` is `uuid`; with another identity model keep the physical type of that model's id, and MySQL `BINARY(16)` / SQLite `TEXT` as in that block -->
 
 ```sql
 CREATE TABLE IF NOT EXISTS board_profiles (
   id             text PRIMARY KEY DEFAULT gen_random_uuid()::text,
   tenant_id      text NOT NULL,
-  account_id     text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  account_id     uuid NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
   display_name   text NOT NULL CHECK (char_length(display_name) BETWEEN 1 AND 30),
   friend_code    varchar(8) NOT NULL
                  CHECK (friend_code ~ '^[ABCDEFGHJKMNPQRSTVWXYZ23456789]{8}$'),
@@ -249,7 +252,7 @@ flowchart TD
     C --> D{Valid shape and ranges?}
     D -->|No| E[422 invalid_stats]
     D -->|Yes| F[Fold: totals only go up, baseline on first report]
-    F --> G[Weekly credit = min of gain and time cap]
+    F --> G[Weekly credit = min of gain and time cap, 0 without a played attempt when proof is required]
     G --> H[Write profile with server time]
 
     I[Anyone opens Community] --> J[GET board for week or all]
@@ -281,18 +284,21 @@ sequenceDiagram
     participant B as Backend
     participant DB as Database
 
-    L->>B: POST /api/board/me/report { xp, level, streak_days, answered, accuracy }
+    L->>B: POST /api/board/me/report { xp, level, streak_days, answered, accuracy, attempt_id? }
     B->>B: Authenticate, resolve profile from session (never from body)
     B->>B: Validate integer ranges
     alt Out of range or not an integer
         B-->>L: 422 { error: "invalid_stats" }
     else Valid
+        B->>B: REQUIRE_ATTEMPT_PROOF: attemptState(account, attempt_id) is confirmed, won or failed?
         B->>DB: Begin, lock own profile row
         DB-->>B: stored profile
         B->>B: xp = max(stored, reported); same for level and answered
         B->>B: week = week_start(now); base = week_xp if same week else 0
         alt Stored xp = 0 and answered = 0 (first report)
             B->>B: credit = 0 (history before signing in is not a week's work)
+        else Proof required and the attempt is not played
+            B->>B: credit = 0 (no play behind the report)
         else Normal report
             B->>B: credit = min(xp gain, BURST_XP + floor(hours since updated_at * XP_PER_HOUR))
         end
@@ -303,6 +309,8 @@ sequenceDiagram
 ```
 
 A jump larger than the cap still raises the all-time `xp` but credits only the capped amount to `week_xp`. No error is returned.
+
+**Proof of play.** With `REQUIRE_ATTEMPT_PROOF = true` (set it where `engagement.energy-lives` is installed), a report credits the week only when it names an `attempt_id` that `attemptState(account_id, attempt_id)` returns in state `confirmed`, `won` or `failed`. An `open`, `cancelled`, `expired` or `rejected` attempt, an unknown id and a missing id credit `0`; `xp`, `level` and `answered` still fold as above and no error is returned. A report sent when a session ends carries its attempt id; a report sent after a sync carries none and credits the totals only. The all-time total stays client-reported (`security.md` T-1).
 
 ### Add a friend by code (happy path and error cases)
 
@@ -395,13 +403,15 @@ Account changes (sign-in, sign-out, switch) → epoch++ → clear friends, leade
 | Community screen (anyone) | GET /api/board | Read the leaderboard, no session needed |
 | Signed-in app | GET/POST/PATCH /api/board/me..., /api/friends | Own standing, report progress, opt-in flag, friends |
 | `data.progress-sync` | Sync completion triggers one report call | The numbers that get reported; the study snapshot itself stays owner-only and is never part of this block |
+| Game client | Session end triggers one report call carrying `attempt_id` | The proof of play for the weekly credit when `REQUIRE_ATTEMPT_PROOF` is on |
 
 ### Outbound
 
 | Target | How | Purpose |
 |--------|-----|---------|
 | Database | SQL | Profiles, friend links, board queries |
-| `users` (from `auth.google-login`) | FK `account_id` | Cascade delete when the account is deleted |
+| `accounts` (from `auth.guest-account`; the project's account or user table otherwise) | FK `account_id` | Cascade delete when the account is deleted |
+| `engagement.energy-lives` (optional) | In-process `attemptState(account_id, attempt_id)` | Proof of play: `confirmed`, `won` or `failed` only (its INV-13) |
 
 ### Events
 
@@ -414,7 +424,7 @@ Account changes (sign-in, sign-out, switch) → epoch++ → clear friends, leade
 
 ### Shared with other blocks
 
-- **Account deletion** (`compliance.account-deletion`): deleting the account must delete its `board_profiles` row; `ON DELETE CASCADE` removes the learner from boards, removes all links in both directions, and frees the friend code. Verify with the checklist item in `acceptance.md`
+- **Account deletion** (`compliance.account-deletion`): deleting the account must delete its `board_profiles` row; `ON DELETE CASCADE` (fired when the `accounts` row is deleted, the last step of the identity deletion) removes the learner from boards, removes all links in both directions, and frees the friend code. Verify with the checklist item in `acceptance.md`
 - **Sign-in providers** (`auth.google-login`, `auth.sign-in-with-apple`): supply the display name used at profile creation. Apple may return no name; the fallback `Learner` applies
 - **Share cards**: if the app renders a rank or progress card, it reads the same effective values from this block's API and must hide the name when the learner chose not to show it (a UI choice, not a data rule)
 
@@ -440,6 +450,7 @@ Account changes (sign-in, sign-out, switch) → epoch++ → clear friends, leade
 | `BOARD_REFRESH_SECONDS` | `number` | `30` | Client reuses a load younger than this |
 | `REPORT_MIN_INTERVAL_SECONDS` | `number` | `0` (disabled) | **Extrapolated, not in the shipped system.** Minimum gap between two accepted reports; a nonzero value closes the "many small reports" gap described in `security.md` |
 | `FRIEND_LOOKUP_RATE_LIMIT` | `number` | `60` | **Extrapolated, not in the shipped system.** Friend-code lookups per account per hour (slows code guessing) |
+| `REQUIRE_ATTEMPT_PROOF` | `boolean` | `false` | **Extrapolated, not in the shipped system.** `true` credits a report to the week only when it names a played attempt (`engagement.energy-lives`, `attemptState`); set it where that block is installed |
 
 ---
 
@@ -468,3 +479,5 @@ Account changes (sign-in, sign-out, switch) → epoch++ → clear friends, leade
 | D7 | No limit on report frequency or friend-code lookups in the rules | Optional `REPORT_MIN_INTERVAL_SECONDS`, `FRIEND_LOOKUP_RATE_LIMIT` | Closes gaps named in `security.md` |
 | D8 | No report or block for user-chosen names on a world-readable board | Listed as an open threat with a recommended mitigation (`security.md` T-6) | App-store user-generated-content rules may apply; the shipped app had no such mechanism |
 | D9 | Reads return the whole stored document (12 keys, including `answered`, `publicBoard`, timestamps) | Explicit projection of 8 fields; `answered`, `public_board` and timestamps of other learners are not returned | Least exposure; the shipped whitelist (`firestore.rules:35-38`) only restricts what can be written |
+| D10 | The account key is the Firebase Authentication uid of a signed-in account | `account_id` is `accounts.id` of `auth.guest-account`, so a guest holds a profile before linking (Identity precondition) | One account id for every game block in the library |
+| D11 | The weekly credit needs no evidence of play | Optional `REQUIRE_ATTEMPT_PROOF`: the credit needs a `confirmed`, `won` or `failed` attempt of `engagement.energy-lives` | Free guest accounts make farming cheap; a played attempt is play evidence recorded by the energy block (`security.md` T-1) |

@@ -1,0 +1,1979 @@
+{
+  "_comment": "API and operation cases for energy-lives (backend.md). Expected values were produced by running the rules of README section 3 on a small in-memory model; stacks A, B and C have not run them. `at` is the server clock for that step. `as` is the account id in the verified session. Steps with `internal` call the in-process operation named there. `expect.body` lists the fields that must be present with these values; absent fields are not checked. The `merge-takes-the-higher-value` case gives the guest account a boost until 12:10 in the model; its stored meter sits in `setup.other_account`.",
+  "accounts": [
+    "acct-0001",
+    "acct-0002"
+  ],
+  "cases": [
+    {
+      "id": "start-spends-on-start",
+      "note": "on_start: charged at start, kept through confirm and win.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 3,
+          "anchor_at": "2026-10-21T12:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-0001",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 201,
+            "body": {
+              "state": "open",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 2,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:30:00Z",
+              "attempt_id": "att-0001"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:05Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/att-0001/confirm",
+          "expect": {
+            "status": 200,
+            "body": {
+              "state": "confirmed",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 2,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:30:00Z"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:01:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/att-0001/finish",
+          "body": {
+            "outcome": "win"
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "state": "won",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 2,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:30:00Z"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "start-replay-and-conflict",
+      "note": "The same attempt id returns the original; another meter code with the same id conflicts.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 3,
+          "anchor_at": "2026-10-21T12:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-0001",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 201,
+            "body": {
+              "state": "open",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 2,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:30:00Z",
+              "attempt_id": "att-0001"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:01Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-0001",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "state": "open",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 2,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:30:00Z",
+              "replayed": true,
+              "attempt_id": "att-0001"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:02Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-0001",
+            "meter_code": "lives"
+          },
+          "expect": {
+            "status": 409,
+            "body": {
+              "error": "attempt_conflict"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "start-with-nothing-left",
+      "note": "Value 0: rejected with the time to the next point; nothing is stored.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 0,
+          "anchor_at": "2026-10-21T11:50:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-0004",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 409,
+            "body": {
+              "value": 0,
+              "available": 0,
+              "next_tick_at": "2026-10-21T12:20:00Z",
+              "full_at": "2026-10-21T14:20:00Z",
+              "error": "insufficient_energy"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "on-fail-reserves-then-charges-on-fail",
+      "note": "on_fail: start reserves; fail charges; the reservation shows in available.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "lives-default (consume_mode on_fail)",
+        "stored_meter": {
+          "value": 3,
+          "anchor_at": "2026-10-21T12:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-0002",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 201,
+            "body": {
+              "state": "open",
+              "charged": 0,
+              "reserved": 1,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 3,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:00:00Z",
+              "attempt_id": "att-0002"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "GET",
+          "path": "/api/energy",
+          "expect": {
+            "status": 200,
+            "body": {
+              "server_now": "2026-10-21T12:00:00Z",
+              "value": 3,
+              "reserved": 1,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:00:00Z",
+              "boost_ends_at": null
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:01:30Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/att-0002/finish",
+          "body": {
+            "outcome": "fail"
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "state": "failed",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 2,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:30:00Z"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "on-fail-win-releases",
+      "note": "on_fail: a win releases the reservation, no charge.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "lives-default (consume_mode on_fail)",
+        "stored_meter": {
+          "value": 3,
+          "anchor_at": "2026-10-21T12:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-0003",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 201,
+            "body": {
+              "state": "open",
+              "charged": 0,
+              "reserved": 1,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 3,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:00:00Z",
+              "attempt_id": "att-0003"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:01:30Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/att-0003/finish",
+          "body": {
+            "outcome": "win"
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "state": "won",
+              "charged": 0,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 3,
+              "available": 3,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:00:00Z"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "last-unit-on-two-devices-on-start",
+      "note": "Two devices race for the last unit: one 201, one 409.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 1,
+          "anchor_at": "2026-10-21T12:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-A",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 201,
+            "body": {
+              "state": "open",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 0,
+              "available": 0,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T14:30:00Z",
+              "attempt_id": "att-A"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-B",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 409,
+            "body": {
+              "value": 0,
+              "available": 0,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T14:30:00Z",
+              "error": "insufficient_energy"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "last-unit-on-two-devices-on-fail",
+      "note": "on_fail: the reservation makes the second device fail to start.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "lives-default (consume_mode on_fail)",
+        "stored_meter": {
+          "value": 1,
+          "anchor_at": "2026-10-21T12:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-A",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 201,
+            "body": {
+              "state": "open",
+              "charged": 0,
+              "reserved": 1,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 1,
+              "available": 0,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T14:00:00Z",
+              "attempt_id": "att-A"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-B",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 409,
+            "body": {
+              "value": 1,
+              "available": 0,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T14:00:00Z",
+              "error": "insufficient_energy"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cancel-refunds-once",
+      "note": "A start that failed to begin: refund of the charge, replay changes nothing.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 3,
+          "anchor_at": "2026-10-21T12:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-0005",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 201,
+            "body": {
+              "state": "open",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 2,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:30:00Z",
+              "attempt_id": "att-0005"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:20Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/att-0005/cancel",
+          "body": {
+            "reason": "start_failed"
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "state": "cancelled",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 1,
+              "boost_free": false,
+              "value": 3,
+              "available": 3,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:00:00Z"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:30Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/att-0005/cancel",
+          "body": {
+            "reason": "start_failed"
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "state": "cancelled",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 1,
+              "boost_free": false,
+              "value": 3,
+              "available": 3,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:00:00Z",
+              "replayed": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "refund-cannot-exceed-pre-spend-level",
+      "note": "Confirm window 3600 s. Full meter, spend, regenerate to full, cancel: nothing to restore.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 5,
+          "anchor_at": "2026-10-21T11:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        },
+        "overrides": {
+          "confirm_timeout_seconds": 3600
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-0006",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 201,
+            "body": {
+              "state": "open",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 4,
+              "available": 4,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T12:30:00Z",
+              "attempt_id": "att-0006"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:30:00Z",
+          "as": "acct-0001",
+          "method": "GET",
+          "path": "/api/energy",
+          "expect": {
+            "status": 200,
+            "body": {
+              "server_now": "2026-10-21T12:30:00Z",
+              "value": 5,
+              "reserved": 0,
+              "available": 5,
+              "next_tick_at": null,
+              "full_at": null,
+              "boost_ends_at": null
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:40:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/att-0006/cancel",
+          "body": {
+            "reason": "start_failed"
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "state": "cancelled",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 5,
+              "available": 5,
+              "next_tick_at": null,
+              "full_at": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "unconfirmed-start-times-out",
+      "note": "No confirm within 120 s: the next touch refunds as of 12:02:00.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 3,
+          "anchor_at": "2026-10-21T12:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-0007",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 201,
+            "body": {
+              "state": "open",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 2,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:30:00Z",
+              "attempt_id": "att-0007"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:03:00Z",
+          "as": "acct-0001",
+          "method": "GET",
+          "path": "/api/energy",
+          "expect": {
+            "status": 200,
+            "body": {
+              "server_now": "2026-10-21T12:03:00Z",
+              "value": 3,
+              "reserved": 0,
+              "available": 3,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:00:00Z",
+              "boost_ends_at": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cancel-after-confirm-refused",
+      "note": "A confirmed attempt is not cancellable.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 3,
+          "anchor_at": "2026-10-21T12:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-0008",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 201,
+            "body": {
+              "state": "open",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 2,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:30:00Z",
+              "attempt_id": "att-0008"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:01Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/att-0008/confirm",
+          "expect": {
+            "status": 200,
+            "body": {
+              "state": "confirmed",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 2,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:30:00Z"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:02Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/att-0008/cancel",
+          "body": {
+            "reason": "start_failed"
+          },
+          "expect": {
+            "status": 409,
+            "body": {
+              "state": "confirmed",
+              "error": "attempt_not_cancellable"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "boost-makes-start-free",
+      "note": "Boost until 13:00: the start costs nothing and is marked boost_free.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 3,
+          "anchor_at": "2026-10-21T12:00:00Z",
+          "boost_ends_at": "2026-10-21T13:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-0009",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 201,
+            "body": {
+              "state": "open",
+              "charged": 0,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": true,
+              "value": 3,
+              "available": 3,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:00:00Z",
+              "attempt_id": "att-0009"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "daily-refund-limit",
+      "note": "Limit 2: the third start-failure that day is not refunded.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 5,
+          "anchor_at": "2026-10-21T01:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        },
+        "overrides": {
+          "start_refund_limit_per_day": 2
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:01Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-r1",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 201,
+            "body": {
+              "state": "open",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 4,
+              "available": 4,
+              "next_tick_at": "2026-10-21T12:30:01Z",
+              "full_at": "2026-10-21T12:30:01Z",
+              "attempt_id": "att-r1"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:01Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/att-r1/cancel",
+          "body": {
+            "reason": "start_failed"
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "state": "cancelled",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 1,
+              "boost_free": false,
+              "value": 5,
+              "available": 5,
+              "next_tick_at": null,
+              "full_at": null
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:02Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-r2",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 201,
+            "body": {
+              "state": "open",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 4,
+              "available": 4,
+              "next_tick_at": "2026-10-21T12:30:02Z",
+              "full_at": "2026-10-21T12:30:02Z",
+              "attempt_id": "att-r2"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:02Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/att-r2/cancel",
+          "body": {
+            "reason": "start_failed"
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "state": "cancelled",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 1,
+              "boost_free": false,
+              "value": 5,
+              "available": 5,
+              "next_tick_at": null,
+              "full_at": null
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:03Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-r3",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 201,
+            "body": {
+              "state": "open",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 4,
+              "available": 4,
+              "next_tick_at": "2026-10-21T12:30:03Z",
+              "full_at": "2026-10-21T12:30:03Z",
+              "attempt_id": "att-r3"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:03Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/att-r3/cancel",
+          "body": {
+            "reason": "start_failed"
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "state": "expired",
+              "charged": 1,
+              "reserved": 0,
+              "refunded": 0,
+              "refund_denied": "daily_limit",
+              "boost_free": false,
+              "value": 4,
+              "available": 4,
+              "next_tick_at": "2026-10-21T12:30:03Z",
+              "full_at": "2026-10-21T12:30:03Z"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "abandoned-on-fail-attempt-is-charged-at-its-expiry",
+      "note": "on_fail, confirmed at 12:00:01, TTL 3600: charged as of 13:00:01, not as of the later read.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "lives-default (consume_mode on_fail)",
+        "stored_meter": {
+          "value": 3,
+          "anchor_at": "2026-10-21T12:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "att-0010",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 201,
+            "body": {
+              "state": "open",
+              "charged": 0,
+              "reserved": 1,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 3,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:00:00Z",
+              "attempt_id": "att-0010"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:01Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/att-0010/confirm",
+          "expect": {
+            "status": 200,
+            "body": {
+              "state": "confirmed",
+              "charged": 0,
+              "reserved": 1,
+              "refunded": 0,
+              "boost_free": false,
+              "value": 3,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:30:00Z",
+              "full_at": "2026-10-21T13:00:00Z"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T13:06:40Z",
+          "as": "acct-0001",
+          "method": "GET",
+          "path": "/api/energy",
+          "expect": {
+            "status": 200,
+            "body": {
+              "server_now": "2026-10-21T13:06:40Z",
+              "value": 4,
+              "reserved": 0,
+              "available": 4,
+              "next_tick_at": "2026-10-21T13:30:01Z",
+              "full_at": "2026-10-21T13:30:01Z",
+              "boost_ends_at": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "refill-to-full",
+      "note": "Meter 2 of 5 at 2 gems per missing unit: cost 6, balance 25 -> 19, replay spends once.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 2,
+          "anchor_at": "2026-10-21T11:50:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/refills",
+          "body": {
+            "refill_id": "r1",
+            "meter_code": "energy",
+            "offer_code": "refill-full",
+            "expected_cost": 6
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "balance": 19,
+              "charged": 6,
+              "currency": "gems",
+              "value": 5,
+              "boost_ends_at": null
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:01Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/refills",
+          "body": {
+            "refill_id": "r1",
+            "meter_code": "energy",
+            "offer_code": "refill-full",
+            "expected_cost": 6
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "balance": 19,
+              "charged": 6,
+              "currency": "gems",
+              "value": 5,
+              "boost_ends_at": null,
+              "replayed": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "refill-price-changed",
+      "note": "Expected 4, actual 6: no charge, the new quote comes back.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 2,
+          "anchor_at": "2026-10-21T11:50:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/refills",
+          "body": {
+            "refill_id": "r2",
+            "meter_code": "energy",
+            "offer_code": "refill-full",
+            "expected_cost": 4
+          },
+          "expect": {
+            "status": 409,
+            "body": {
+              "error": "price_changed",
+              "quote": {
+                "offer_code": "refill-full",
+                "kind": "to_full",
+                "units": 3,
+                "cost": 6,
+                "currency": "gems"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "refill-when-full",
+      "note": "At the cap: no charge.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 5,
+          "anchor_at": "2026-10-21T04:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/refills",
+          "body": {
+            "refill_id": "r3",
+            "meter_code": "energy",
+            "offer_code": "refill-full",
+            "expected_cost": 0
+          },
+          "expect": {
+            "status": 409,
+            "body": {
+              "error": "already_full"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "refill-insufficient-balance",
+      "note": "Balance 1 gem: rejected by the ledger, meter unchanged.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 2,
+          "anchor_at": "2026-10-21T11:50:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 1
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/refills",
+          "body": {
+            "refill_id": "r4",
+            "meter_code": "energy",
+            "offer_code": "refill-full",
+            "expected_cost": 6
+          },
+          "expect": {
+            "status": 409,
+            "body": {
+              "balance": 1,
+              "error": "insufficient_balance"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:01Z",
+          "as": "acct-0001",
+          "method": "GET",
+          "path": "/api/energy",
+          "expect": {
+            "status": 200,
+            "body": {
+              "server_now": "2026-10-21T12:00:01Z",
+              "value": 2,
+              "reserved": 0,
+              "available": 2,
+              "next_tick_at": "2026-10-21T12:20:00Z",
+              "full_at": "2026-10-21T13:20:00Z",
+              "boost_ends_at": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "refill-crash-after-spend",
+      "note": "The ledger spend applied, the credit failed: the entry is pending; the next read re-drives it, the meter reaches 5 and the ledger is charged once.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 2,
+          "anchor_at": "2026-10-21T11:50:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/refills",
+          "body": {
+            "refill_id": "r5",
+            "meter_code": "energy",
+            "offer_code": "refill-full",
+            "expected_cost": 6
+          },
+          "expect": {
+            "status": 503,
+            "body": {
+              "error": "unavailable"
+            }
+          },
+          "simulate": "credit_fails_after_ledger_spend"
+        },
+        {
+          "at": "2026-10-21T12:00:01Z",
+          "as": "acct-0001",
+          "method": "GET",
+          "path": "/api/energy",
+          "expect": {
+            "status": 200,
+            "body": {
+              "server_now": "2026-10-21T12:00:01Z",
+              "value": 5,
+              "reserved": 0,
+              "available": 5,
+              "next_tick_at": null,
+              "full_at": null,
+              "boost_ends_at": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ad-reward-grants-one-unit-once",
+      "note": "A verified ad callback with transaction_id tx-9001: +1; a repeat of the callback adds nothing.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 2,
+          "anchor_at": "2026-10-21T11:50:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "internal": "ad_reward_verified",
+          "transaction_id": "tx-9001",
+          "user_id": "acct-0001",
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "balance": 3,
+              "applied_amount": 1,
+              "unapplied_amount": 0
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:01Z",
+          "internal": "ad_reward_verified",
+          "transaction_id": "tx-9001",
+          "user_id": "acct-0001",
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "balance": 3,
+              "applied_amount": 1,
+              "unapplied_amount": 0,
+              "replayed": true
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:02Z",
+          "as": "acct-0001",
+          "method": "GET",
+          "path": "/api/energy",
+          "expect": {
+            "status": 200,
+            "body": {
+              "server_now": "2026-10-21T12:00:02Z",
+              "value": 3,
+              "reserved": 0,
+              "available": 3,
+              "next_tick_at": "2026-10-21T12:20:00Z",
+              "full_at": "2026-10-21T12:50:00Z",
+              "boost_ends_at": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ad-daily-limit",
+      "note": "Five grants fill the day; the sixth is refused as daily_limit.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 0,
+          "anchor_at": "2026-10-21T12:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:01Z",
+          "internal": "ad_reward_verified",
+          "transaction_id": "tx-1",
+          "user_id": "acct-0001",
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "balance": 1,
+              "applied_amount": 1,
+              "unapplied_amount": 0
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:02Z",
+          "internal": "ad_reward_verified",
+          "transaction_id": "tx-2",
+          "user_id": "acct-0001",
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "balance": 2,
+              "applied_amount": 1,
+              "unapplied_amount": 0
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:03Z",
+          "internal": "ad_reward_verified",
+          "transaction_id": "tx-3",
+          "user_id": "acct-0001",
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "balance": 3,
+              "applied_amount": 1,
+              "unapplied_amount": 0
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:04Z",
+          "internal": "ad_reward_verified",
+          "transaction_id": "tx-4",
+          "user_id": "acct-0001",
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "balance": 4,
+              "applied_amount": 1,
+              "unapplied_amount": 0
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:05Z",
+          "internal": "ad_reward_verified",
+          "transaction_id": "tx-5",
+          "user_id": "acct-0001",
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "balance": 5,
+              "applied_amount": 1,
+              "unapplied_amount": 0
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:06Z",
+          "internal": "ad_reward_verified",
+          "transaction_id": "tx-6",
+          "user_id": "acct-0001",
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": false,
+              "error": "daily_limit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "grant-above-ceiling-reports-the-rest",
+      "note": "Streak reward of 8 at 5 of 5: ceiling 10, applied 5, unapplied 3; the replay returns the same.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 5,
+          "anchor_at": "2026-10-21T04:00:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "internal": "grantEnergy",
+          "amount": 8,
+          "reason": "daily-streak.claim",
+          "idempotency_key": "daily-streak:acct-0001:2026-10-21",
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "balance": 10,
+              "applied_amount": 5,
+              "unapplied_amount": 3
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:01Z",
+          "internal": "grantEnergy",
+          "amount": 8,
+          "reason": "daily-streak.claim",
+          "idempotency_key": "daily-streak:acct-0001:2026-10-21",
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "balance": 10,
+              "applied_amount": 5,
+              "unapplied_amount": 3,
+              "replayed": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "boost-stacks-additively",
+      "note": "Boost with 1800 s left plus 3600 s: ends 13:30.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 2,
+          "anchor_at": "2026-10-21T12:00:00Z",
+          "boost_ends_at": "2026-10-21T12:30:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "internal": "grantBoost",
+          "seconds": 3600,
+          "idempotency_key": "event-calendar:acct-0001:evt-1:boost",
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "applied_seconds": 3600,
+              "unapplied_seconds": 0,
+              "boost_ends_at": "2026-10-21T13:30:00Z"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "boost-stack-limit",
+      "note": "Remaining 85000 s (cap 86400): only 1400 s fit, 2200 s are reported unapplied.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 2,
+          "anchor_at": "2026-10-21T12:00:00Z",
+          "boost_ends_at": "2026-10-22T11:36:40Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "internal": "grantBoost",
+          "seconds": 3600,
+          "idempotency_key": "event-calendar:acct-0001:evt-2:boost",
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "applied_seconds": 1400,
+              "unapplied_seconds": 2200,
+              "boost_ends_at": "2026-10-22T12:00:00Z"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "paid-boost-stacks",
+      "note": "Two bought boosts of 3600 s: ends 13:00, then 14:00.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 2,
+          "anchor_at": "2026-10-21T11:50:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/refills",
+          "body": {
+            "refill_id": "rb1",
+            "meter_code": "energy",
+            "offer_code": "boost-1h",
+            "expected_cost": 12
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "balance": 13,
+              "charged": 12,
+              "currency": "gems",
+              "value": 2,
+              "boost_ends_at": "2026-10-21T13:00:00Z"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:01Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/refills",
+          "body": {
+            "refill_id": "rb2",
+            "meter_code": "energy",
+            "offer_code": "boost-1h",
+            "expected_cost": 12
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "balance": 1,
+              "charged": 12,
+              "currency": "gems",
+              "value": 2,
+              "boost_ends_at": "2026-10-21T14:00:00Z"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "offline-queue-accepted",
+      "note": "Server value 2; two offline attempts replayed in order are both accepted; a repeat of the batch changes nothing.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 2,
+          "anchor_at": "2026-10-21T11:50:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        },
+        "overrides": {
+          "offline_attempts": true
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/reconcile",
+          "body": {
+            "attempts": [
+              {
+                "attempt_id": "off-1",
+                "meter_code": "energy",
+                "outcome": "win"
+              },
+              {
+                "attempt_id": "off-2",
+                "meter_code": "energy",
+                "outcome": "fail"
+              }
+            ]
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "results": [
+                {
+                  "attempt_id": "off-1",
+                  "state": "won",
+                  "charged": 1
+                },
+                {
+                  "attempt_id": "off-2",
+                  "state": "failed",
+                  "charged": 1
+                }
+              ],
+              "value": 0,
+              "available": 0,
+              "next_tick_at": "2026-10-21T12:20:00Z",
+              "full_at": "2026-10-21T14:20:00Z"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:01Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/reconcile",
+          "body": {
+            "attempts": [
+              {
+                "attempt_id": "off-1",
+                "meter_code": "energy",
+                "outcome": "win"
+              },
+              {
+                "attempt_id": "off-2",
+                "meter_code": "energy",
+                "outcome": "fail"
+              }
+            ]
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "results": [
+                {
+                  "attempt_id": "off-1",
+                  "state": "won",
+                  "replayed": true
+                },
+                {
+                  "attempt_id": "off-2",
+                  "state": "failed",
+                  "replayed": true
+                }
+              ],
+              "value": 0,
+              "available": 0,
+              "next_tick_at": "2026-10-21T12:20:00Z",
+              "full_at": "2026-10-21T14:20:00Z"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "offline-queue-overdraft",
+      "note": "Server value 1 (another device spent): the first attempt is accepted, the second is rejected and stays rejected.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 1,
+          "anchor_at": "2026-10-21T11:50:00Z"
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        },
+        "overrides": {
+          "offline_attempts": true
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts/reconcile",
+          "body": {
+            "attempts": [
+              {
+                "attempt_id": "off-1",
+                "meter_code": "energy",
+                "outcome": "win"
+              },
+              {
+                "attempt_id": "off-2",
+                "meter_code": "energy",
+                "outcome": "win"
+              }
+            ]
+          },
+          "expect": {
+            "status": 200,
+            "body": {
+              "results": [
+                {
+                  "attempt_id": "off-1",
+                  "state": "won",
+                  "charged": 1
+                },
+                {
+                  "attempt_id": "off-2",
+                  "state": "rejected",
+                  "error": "insufficient_energy"
+                }
+              ],
+              "value": 0,
+              "available": 0,
+              "next_tick_at": "2026-10-21T12:20:00Z",
+              "full_at": "2026-10-21T14:20:00Z"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:30:00Z",
+          "as": "acct-0001",
+          "method": "POST",
+          "path": "/api/energy/attempts",
+          "body": {
+            "attempt_id": "off-2",
+            "meter_code": "energy"
+          },
+          "expect": {
+            "status": 409,
+            "body": {
+              "state": "rejected",
+              "replayed": true,
+              "error": "insufficient_energy"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "merge-takes-the-higher-value",
+      "note": "Guest 3 (boost until 12:10) into the account at 1: value 3, boost kept; replay changes nothing.",
+      "setup": {
+        "meter_code": "energy",
+        "config": "energy-default",
+        "stored_meter": {
+          "value": 1,
+          "anchor_at": "2026-10-21T11:50:00Z"
+        },
+        "other_account": {
+          "account_id": "acct-0002",
+          "stored_meter": {
+            "value": 3,
+            "anchor_at": "2026-10-21T11:58:20Z",
+            "boost_ends_at": "2026-10-21T12:10:00Z"
+          }
+        },
+        "ledger": {
+          "acct-0001": {
+            "gems": 25
+          }
+        }
+      },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "internal": "mergeAccounts",
+          "from_account_id": "acct-0002",
+          "into_account_id": "acct-0001",
+          "merge_id": "m1",
+          "expect": {
+            "status": 200,
+            "body": {
+              "applied": true,
+              "value": 3,
+              "next_tick_at": "2026-10-21T12:28:20Z",
+              "full_at": "2026-10-21T12:58:20Z",
+              "boost_ends_at": "2026-10-21T12:10:00Z"
+            }
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:01Z",
+          "internal": "mergeAccounts",
+          "from_account_id": "acct-0002",
+          "into_account_id": "acct-0001",
+          "merge_id": "m1",
+          "expect": {
+            "status": 200,
+            "body": {
+              "replayed": true
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

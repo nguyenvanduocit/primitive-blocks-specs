@@ -1,0 +1,172 @@
+{
+  "description": "Item catalog for engagement.items scenarios. Codes, versions and values are examples; every instance id in the other fixtures is a readable stand-in for a unique_id. Times are UTC.",
+  "tenant_id": "tenant-001",
+  "clock": "2026-10-27T12:00:00Z",
+  "config_sets": {
+    "default": {
+      "BAG_CAPACITY_DEFAULT": 200,
+      "BAG_CAPACITY_OVERRIDES": {},
+      "STACK_CAP_DEFAULT": 999,
+      "HELD_MAX_PER_ACCOUNT": 100,
+      "HELD_GRANT_TTL_SECONDS": 2592000,
+      "UPGRADE_MAX_COST_LINES": 3,
+      "ACTIVATION_MAX_REMAINING_SECONDS": 2592000,
+      "RETIRED_ALLOW_UPGRADE": true,
+      "EXPIRY_WARNING_SECONDS": 259200,
+      "EXPIRY_REMOVAL_GRACE_SECONDS": 86400,
+      "EXPIRY_REMOVE_DEFER_MAX_SECONDS": 2592000,
+      "PAGE_SIZE_DEFAULT": 50,
+      "PAGE_SIZE_MAX": 100,
+      "OPERATION_RECOVERY_AFTER_SECONDS": 60
+    },
+    "small_bags": {
+      "extends": "default",
+      "BAG_CAPACITY_OVERRIDES": { "equipment": 3, "units": 2 },
+      "HELD_MAX_PER_ACCOUNT": 2
+    },
+    "short_activation_limit": {
+      "extends": "default",
+      "ACTIVATION_MAX_REMAINING_SECONDS": 3600
+    },
+    "retired_no_upgrade": {
+      "extends": "default",
+      "RETIRED_ALLOW_UPGRADE": false
+    }
+  },
+  "ledger_currencies": [
+    { "code": "coins", "kind": "soft" },
+    { "code": "gems", "kind": "hard" },
+    { "code": "shards_ember", "kind": "item" },
+    { "code": "booster_double_xp", "kind": "item" },
+    { "code": "key_frost", "kind": "item" }
+  ],
+  "store_products": [
+    { "product_code": "gems_small", "product_kind": "consumable", "fulfilment": "ledger", "owner_block": "billing.virtual-currency", "contents": [{ "currency": "gems", "amount": 100 }] },
+    { "product_code": "frame_gold_pack", "product_kind": "non_consumable", "fulfilment": "external", "owner_block": "engagement.items", "grants_item_code": "frame_gold" }
+  ],
+  "definitions": [
+    {
+      "code": "shards_ember", "version": 1, "status": "active", "kind": "collectible", "stack_mode": "count",
+      "rarity_rank": 1, "rarity_key": "rarity.common", "display_name_key": "item.shards_ember.name", "description_key": "item.shards_ember.desc",
+      "stack_cap": 999, "expiry_mode": "none", "random_sources": [], "obtainable_free": true, "progress_gating": false,
+      "faucet_reasons": ["objectives.reward"], "sort_order": 1
+    },
+    {
+      "code": "booster_double_xp", "version": 1, "status": "active", "kind": "booster", "stack_mode": "count",
+      "rarity_rank": 2, "rarity_key": "rarity.uncommon", "display_name_key": "item.booster_double_xp.name", "description_key": "item.booster_double_xp.desc",
+      "stack_cap": 99, "activation_seconds": 1800, "activation_policy": "extend", "expiry_mode": "none",
+      "random_sources": [], "obtainable_free": true, "progress_gating": false,
+      "faucet_reasons": ["objectives.reward", "season-pass.tier-reward"], "sort_order": 2
+    },
+    {
+      "code": "key_frost", "version": 1, "status": "active", "kind": "consumable", "stack_mode": "count",
+      "rarity_rank": 2, "rarity_key": "rarity.uncommon", "display_name_key": "item.key_frost.name", "description_key": "item.key_frost.desc",
+      "stack_cap": 50, "expiry_mode": "absolute", "expires_at": "2026-10-30T00:00:00Z", "expiry_outcome": "convert",
+      "expiry_value": [{ "currency": "coins", "amount": 5 }], "expiry_note_key": "items.expiry.key_frost",
+      "random_sources": [], "obtainable_free": true, "progress_gating": false,
+      "faucet_reasons": ["event-calendar.reward"], "sort_order": 3
+    },
+    {
+      "code": "sword_iron", "version": 1, "status": "active", "kind": "equipment", "stack_mode": "instance",
+      "rarity_rank": 2, "rarity_key": "rarity.uncommon", "display_name_key": "item.sword_iron.name", "description_key": "item.sword_iron.desc",
+      "bag": "equipment", "slot": "weapon", "equip_target": "unit", "max_level": 4,
+      "convert_value": [{ "currency": "coins", "amount": 40 }], "expiry_mode": "none",
+      "random_sources": [], "obtainable_free": true, "progress_gating": false, "faucet_reasons": [], "sort_order": 10
+    },
+    {
+      "code": "hero_ember", "version": 1, "status": "active", "kind": "unit", "stack_mode": "instance",
+      "rarity_rank": 4, "rarity_key": "rarity.epic", "display_name_key": "item.hero_ember.name", "description_key": "item.hero_ember.desc",
+      "bag": "units", "max_level": 5, "max_copies": 1, "duplicate_rule": "trade_in",
+      "duplicate_value": [{ "currency": "shards_ember", "amount": 30 }], "duplicate_note_key": "items.duplicate.hero_ember",
+      "convert_value": [{ "currency": "coins", "amount": 200 }], "expiry_mode": "none",
+      "random_sources": [{ "source_code": "gacha_main", "odds_ref": "odds/gacha_main" }],
+      "obtainable_free": true, "progress_gating": false, "faucet_reasons": [], "sort_order": 11
+    },
+    {
+      "code": "hero_cinder", "version": 1, "status": "active", "kind": "unit", "stack_mode": "instance",
+      "rarity_rank": 3, "rarity_key": "rarity.rare", "display_name_key": "item.hero_cinder.name", "description_key": "item.hero_cinder.desc",
+      "bag": "units", "max_level": 3, "max_copies": 1, "duplicate_rule": "convert",
+      "duplicate_value": [{ "currency": "coins", "amount": 150 }], "duplicate_note_key": "items.duplicate.hero_cinder",
+      "convert_value": [{ "currency": "coins", "amount": 150 }], "expiry_mode": "none",
+      "random_sources": [], "obtainable_free": true, "progress_gating": false, "faucet_reasons": [], "sort_order": 12
+    },
+    {
+      "code": "frame_gold", "version": 1, "status": "active", "kind": "cosmetic", "stack_mode": "instance",
+      "rarity_rank": 3, "rarity_key": "rarity.rare", "display_name_key": "item.frame_gold.name", "description_key": "item.frame_gold.desc",
+      "slot": "avatar_frame", "equip_target": "account", "max_level": 1, "max_copies": 1, "duplicate_rule": "cap",
+      "duplicate_note_key": "items.duplicate.frame_gold", "expiry_mode": "none",
+      "random_sources": [], "obtainable_free": false, "progress_gating": false, "faucet_reasons": [], "sort_order": 13
+    },
+    {
+      "code": "charm_trial", "version": 1, "status": "active", "kind": "collectible", "stack_mode": "instance",
+      "rarity_rank": 1, "rarity_key": "rarity.common", "display_name_key": "item.charm_trial.name", "description_key": "item.charm_trial.desc",
+      "max_level": 1, "expiry_mode": "relative", "expiry_seconds": 604800, "expiry_outcome": "remove",
+      "expiry_note_key": "items.expiry.charm_trial", "random_sources": [], "obtainable_free": true, "progress_gating": false,
+      "faucet_reasons": [], "sort_order": 14
+    },
+    {
+      "code": "badge_event", "version": 1, "status": "active", "kind": "collectible", "stack_mode": "instance",
+      "rarity_rank": 2, "rarity_key": "rarity.uncommon", "display_name_key": "item.badge_event.name", "description_key": "item.badge_event.desc",
+      "max_level": 1, "expiry_mode": "absolute", "expires_at": "2026-10-30T00:00:00Z", "expiry_outcome": "convert",
+      "expiry_value": [{ "currency": "coins", "amount": 25 }], "expiry_note_key": "items.expiry.badge_event",
+      "random_sources": [], "obtainable_free": true, "progress_gating": false, "faucet_reasons": [], "sort_order": 15
+    },
+    {
+      "code": "sword_bronze", "version": 2, "status": "retired", "kind": "equipment", "stack_mode": "instance",
+      "rarity_rank": 1, "rarity_key": "rarity.common", "display_name_key": "item.sword_bronze.name", "description_key": "item.sword_bronze.desc",
+      "bag": "equipment", "slot": "weapon", "equip_target": "unit", "max_level": 3,
+      "convert_value": [{ "currency": "coins", "amount": 20 }], "expiry_mode": "none",
+      "random_sources": [], "obtainable_free": true, "progress_gating": false, "faucet_reasons": [], "sort_order": 16
+    }
+  ],
+  "upgrade_costs": [
+    { "item_code": "sword_iron", "definition_version": 1, "to_level": 2, "lines": [{ "currency": "coins", "amount": 100 }] },
+    { "item_code": "sword_iron", "definition_version": 1, "to_level": 3, "lines": [{ "currency": "coins", "amount": 200 }] },
+    { "item_code": "sword_iron", "definition_version": 1, "to_level": 4, "lines": [{ "currency": "coins", "amount": 300 }, { "currency": "shards_ember", "amount": 10 }] },
+    { "item_code": "hero_ember", "definition_version": 1, "to_level": 2, "lines": [{ "currency": "shards_ember", "amount": 10 }] },
+    { "item_code": "hero_ember", "definition_version": 1, "to_level": 3, "lines": [{ "currency": "coins", "amount": 100 }, { "currency": "shards_ember", "amount": 20 }] },
+    { "item_code": "hero_ember", "definition_version": 1, "to_level": 4, "lines": [{ "currency": "coins", "amount": 200 }, { "currency": "shards_ember", "amount": 40 }] },
+    { "item_code": "hero_ember", "definition_version": 1, "to_level": 5, "lines": [{ "currency": "coins", "amount": 400 }, { "currency": "shards_ember", "amount": 80 }] },
+    { "item_code": "hero_cinder", "definition_version": 1, "to_level": 2, "lines": [{ "currency": "coins", "amount": 150 }] },
+    { "item_code": "hero_cinder", "definition_version": 1, "to_level": 3, "lines": [{ "currency": "coins", "amount": 300 }] },
+    { "item_code": "sword_bronze", "definition_version": 2, "to_level": 2, "lines": [{ "currency": "coins", "amount": 50 }] },
+    { "item_code": "sword_bronze", "definition_version": 2, "to_level": 3, "lines": [{ "currency": "coins", "amount": 100 }] }
+  ],
+  "expected_flows": [
+    { "currency_code": "coins", "direction": "sink", "reason": "items.upgrade", "source_block": "engagement.items" },
+    { "currency_code": "coins", "direction": "faucet", "reason": "items.upgrade-refund", "source_block": "engagement.items" },
+    { "currency_code": "coins", "direction": "faucet", "reason": "items.duplicate", "source_block": "engagement.items" },
+    { "currency_code": "coins", "direction": "faucet", "reason": "items.convert", "source_block": "engagement.items" },
+    { "currency_code": "coins", "direction": "faucet", "reason": "items.expire", "source_block": "engagement.items" },
+    { "currency_code": "shards_ember", "direction": "faucet", "reason": "objectives.reward", "source_block": "engagement.objectives" },
+    { "currency_code": "shards_ember", "direction": "faucet", "reason": "items.duplicate", "source_block": "engagement.items" },
+    { "currency_code": "shards_ember", "direction": "faucet", "reason": "items.upgrade-refund", "source_block": "engagement.items" },
+    { "currency_code": "shards_ember", "direction": "sink", "reason": "items.upgrade", "source_block": "engagement.items" },
+    { "currency_code": "shards_ember", "direction": "sink", "reason": "items.discard", "source_block": "engagement.items" },
+    { "currency_code": "booster_double_xp", "direction": "faucet", "reason": "objectives.reward", "source_block": "engagement.objectives" },
+    { "currency_code": "booster_double_xp", "direction": "faucet", "reason": "season-pass.tier-reward", "source_block": "engagement.season-pass" },
+    { "currency_code": "booster_double_xp", "direction": "faucet", "reason": "items.consume-refund", "source_block": "engagement.items" },
+    { "currency_code": "booster_double_xp", "direction": "sink", "reason": "items.consume", "source_block": "engagement.items" },
+    { "currency_code": "booster_double_xp", "direction": "sink", "reason": "items.discard", "source_block": "engagement.items" },
+    { "currency_code": "key_frost", "direction": "faucet", "reason": "event-calendar.reward", "source_block": "engagement.event-calendar" },
+    { "currency_code": "key_frost", "direction": "sink", "reason": "items.consume", "source_block": "engagement.items" },
+    { "currency_code": "key_frost", "direction": "sink", "reason": "items.discard", "source_block": "engagement.items" },
+    { "currency_code": "key_frost", "direction": "sink", "reason": "items.expire", "source_block": "engagement.items" }
+  ],
+  "invalid_drafts": [
+    { "name": "count-with-level", "base": "shards_ember", "change": { "max_level": 3 }, "expect_error": "count_has_per_copy_feature" },
+    { "name": "equipment-as-count", "base": "sword_iron", "change": { "stack_mode": "count" }, "expect_error": "kind_mode_mismatch" },
+    { "name": "convert-without-value", "base": "hero_cinder", "change": { "duplicate_value": [] }, "expect_error": "duplicate_value_required" },
+    { "name": "cap-on-random-source", "base": "hero_ember", "change": { "duplicate_rule": "cap", "duplicate_value": null }, "expect_error": "cap_not_allowed_for_random_source" },
+    { "name": "random-without-duplicate-note", "base": "hero_ember", "change": { "duplicate_note_key": null }, "expect_error": "duplicate_note_required" },
+    { "name": "trade-in-fragment-unused", "base": "hero_ember", "change": { "duplicate_value": [{ "currency": "key_frost", "amount": 30 }] }, "expect_error": "trade_in_fragment_unused" },
+    { "name": "expiry-on-item-sold-for-money", "base": "frame_gold", "change": { "expiry_mode": "relative", "expiry_seconds": 86400, "expiry_outcome": "remove", "expiry_note_key": "items.expiry.frame_gold" }, "expect_error": "expiry_on_purchased_item" },
+    { "name": "gating-without-free-route", "base": "frame_gold", "change": { "progress_gating": true }, "expect_error": "gating_requires_free_route" },
+    { "name": "max-level-decrease", "base": "sword_iron", "change": { "version": 2, "max_level": 3 }, "expect_error": "max_level_decrease" },
+    { "name": "mode-change-in-new-version", "base": "sword_iron", "change": { "version": 2, "stack_mode": "count" }, "expect_error": "immutable_field_changed" },
+    { "name": "booster-without-activation", "base": "booster_double_xp", "change": { "activation_seconds": null }, "expect_error": "activation_required" },
+    { "name": "count-expiry-removes", "base": "key_frost", "change": { "expiry_outcome": "remove", "expiry_value": null }, "expect_error": "count_expiry_must_convert" },
+    { "name": "instance-code-in-pack-contents", "base": "sword_iron", "change": {}, "store_product_contents": [{ "product_code": "gems_small", "currency": "sword_iron", "amount": 1 }], "expect_error": "instance_code_in_ledger_contents" },
+    { "name": "expiry-without-note", "base": "charm_trial", "change": { "expiry_note_key": null }, "expect_error": "expiry_note_required" }
+  ]
+}

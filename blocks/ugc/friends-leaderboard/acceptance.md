@@ -9,7 +9,8 @@ Claude Code runs this checklist after implementation, before reporting done. Tes
 - [ ] `UNIQUE (tenant_id, owner_profile_id, friend_profile_id)` exists on `friend_links`
 - [ ] `CHECK (owner_profile_id <> friend_profile_id)` is active (insert a self-link directly and see it fail)
 - [ ] Range `CHECK`s are active on `xp`, `level`, `streak_days`, `answered`, `accuracy`, `week_xp`
-- [ ] Foreign keys cascade: deleting a user removes the profile; deleting a profile removes links in both directions
+- [ ] `board_profiles.account_id` is a foreign key to `accounts.id` (not `users.id`); a guest account holds a profile and a row on the board before it links
+- [ ] Foreign keys cascade: deleting an account removes the profile; deleting a profile removes links in both directions
 - [ ] Board queries use the two partial indexes (check the query plan for both periods)
 - [ ] All queries include `tenant_id` in the `WHERE` clause
 
@@ -52,6 +53,9 @@ Claude Code runs this checklist after implementation, before reporting done. Tes
 - [ ] Two simultaneous reports for the same profile serialize (row lock or `BEGIN IMMEDIATE`) and neither is lost
 - [ ] Reset sets exactly the zero state and keeps `friend_code`, `created_at`, `public_board` (I-9)
 - [ ] If `REPORT_MIN_INTERVAL_SECONDS > 0`, a second report inside the interval returns 429 (extrapolated feature)
+- [ ] With `REQUIRE_ATTEMPT_PROOF = true`, the weekly credit is granted only when `attemptState(account_id, attempt_id)` is `confirmed`, `won` or `failed`; `open`, `cancelled`, `expired`, `rejected`, an unknown id and a missing id credit `0` and return 200 (the `unplayed-attempt-credits-nothing` case and the outline in `report-progress.feature`)
+- [ ] With the setting off (default), a report is credited as before and no attempt lookup is made
+- [ ] The report body accepts `attempt_id` as its only optional key and rejects a malformed one with 422 `invalid_stats`; no response or log carries the attempt state of another account
 
 ## Friends
 

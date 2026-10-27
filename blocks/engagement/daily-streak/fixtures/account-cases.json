@@ -1,0 +1,244 @@
+{
+  "_comment": "Account lifecycle vectors. State field names follow the streak_states columns. merge_cases take the guest row as from_guest and the account row as into_account at today = 2026-10-27, run through mergeAccounts(from, into, merge_id).",
+  "merge_cases": [
+    {
+      "id": "guest-streak-wins",
+      "merge_id": "merge-0001",
+      "note": "The account lost its 9-day streak to a miss (reset policy), so the guest streak 4 survives; longest_streak keeps the maximum 9; freezes add up to the cap",
+      "today": "2026-10-27",
+      "settings_override": { "MISS_POLICY": "reset" },
+      "from_guest": { "current_streak": 4, "longest_streak": 6, "settled_through_day_key": "2026-10-26", "freezes_held": 1, "milestones_granted": [ "m7" ], "timezone": "Etc/UTC" },
+      "into_account": { "current_streak": 9, "longest_streak": 9, "settled_through_day_key": "2026-10-25", "freezes_held": 1, "milestones_granted": [], "timezone": "Europe/Berlin" },
+      "expected": {
+        "status": "merged",
+        "current_streak": 4,
+        "longest_streak": 9,
+        "settled_through_day_key": "2026-10-26",
+        "freezes_held": 2,
+        "milestones_granted": [ "m7" ],
+        "timezone": "Europe/Berlin",
+        "repair_offer": null
+      }
+    },
+    {
+      "id": "account-streak-wins",
+      "merge_id": "merge-0002",
+      "note": "Both streaks are alive: the larger one wins whole, freezes 2+1 clip to FREEZE_CAP 2, milestone ids are the union",
+      "today": "2026-10-27",
+      "settings_override": {},
+      "from_guest": { "current_streak": 6, "longest_streak": 6, "settled_through_day_key": "2026-10-26", "freezes_held": 2, "milestones_granted": [], "timezone": "Etc/UTC" },
+      "into_account": { "current_streak": 3, "longest_streak": 5, "settled_through_day_key": "2026-10-26", "freezes_held": 1, "milestones_granted": [ "m7" ], "timezone": "Asia/Tokyo" },
+      "expected": {
+        "status": "merged",
+        "current_streak": 6,
+        "longest_streak": 6,
+        "settled_through_day_key": "2026-10-26",
+        "freezes_held": 2,
+        "milestones_granted": [ "m7" ],
+        "timezone": "Asia/Tokyo",
+        "repair_offer": null
+      }
+    },
+    {
+      "id": "tie-keeps-account",
+      "merge_id": "merge-0003",
+      "note": "Equal settled streaks: the signed-in account row survives, including its timezone",
+      "today": "2026-10-27",
+      "settings_override": {},
+      "from_guest": { "current_streak": 5, "longest_streak": 5, "settled_through_day_key": "2026-10-26", "freezes_held": 0, "milestones_granted": [], "timezone": "Etc/UTC" },
+      "into_account": { "current_streak": 5, "longest_streak": 7, "settled_through_day_key": "2026-10-26", "freezes_held": 0, "milestones_granted": [], "timezone": "Asia/Tokyo" },
+      "expected": {
+        "status": "merged",
+        "current_streak": 5,
+        "longest_streak": 7,
+        "settled_through_day_key": "2026-10-26",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "timezone": "Asia/Tokyo",
+        "repair_offer": null
+      }
+    }
+  ],
+  "merge_idempotency": {
+    "note": "mergeAccounts(from, into, merge_id) is one-way and idempotent by merge_id. The merged guest row stays as a tombstone until deleteAccount removes it.",
+    "from": "acc-guest",
+    "into": "acc-ann",
+    "calls": [
+      { "call": 1, "merge_id": "merge-0100", "into": "acc-ann", "expect": { "status": "merged" } },
+      {
+        "call": 2,
+        "merge_id": "merge-0100",
+        "into": "acc-ann",
+        "expect": { "status": "already_merged", "changes": "none" },
+        "note": "same merge_id: the first result, nothing changes"
+      },
+      {
+        "call": 3,
+        "merge_id": "merge-0101",
+        "into": "acc-ben",
+        "expect": { "error": "already_merged", "changes": "none" },
+        "note": "a tombstoned guest cannot be merged into another account"
+      },
+      { "call": 4, "merge_id": "merge-0102", "into": "acc-ann", "from": "acc-never-played", "expect": { "status": "nothing_to_merge" } },
+      { "call": 5, "merge_id": "merge-0103", "into": "acc-ann", "from": "acc-ann", "expect": { "error": "invalid_request" } }
+    ],
+    "after_call_1": {
+      "from_row": { "current_streak": 0, "freezes_held": 0, "merged_into_account_id": "acc-ann", "merge_id": "merge-0100" },
+      "from_dependent_rows": "deleted in daily_claims, daily_play, protection_orders, timezone_changes"
+    },
+    "after_deleteAccount_from": { "from_row": "absent" }
+  },
+  "holdings": {
+    "note": "holdings(account_id) for the guest-account link preview. Freezes bought with a currency are not paid in the money sense of the contract.",
+    "cases": [
+      {
+        "account": "acc-guest-1",
+        "state": { "current_streak": 4, "freezes_held": 1 },
+        "expected": [
+          { "category": "progress", "label_key": "daily_streak.streak", "paid": false, "effect": "carried" },
+          { "category": "items", "label_key": "daily_streak.freezes", "paid": false, "effect": "carried" }
+        ]
+      },
+      {
+        "account": "acc-guest-2",
+        "state": { "current_streak": 0, "freezes_held": 2 },
+        "expected": [ { "category": "items", "label_key": "daily_streak.freezes", "paid": false, "effect": "carried" } ]
+      },
+      { "account": "acc-guest-3", "state": { "current_streak": 0, "freezes_held": 0 }, "expected": [] },
+      { "account": "acc-never-played", "state": null, "expected": [] },
+      { "account": "acc-guest", "state": "tombstone (merged_into_account_id acc-ann)", "expected": [] }
+    ]
+  },
+  "downtime": {
+    "windows": [ { "starts_at": "2026-10-25T00:00:00Z", "ends_at": "2026-10-26T12:00:00Z", "reason": "database outage" } ],
+    "DOWNTIME_EXCUSE_FRACTION": 0.5,
+    "note": "A missed local day is excused when the windows cover at least the fraction of that day real length, measured in instants of the account zone. Excused days are credited without consuming a freeze.",
+    "cases": [
+      {
+        "id": "downtime-etc-utc",
+        "zone": "Etc/UTC",
+        "clock": "2026-10-27T12:00:00Z",
+        "day_key_at_clock": "2026-10-27",
+        "state_before": { "current_streak": 5, "longest_streak": 5, "settled_through_day_key": "2026-10-24", "freezes_held": 0, "milestones_granted": [], "timezone": "Etc/UTC" },
+        "per_day": [ { "day_key": "2026-10-25", "overlap_hours": 24, "fraction": 1, "excused": true }, { "day_key": "2026-10-26", "overlap_hours": 12, "fraction": 0.5, "excused": true } ],
+        "action": "claim",
+        "expected": {
+          "status": "claimed",
+          "current_streak": 6,
+          "longest_streak": 6,
+          "settled_through_day_key": "2026-10-27",
+          "freezes_held": 0,
+          "milestones_granted": [],
+          "rows": [ { "kind": "excused", "day_key": "2026-10-25" }, { "kind": "excused", "day_key": "2026-10-26" }, { "kind": "claim", "day_key": "2026-10-27" } ],
+          "repair_offer": null
+        }
+      },
+      {
+        "id": "downtime-pacific-kiritimati",
+        "zone": "Pacific/Kiritimati",
+        "clock": "2026-10-27T02:00:00Z",
+        "day_key_at_clock": "2026-10-27",
+        "state_before": { "current_streak": 5, "longest_streak": 5, "settled_through_day_key": "2026-10-24", "freezes_held": 0, "milestones_granted": [], "timezone": "Pacific/Kiritimati" },
+        "per_day": [
+          { "day_key": "2026-10-25", "overlap_hours": 10, "fraction": 0.4167, "excused": false },
+          { "day_key": "2026-10-26", "overlap_hours": 24, "fraction": 1, "excused": true }
+        ],
+        "action": "claim",
+        "expected": {
+          "status": "repair_decision_required",
+          "current_streak": 0,
+          "longest_streak": 5,
+          "settled_through_day_key": "2026-10-26",
+          "freezes_held": 0,
+          "milestones_granted": [],
+          "rows": [ { "kind": "excused", "day_key": "2026-10-26" } ],
+          "repair_offer": { "streak_before": 5, "gap_first_day_key": "2026-10-25", "expires_day_key": "2026-10-27" }
+        }
+      }
+    ]
+  },
+  "deletion": {
+    "tables": [ "streak_states", "daily_claims", "daily_play", "protection_orders", "timezone_changes" ],
+    "account_id": "acc-ann",
+    "note": "compliance.account-deletion and the guest purge remove every row of these tables for the account, a merge tombstone included; ledger entries are owned by billing.virtual-currency."
+  },
+  "pending_grant": {
+    "claim": {
+      "id": "claim-ann-0001",
+      "account_id": "acc-ann",
+      "day_key": "2026-10-27",
+      "kind": "claim",
+      "grant_status": "pending",
+      "reward_lines": [
+        { "kind": "currency", "code": "coin", "amount": 500 },
+        { "kind": "currency", "code": "gem", "amount": 20 },
+        { "kind": "freeze", "amount": 1 },
+        { "kind": "currency", "code": "gem", "amount": 30 }
+      ]
+    },
+    "expected_ledger_calls": [
+      {
+        "fn": "grant",
+        "account_id": "acc-ann",
+        "currency": "coin",
+        "amount": 500,
+        "reason": "daily-streak.claim",
+        "source_ref": "claim-ann-0001",
+        "idempotency_key": "daily-streak:acc-ann:2026-10-27:1"
+      },
+      {
+        "fn": "grant",
+        "account_id": "acc-ann",
+        "currency": "gem",
+        "amount": 20,
+        "reason": "daily-streak.claim",
+        "source_ref": "claim-ann-0001",
+        "idempotency_key": "daily-streak:acc-ann:2026-10-27:2"
+      },
+      {
+        "fn": "grant",
+        "account_id": "acc-ann",
+        "currency": "gem",
+        "amount": 30,
+        "reason": "daily-streak.claim",
+        "source_ref": "claim-ann-0001",
+        "idempotency_key": "daily-streak:acc-ann:2026-10-27:4"
+      }
+    ],
+    "note": "The freeze line (position 3) is applied to streak_states in the claim transaction and is never sent to the ledger; positions count every line so keys stay stable when a line is clipped."
+  },
+  "play_counter": {
+    "settings": { "PLAY_TARGET": 3, "PLAY_ACTIONS": [ "level_complete" ], "PLAY_PROOF_SOURCE": "attempt" },
+    "day_key": "2026-10-27",
+    "attempt_states": { "att-001": "won", "att-002": "failed", "att-003": "open", "att-004": "confirmed", "att-005": "won", "att-006": "cancelled" },
+    "note": "attemptState(account, attempt_id) answers from attempt_states; an attempt id missing from the map answers null. Only confirmed, won and failed prove play (engagement.energy-lives).",
+    "events": [
+      { "attempt_id": "att-001", "action": "level_complete", "expect": { "counted": true, "play_count": 1, "qualified": false } },
+      { "attempt_id": "att-002", "action": "level_complete", "expect": { "counted": true, "play_count": 2, "qualified": false } },
+      {
+        "attempt_id": "att-002",
+        "action": "level_complete",
+        "expect": { "counted": false, "reason": "already_counted", "play_count": 2 },
+        "note": "a replayed attempt counts once"
+      },
+      { "attempt_id": "att-003", "action": "level_complete", "expect": { "error": "play_not_proven", "reason": "attempt_not_proven" }, "note": "open proves nothing" },
+      { "attempt_id": "att-006", "action": "level_complete", "expect": { "error": "play_not_proven", "reason": "attempt_not_proven" }, "note": "cancelled proves nothing" },
+      { "attempt_id": "att-099", "action": "level_complete", "expect": { "error": "play_not_proven", "reason": "attempt_unknown" } },
+      { "attempt_id": "att-004", "action": "tutorial_skip", "expect": { "error": "unknown_action" } },
+      { "attempt_id": "att-004", "action": "level_complete", "expect": { "counted": true, "play_count": 3, "qualified": true }, "note": "confirmed proves play" },
+      {
+        "attempt_id": "att-005",
+        "action": "level_complete",
+        "expect": { "counted": false, "reason": "cap_reached", "play_count": 3 },
+        "note": "rows stop at the largest target in use"
+      },
+      {
+        "clock": "2026-10-28T12:00:00Z",
+        "attempt_id": "att-001",
+        "action": "level_complete",
+        "expect": { "counted": false, "reason": "already_counted", "play_count": 0 },
+        "note": "a play counts once ever, not once per day"
+      }
+    ]
+  }
+}

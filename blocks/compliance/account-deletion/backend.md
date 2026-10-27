@@ -24,14 +24,24 @@ Paths are examples; the behavior is the contract.
 }
 ```
 
+For a guest account (`auth.guest-account`) the proof is the device credential and the challenge, not a provider token **[extrapolated]**:
+
+```json
+{
+  "provider": "guest",
+  "device_secret": "<the guest's device credential, read from secure storage>",
+  "nonce": "<the value returned by POST /api/account/deletion/challenge>"
+}
+```
+
 ### Responses
 
 | Condition | Status | `error` code | Origin message key |
 |---|---|---|---|
 | Success | `204` | none | success toast `account.deleted` |
 | No valid session | `401` | `no_session` | `expired` |
-| `provider` missing or not linked to the user | `400` | `invalid_provider` | none |
-| Proof invalid, expired, nonce unknown, replayed or too old | `401` | `reauth_required` | `expired` |
+| `provider` missing or not linked to the user (`guest`: the account is not an active guest) | `400` | `invalid_provider` | none |
+| Proof invalid, expired, nonce unknown, replayed or too old (`guest`: device secret unknown, retired or not this account's) | `401` | `reauth_required` | `expired` |
 | Proof subject differs from the current user | `403` | `wrong_account` | `wrongAccount` |
 | Another deletion for this user is running | `409` | `deletion_in_progress` | none (origin serializes on the client) |
 | A step failed; the user is still signed in | `500` | `deletion_incomplete` | `server` |
@@ -49,7 +59,7 @@ The sequence is fixed because each step depends on the one before it. The origin
 2. **Content is erased while the identity still exists.** The origin needs the live sign-in to authorize its deletes (its data rules require it). **[origin]** `firebasePort.ts:160-162`. SQL stacks may merge steps 3 and 5 into one transaction (see below).
 3. **Revocation needs a fresh credential and a live identity.** The authorization code is one-time and comes from the re-authentication in step 1. Revocation therefore happens before the identity is destroyed. **[origin]** `firebasePort.ts:178-179`.
 4. **A revocation failure never keeps the account alive.** Record `revocation = failed`, continue. **[origin]** `firebasePort.ts:178` ("must not keep the account alive").
-5. **The identity is destroyed last.** After it is gone the user cannot authenticate a retry, so everything that can fail goes before it. **[origin]** `firebasePort.ts:180`.
+5. **The identity is destroyed last.** After it is gone the user cannot authenticate a retry, so everything that can fail goes before it. **[origin]** `firebasePort.ts:180`. With `auth.guest-account` the identity is the `users` row (when the account is linked) and then the `accounts` row, in that order and in one transaction; the `accounts` row is the last mutation and its cascades remove the account's credentials, sessions and every table that keys `account_id` to it. **[extrapolated]**
 6. **Every step is safe to run again.** Erasing rows that are already gone is not an error. **[origin]** `firebasePort.ts:159-160` ("Run again after a failure, it finds what is left and finishes"); [extrapolated] for the SQL translation.
 
 **Allowed variation [extrapolated]:** when content and identity live in one SQL database, the content erase and the identity delete may run in a single transaction, with revocation placed before the transaction. This removes the "content erased, identity alive" state at the cost of ordering revocation before the commit. If you choose this, keep `account_deletions` (it still records a failed revocation) and keep the same endpoint behavior.
@@ -89,6 +99,30 @@ async function verifyReauth(user: User, proof: Proof, maxAgeSec: number): Promis
 }
 ```
 
+### Pattern 1b: Guest proof
+
+A guest has no provider identity, so the proof is possession of the device credential, shown again together with a single-use challenge **[extrapolated]**. All of these must hold, in this order:
+
+1. `provider` is `guest` and the session's account is an active guest (`accounts.kind = guest`); otherwise `400 invalid_provider`.
+2. `SHA-256(device_secret)` equals the `secret_hash` of an **active** `device` credential of **this account**. The lookup is by hash (`auth.guest-account` INV-3); an unknown, retired or other account's secret answers `401 reauth_required`, and no field of the answer says which. `wrong_account` does not apply: the session's account is the only subject.
+3. The `nonce` matches an unused, unexpired challenge issued to this session; mark it used in the same step (same store as Pattern 1, lifetime `ACCOUNT_DELETION_CHALLENGE_TTL_SECONDS`). A token has no `iat`, so the challenge lifetime is the freshness bound; `ACCOUNT_DELETION_REAUTH_MAX_AGE_SECONDS` does not apply.
+
+<!-- PATTERN: guest-proof-verify -->
+<!-- PURPOSE: accept a guest's deletion only when the device credential and a fresh single-use challenge are shown together -->
+<!-- REFERENCE: runtime=node20+ framework=agnostic language=typescript -->
+<!-- ADAPT: `guestCredentials.findActiveDevice` is the lookup of `auth.guest-account` by (account id, secret hash) over `guest_credentials` with purpose `device` and status `active`; `sha256Hex` is your hash helper; `challenges.consume` is the same single-use store as `reauth-proof-verify`; never log or store `deviceSecret` -->
+```typescript
+type GuestProof = { provider: "guest"; deviceSecret: string; nonce: string };
+
+async function verifyGuestReauth(account: Account, proof: GuestProof): Promise<void> {
+  if (account.kind !== "guest") throw new HttpError(400, "invalid_provider");
+  const credential = await guestCredentials.findActiveDevice(account.id, sha256Hex(proof.deviceSecret));
+  if (!credential) throw new HttpError(401, "reauth_required"); // unknown, retired or another account's
+  const fresh = await challenges.consume(account.sessionId, proof.nonce); // single use
+  if (!fresh) throw new HttpError(401, "reauth_required");
+}
+```
+
 ---
 
 ## Pattern 2: Ordered, re-runnable deletion
@@ -114,7 +148,7 @@ const claim = `
 <!-- PATTERN: ordered-erasure -->
 <!-- PURPOSE: erase content, revoke, then destroy the identity; any failure leaves the user able to retry -->
 <!-- REFERENCE: runtime=node20+ framework=agnostic language=typescript -->
-<!-- ADAPT: `claimDeletion` runs the claim SQL above; `erasers.runAll` is Pattern 3; `revokeProviderTokens` must catch its own errors and return a status; `deleteIdentity` removes sessions, provider link and the users row in one transaction (cascade then removes the account_deletions row); `stepOf` maps a thrown error to a step name without user content (`content_erase`, `identity_delete`, else `other`) -->
+<!-- ADAPT: `claimDeletion` runs the claim SQL above; `erasers.runAll` is Pattern 3; `revokeProviderTokens` must catch its own errors and return a status; `deleteIdentity` removes sessions, provider link and the users row (when one exists) and then the accounts row of `auth.guest-account` in one transaction (the cascade from accounts removes the account_deletions row and every account_id table); `revokeProviderTokens` returns `not_applicable` for provider `guest`; `Proof` becomes the union of the provider proofs and `GuestProof` (Pattern 1b); `stepOf` maps a thrown error to a step name without user content (`content_erase`, `identity_delete`, else `other`) -->
 ```typescript
 async function deleteAccount(user: User, proof: Proof): Promise<void> {
   const rowId = await claimDeletion(user.id, proof.provider);
@@ -148,7 +182,7 @@ Every place user data lives is erased by a named eraser. A forgotten table is th
 <!-- PATTERN: erasure-registry -->
 <!-- PURPOSE: list every user-owned table once so none is forgotten and the list is testable -->
 <!-- REFERENCE: runtime=node20+ framework=agnostic language=typescript -->
-<!-- ADAPT: one entry per table with user data in your schema (profile/leaderboard row, progress snapshot, friendships where the user is owner, friend code registry, ...); tables with a user_id FK ON DELETE CASCADE can be listed with `cascade: true` and no `run`; `Tx` is your transaction handle type -->
+<!-- ADAPT: one entry per table with user data in your schema (profile/leaderboard row, progress snapshot, friendships where the user is owner, friend code registry, ...); tables with a user_id or account_id FK ON DELETE CASCADE can be listed with `cascade: true` and no `run` (the account_id cascade fires when the accounts row goes, last); a block that exposes `deleteAccount(account_id)` (the participant hook named by `auth.guest-account`) is listed with a `run` that calls it; `Tx` is your transaction handle type -->
 ```typescript
 type Eraser = { table: string; cascade?: boolean; run?: (tx: Tx, userId: string) => Promise<void> };
 
@@ -174,7 +208,7 @@ The friend-code entry deletes only rows owned by this user. **[origin]** the ori
 <!-- PATTERN: registry-completeness-query -->
 <!-- PURPOSE: find tables with a user_id column that the registry does not cover -->
 <!-- REFERENCE: dialect=postgres -->
-<!-- ADAPT: information_schema is Postgres/MySQL; SQLite -> iterate `pragma_table_info` for each table from sqlite_master; if your owner column is not named user_id, extend the column list; compare the result against erasers[].table in a test and fail on any extra table -->
+<!-- ADAPT: information_schema is Postgres/MySQL; SQLite -> iterate `pragma_table_info` for each table from sqlite_master; if your owner column is not named user_id, extend the column list (the blocks keyed by account id use `account_id`: add it); compare the result against erasers[].table in a test and fail on any extra table -->
 ```sql
 SELECT c.table_name
 FROM information_schema.columns c

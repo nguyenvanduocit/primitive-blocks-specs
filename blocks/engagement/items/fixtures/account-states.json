@@ -1,0 +1,426 @@
+{
+  "description": "Account states for engagement.items scenarios, on the catalog in fixtures/definitions.json. Instance ids are readable stand-ins for unique_id values; real ids are random, so tests compare by position and by these labels. Times are UTC; the clock is 2026-10-27T12:00:00Z.",
+  "tenant_id": "tenant-001",
+  "clock": "2026-10-27T12:00:00Z",
+  "accounts": {
+    "account-001": {
+      "note": "Main player. Config set default.",
+      "balances": {
+        "coins": 340,
+        "shards_ember": 40,
+        "booster_double_xp": 3,
+        "gems": 0
+      },
+      "inventory_version": 12,
+      "instances": [
+        {
+          "id": "inst-001",
+          "item_code": "sword_iron",
+          "level": 1,
+          "version": 1,
+          "state": "owned",
+          "rarity_rank": 2,
+          "added_at": "2026-10-20T09:00:00Z",
+          "source_kind": "fixed",
+          "source_ref": "objectives:obj-12:reward"
+        },
+        {
+          "id": "inst-002",
+          "item_code": "sword_iron",
+          "level": 2,
+          "version": 3,
+          "state": "owned",
+          "rarity_rank": 2,
+          "added_at": "2026-10-21T09:00:00Z",
+          "source_kind": "fixed",
+          "source_ref": "season-pass:s7:free:4"
+        },
+        {
+          "id": "inst-003",
+          "item_code": "hero_ember",
+          "level": 1,
+          "version": 1,
+          "state": "owned",
+          "rarity_rank": 4,
+          "added_at": "2026-10-22T10:00:00Z",
+          "source_kind": "random",
+          "source_ref": "gacha_main:pull-0031:1"
+        },
+        {
+          "id": "inst-004",
+          "item_code": "hero_cinder",
+          "level": 2,
+          "version": 2,
+          "state": "owned",
+          "rarity_rank": 3,
+          "added_at": "2026-10-22T10:00:00Z",
+          "source_kind": "fixed",
+          "source_ref": "event-calendar:e-3:reward"
+        },
+        {
+          "id": "inst-005",
+          "item_code": "sword_iron",
+          "level": 1,
+          "version": 1,
+          "state": "owned",
+          "rarity_rank": 2,
+          "added_at": "2026-10-25T08:00:00Z",
+          "source_kind": "fixed",
+          "source_ref": "objectives:obj-14:reward"
+        },
+        {
+          "id": "inst-006",
+          "item_code": "charm_trial",
+          "level": 1,
+          "version": 1,
+          "state": "owned",
+          "rarity_rank": 1,
+          "added_at": "2026-10-26T08:00:00Z",
+          "expires_at": "2026-11-02T08:00:00Z",
+          "source_kind": "fixed",
+          "source_ref": "event-calendar:e-4:reward"
+        },
+        {
+          "id": "inst-007",
+          "item_code": "frame_gold",
+          "level": 1,
+          "version": 1,
+          "state": "owned",
+          "rarity_rank": 3,
+          "added_at": "2026-10-27T08:00:00Z",
+          "source_kind": "purchase",
+          "source_ref": "purchase:txn-5001"
+        },
+        {
+          "id": "inst-008",
+          "item_code": "sword_iron",
+          "level": 1,
+          "version": 2,
+          "state": "discarded",
+          "rarity_rank": 2,
+          "added_at": "2026-10-19T09:00:00Z",
+          "source_kind": "fixed",
+          "source_ref": "objectives:obj-10:reward"
+        }
+      ],
+      "equips": [
+        {
+          "target_key": "inst-003",
+          "slot": "weapon",
+          "instance_id": "inst-005"
+        }
+      ],
+      "held_grants": [],
+      "activations": []
+    },
+    "account-upgrade-short": {
+      "note": "Enough coins for the first cost line of hero_ember level 3, too few shards for the second. Config set default.",
+      "balances": {
+        "coins": 500,
+        "shards_ember": 5
+      },
+      "inventory_version": 3,
+      "instances": [
+        {
+          "id": "inst-u1",
+          "item_code": "hero_ember",
+          "level": 2,
+          "version": 2,
+          "state": "owned",
+          "rarity_rank": 4,
+          "added_at": "2026-10-24T09:00:00Z",
+          "source_kind": "random",
+          "source_ref": "gacha_main:pull-0102:1"
+        }
+      ],
+      "equips": [],
+      "held_grants": [],
+      "activations": []
+    },
+    "account-full": {
+      "note": "Equipment bag at capacity 3 and units bag at capacity 2. Config set small_bags.",
+      "balances": {
+        "coins": 500,
+        "shards_ember": 0
+      },
+      "inventory_version": 5,
+      "instances": [
+        {
+          "id": "inst-f1",
+          "item_code": "sword_iron",
+          "level": 1,
+          "version": 1,
+          "state": "owned",
+          "rarity_rank": 2,
+          "added_at": "2026-10-20T09:00:00Z",
+          "source_kind": "fixed",
+          "source_ref": "seed:f1"
+        },
+        {
+          "id": "inst-f2",
+          "item_code": "sword_iron",
+          "level": 1,
+          "version": 1,
+          "state": "owned",
+          "rarity_rank": 2,
+          "added_at": "2026-10-21T09:00:00Z",
+          "source_kind": "fixed",
+          "source_ref": "seed:f2"
+        },
+        {
+          "id": "inst-f3",
+          "item_code": "sword_iron",
+          "level": 3,
+          "version": 4,
+          "state": "owned",
+          "rarity_rank": 2,
+          "added_at": "2026-10-22T09:00:00Z",
+          "source_kind": "fixed",
+          "source_ref": "seed:f3"
+        },
+        {
+          "id": "inst-f4",
+          "item_code": "hero_cinder",
+          "level": 1,
+          "version": 1,
+          "state": "owned",
+          "rarity_rank": 3,
+          "added_at": "2026-10-23T09:00:00Z",
+          "source_kind": "fixed",
+          "source_ref": "seed:f4"
+        },
+        {
+          "id": "inst-f5",
+          "item_code": "hero_ember",
+          "level": 1,
+          "version": 1,
+          "state": "owned",
+          "rarity_rank": 4,
+          "added_at": "2026-10-24T09:00:00Z",
+          "source_kind": "random",
+          "source_ref": "gacha_main:pull-0001:1"
+        }
+      ],
+      "equips": [],
+      "held_grants": [],
+      "activations": []
+    },
+    "account-held-limit": {
+      "note": "Equipment bag at capacity and the held list at HELD_MAX_PER_ACCOUNT 2. Config set small_bags.",
+      "balances": {
+        "coins": 0
+      },
+      "inventory_version": 8,
+      "instances": [
+        {
+          "id": "inst-h1",
+          "item_code": "sword_iron",
+          "level": 1,
+          "version": 1,
+          "state": "owned",
+          "rarity_rank": 2,
+          "added_at": "2026-10-20T09:00:00Z",
+          "source_kind": "fixed",
+          "source_ref": "seed:h1"
+        },
+        {
+          "id": "inst-h2",
+          "item_code": "sword_iron",
+          "level": 1,
+          "version": 1,
+          "state": "owned",
+          "rarity_rank": 2,
+          "added_at": "2026-10-21T09:00:00Z",
+          "source_kind": "fixed",
+          "source_ref": "seed:h2"
+        },
+        {
+          "id": "inst-h3",
+          "item_code": "sword_iron",
+          "level": 1,
+          "version": 1,
+          "state": "owned",
+          "rarity_rank": 2,
+          "added_at": "2026-10-22T09:00:00Z",
+          "source_kind": "fixed",
+          "source_ref": "seed:h3"
+        }
+      ],
+      "equips": [],
+      "held_grants": [
+        {
+          "grant_id": "grant-h1",
+          "item_code": "sword_iron",
+          "source_ref": "objectives:obj-20:reward",
+          "ordinal": 0,
+          "held_quantity": 1,
+          "hold_reason": "bag_full",
+          "held_until": "2026-11-26T12:00:00Z"
+        },
+        {
+          "grant_id": "grant-h2",
+          "item_code": "sword_iron",
+          "source_ref": "objectives:obj-21:reward",
+          "ordinal": 0,
+          "held_quantity": 1,
+          "hold_reason": "bag_full",
+          "held_until": "2026-11-26T12:00:00Z"
+        }
+      ],
+      "activations": []
+    },
+    "account-stack-cap": {
+      "note": "Holds 98 of booster_double_xp whose stack_cap is 99. Config set default.",
+      "balances": {
+        "booster_double_xp": 98
+      },
+      "inventory_version": 2,
+      "instances": [],
+      "equips": [],
+      "held_grants": [],
+      "activations": []
+    },
+    "account-booster": {
+      "note": "Holds two boosters and one running activation that ends in ten minutes. Config sets default and short_activation_limit.",
+      "balances": {
+        "booster_double_xp": 2
+      },
+      "inventory_version": 4,
+      "instances": [],
+      "equips": [],
+      "held_grants": [],
+      "activations": [
+        {
+          "id": "act-1",
+          "item_code": "booster_double_xp",
+          "starts_at": "2026-10-27T11:40:00Z",
+          "ends_at": "2026-10-27T12:10:00Z"
+        }
+      ]
+    },
+    "account-retired": {
+      "note": "Owns a retired sword_bronze (definition version 2 is retired). Config sets default and retired_no_upgrade.",
+      "balances": {
+        "coins": 200
+      },
+      "inventory_version": 2,
+      "instances": [
+        {
+          "id": "inst-r1",
+          "item_code": "sword_bronze",
+          "level": 1,
+          "version": 1,
+          "state": "owned",
+          "rarity_rank": 1,
+          "added_at": "2026-09-01T09:00:00Z",
+          "source_kind": "fixed",
+          "source_ref": "seed:r1"
+        }
+      ],
+      "equips": [],
+      "held_grants": [],
+      "activations": []
+    }
+  },
+  "pagination": {
+    "account": "account-001",
+    "page_size": 3,
+    "newest": {
+      "order_rule": "added_at DESC, id DESC",
+      "pages": [
+        {
+          "ids": [
+            "inst-007",
+            "inst-006",
+            "inst-005"
+          ],
+          "has_next": true
+        },
+        {
+          "ids": [
+            "inst-004",
+            "inst-003",
+            "inst-002"
+          ],
+          "has_next": true
+        },
+        {
+          "ids": [
+            "inst-001"
+          ],
+          "has_next": false
+        }
+      ],
+      "note": "inst-003 and inst-004 share added_at; id DESC breaks the tie. inst-008 is discarded and never listed."
+    },
+    "rarity": {
+      "order_rule": "rarity_rank DESC, added_at DESC, id DESC",
+      "pages": [
+        {
+          "ids": [
+            "inst-003",
+            "inst-007",
+            "inst-004"
+          ],
+          "has_next": true
+        },
+        {
+          "ids": [
+            "inst-005",
+            "inst-002",
+            "inst-001"
+          ],
+          "has_next": true
+        },
+        {
+          "ids": [
+            "inst-006"
+          ],
+          "has_next": false
+        }
+      ]
+    },
+    "concurrent_changes": [
+      {
+        "name": "level-changes-between-pages",
+        "after_page": 1,
+        "change": "inst-002 is upgraded to level 3",
+        "expect": "inst-002 is still on page 2 at the same position; every other id appears once"
+      },
+      {
+        "name": "row-granted-between-pages",
+        "after_page": 1,
+        "change": "a new sword_iron is granted at 2026-10-27T12:00:00Z",
+        "expect": "the new row is not on page 2 or 3; a fresh first-page read returns it first; no existing id is repeated or skipped"
+      },
+      {
+        "name": "row-discarded-between-pages",
+        "after_page": 1,
+        "change": "inst-002 is discarded",
+        "expect": "inst-002 does not appear; every other id appears once"
+      }
+    ]
+  },
+  "capacity": {
+    "account-001": {
+      "equipment": {
+        "used": 3,
+        "capacity": 200
+      },
+      "units": {
+        "used": 2,
+        "capacity": 200
+      }
+    },
+    "account-full": {
+      "equipment": {
+        "used": 3,
+        "capacity": 3
+      },
+      "units": {
+        "used": 2,
+        "capacity": 2
+      }
+    }
+  }
+}

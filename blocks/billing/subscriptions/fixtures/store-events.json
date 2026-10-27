@@ -1,0 +1,829 @@
+{
+  "_comment": "Verified-and-decoded store messages as the shared receivers hand them to this block (README section 3, \"Intake\"). Real Apple messages are signed JWS strings (`signedPayload`) and real Google messages are base64 Pub/Sub data; here they are decoded and reduced to the fields the block reads. All ids, tokens and the bundle/package name are placeholders. `delivery.event_id` is the Apple `notificationUUID` or the Google Pub/Sub `messageId`. Apple times are millisecond Unix times as in the store payloads; Google times are RFC 3339. `fetches` are reduced `purchases.subscriptionsv2.get` results that the block obtains after a Google message; `fetch_script` says which result each message sees and when the fetch started. Outcomes: applied, applied_no_change, stale, duplicate, unlinked, ignored. `apple_refund` and `apple_refund_reversed` are not routed to the handler: billing.virtual-currency records them and fires on_purchase_state_changed, and the chain refresh then sees these snapshots (sequence `apple_refund_then_reversal`).",
+  "clock": "2026-10-27T12:00:00Z",
+  "apple": {
+    "notifications": {
+      "apple_subscribed_free_trial": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000001"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000001",
+          "notificationType": "SUBSCRIBED",
+          "version": "2.0",
+          "signedDate": 1792497600000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 1,
+            "signedTransactionInfo": {
+              "transactionId": "2000000000000001",
+              "originalTransactionId": "1000000000000001",
+              "productId": "example.vip.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1792497600000,
+              "originalPurchaseDate": 1792497600000,
+              "expiresDate": 1793102400000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a01",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "PURCHASE",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game",
+              "offerType": 1,
+              "offerDiscountType": "FREE_TRIAL"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":1,"autoRenewProductId":"example.vip.monthly","originalTransactionId":"1000000000000001"}
+          },
+          "subtype": "INITIAL_BUY"
+        }
+      },
+      "apple_did_renew_trial_converts": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000002"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000002",
+          "notificationType": "DID_RENEW",
+          "version": "2.0",
+          "signedDate": 1793100600000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 1,
+            "signedTransactionInfo": {
+              "transactionId": "2000000000000002",
+              "originalTransactionId": "1000000000000001",
+              "productId": "example.vip.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1793102400000,
+              "originalPurchaseDate": 1793102400000,
+              "expiresDate": 1795780800000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a01",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "RENEWAL",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":1,"autoRenewProductId":"example.vip.monthly","originalTransactionId":"1000000000000001"}
+          }
+        }
+      },
+      "apple_auto_renew_disabled": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000003"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000003",
+          "notificationType": "DID_CHANGE_RENEWAL_STATUS",
+          "version": "2.0",
+          "signedDate": 1793101200000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 1,
+            "signedTransactionInfo": {
+              "transactionId": "2000000000000002",
+              "originalTransactionId": "1000000000000001",
+              "productId": "example.vip.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1793102400000,
+              "originalPurchaseDate": 1793102400000,
+              "expiresDate": 1795780800000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a01",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "RENEWAL",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":0,"autoRenewProductId":"example.vip.monthly","originalTransactionId":"1000000000000001","expirationIntent":1}
+          },
+          "subtype": "AUTO_RENEW_DISABLED"
+        }
+      },
+      "apple_auto_renew_enabled": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000004"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000004",
+          "notificationType": "DID_CHANGE_RENEWAL_STATUS",
+          "version": "2.0",
+          "signedDate": 1793101800000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 1,
+            "signedTransactionInfo": {
+              "transactionId": "2000000000000002",
+              "originalTransactionId": "1000000000000001",
+              "productId": "example.vip.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1793102400000,
+              "originalPurchaseDate": 1793102400000,
+              "expiresDate": 1795780800000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a01",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "RENEWAL",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":1,"autoRenewProductId":"example.vip.monthly","originalTransactionId":"1000000000000001"}
+          },
+          "subtype": "AUTO_RENEW_ENABLED"
+        }
+      },
+      "apple_refund": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000005"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000005",
+          "notificationType": "REFUND",
+          "version": "2.0",
+          "signedDate": 1793102100000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 5,
+            "signedTransactionInfo": {
+              "transactionId": "2000000000000002",
+              "originalTransactionId": "1000000000000001",
+              "productId": "example.vip.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1793102400000,
+              "originalPurchaseDate": 1793102400000,
+              "expiresDate": 1795780800000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a01",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "RENEWAL",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game",
+              "revocationDate": 1793102100000,
+              "revocationReason": 0
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":0,"autoRenewProductId":"example.vip.monthly","originalTransactionId":"1000000000000001"}
+          }
+        }
+      },
+      "apple_refund_reversed": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000006"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000006",
+          "notificationType": "REFUND_REVERSED",
+          "version": "2.0",
+          "signedDate": 1793102280000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 1,
+            "signedTransactionInfo": {
+              "transactionId": "2000000000000002",
+              "originalTransactionId": "1000000000000001",
+              "productId": "example.vip.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1793102400000,
+              "originalPurchaseDate": 1793102400000,
+              "expiresDate": 1795780800000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a01",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "RENEWAL",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":1,"autoRenewProductId":"example.vip.monthly","originalTransactionId":"1000000000000001"}
+          }
+        }
+      },
+      "apple_fail_to_renew_grace": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000011"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000011",
+          "notificationType": "DID_FAIL_TO_RENEW",
+          "version": "2.0",
+          "signedDate": 1792497900000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 4,
+            "signedTransactionInfo": {
+              "transactionId": "3000000000000001",
+              "originalTransactionId": "1000000000000002",
+              "productId": "example.vip.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1789905600000,
+              "originalPurchaseDate": 1789905600000,
+              "expiresDate": 1792497600000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a02",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "RENEWAL",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":1,"autoRenewProductId":"example.vip.monthly","originalTransactionId":"1000000000000002","isInBillingRetryPeriod":true,"gracePeriodExpiresDate":1792756800000,"expirationIntent":2}
+          },
+          "subtype": "GRACE_PERIOD"
+        }
+      },
+      "apple_grace_period_expired": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000012"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000012",
+          "notificationType": "GRACE_PERIOD_EXPIRED",
+          "version": "2.0",
+          "signedDate": 1792757100000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 3,
+            "signedTransactionInfo": {
+              "transactionId": "3000000000000001",
+              "originalTransactionId": "1000000000000002",
+              "productId": "example.vip.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1789905600000,
+              "originalPurchaseDate": 1789905600000,
+              "expiresDate": 1792497600000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a02",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "RENEWAL",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":1,"autoRenewProductId":"example.vip.monthly","originalTransactionId":"1000000000000002","isInBillingRetryPeriod":true,"expirationIntent":2}
+          }
+        }
+      },
+      "apple_did_renew_billing_recovery": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000013"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000013",
+          "notificationType": "DID_RENEW",
+          "version": "2.0",
+          "signedDate": 1793001600000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 1,
+            "signedTransactionInfo": {
+              "transactionId": "3000000000000002",
+              "originalTransactionId": "1000000000000002",
+              "productId": "example.vip.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1793001600000,
+              "originalPurchaseDate": 1793001600000,
+              "expiresDate": 1795680000000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a02",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "RENEWAL",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":1,"autoRenewProductId":"example.vip.monthly","originalTransactionId":"1000000000000002","isInBillingRetryPeriod":false}
+          },
+          "subtype": "BILLING_RECOVERY"
+        }
+      },
+      "apple_expired_billing_retry_ended": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000014"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000014",
+          "notificationType": "EXPIRED",
+          "version": "2.0",
+          "signedDate": 1797681600000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 2,
+            "signedTransactionInfo": {
+              "transactionId": "3000000000000001",
+              "originalTransactionId": "1000000000000002",
+              "productId": "example.vip.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1789905600000,
+              "originalPurchaseDate": 1789905600000,
+              "expiresDate": 1792497600000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a02",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "RENEWAL",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":1,"autoRenewProductId":"example.vip.monthly","originalTransactionId":"1000000000000002","isInBillingRetryPeriod":false,"expirationIntent":2}
+          },
+          "subtype": "BILLING_RETRY"
+        }
+      },
+      "apple_subscribed_initial_buy": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000021"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000021",
+          "notificationType": "SUBSCRIBED",
+          "version": "2.0",
+          "signedDate": 1791633600000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 1,
+            "signedTransactionInfo": {
+              "transactionId": "4000000000000001",
+              "originalTransactionId": "1000000000000003",
+              "productId": "example.vip.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1791633600000,
+              "originalPurchaseDate": 1791633600000,
+              "expiresDate": 1794312000000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a03",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "PURCHASE",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":1,"autoRenewProductId":"example.vip.monthly","originalTransactionId":"1000000000000003"}
+          },
+          "subtype": "INITIAL_BUY"
+        }
+      },
+      "apple_renewal_pref_upgrade": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000022"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000022",
+          "notificationType": "DID_CHANGE_RENEWAL_PREF",
+          "version": "2.0",
+          "signedDate": 1792054800000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 1,
+            "signedTransactionInfo": {
+              "transactionId": "4000000000000002",
+              "originalTransactionId": "1000000000000003",
+              "productId": "example.vipplus.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1792054800000,
+              "originalPurchaseDate": 1792054800000,
+              "expiresDate": 1794733200000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a03",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "PURCHASE",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":1,"autoRenewProductId":"example.vipplus.monthly","originalTransactionId":"1000000000000003"}
+          },
+          "subtype": "UPGRADE"
+        }
+      },
+      "apple_renewal_pref_downgrade": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000023"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000023",
+          "notificationType": "DID_CHANGE_RENEWAL_PREF",
+          "version": "2.0",
+          "signedDate": 1792490400000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 1,
+            "signedTransactionInfo": {
+              "transactionId": "4000000000000002",
+              "originalTransactionId": "1000000000000003",
+              "productId": "example.vipplus.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1792054800000,
+              "originalPurchaseDate": 1792054800000,
+              "expiresDate": 1794733200000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a03",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "PURCHASE",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":1,"autoRenewProductId":"example.vip.monthly","originalTransactionId":"1000000000000003"}
+          },
+          "subtype": "DOWNGRADE"
+        }
+      },
+      "apple_renewal_pref_reverted": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000024"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000024",
+          "notificationType": "DID_CHANGE_RENEWAL_PREF",
+          "version": "2.0",
+          "signedDate": 1792576800000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 1,
+            "signedTransactionInfo": {
+              "transactionId": "4000000000000002",
+              "originalTransactionId": "1000000000000003",
+              "productId": "example.vipplus.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1792054800000,
+              "originalPurchaseDate": 1792054800000,
+              "expiresDate": 1794733200000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a03",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "PURCHASE",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":1,"autoRenewProductId":"example.vipplus.monthly","originalTransactionId":"1000000000000003"}
+          }
+        }
+      },
+      "apple_price_increase_pending": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000025"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000025",
+          "notificationType": "PRICE_INCREASE",
+          "version": "2.0",
+          "signedDate": 1792663200000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 1,
+            "signedTransactionInfo": {
+              "transactionId": "4000000000000002",
+              "originalTransactionId": "1000000000000003",
+              "productId": "example.vipplus.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1792054800000,
+              "originalPurchaseDate": 1792054800000,
+              "expiresDate": 1794733200000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a03",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "PURCHASE",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":1,"autoRenewProductId":"example.vipplus.monthly","originalTransactionId":"1000000000000003","priceIncreaseStatus":0,"renewalPrice":9990,"currency":"USD"}
+          },
+          "subtype": "PENDING"
+        }
+      },
+      "apple_price_increase_accepted": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000026"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000026",
+          "notificationType": "PRICE_INCREASE",
+          "version": "2.0",
+          "signedDate": 1792749600000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 1,
+            "signedTransactionInfo": {
+              "transactionId": "4000000000000002",
+              "originalTransactionId": "1000000000000003",
+              "productId": "example.vipplus.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1792054800000,
+              "originalPurchaseDate": 1792054800000,
+              "expiresDate": 1794733200000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a03",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "PURCHASE",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":1,"autoRenewProductId":"example.vipplus.monthly","originalTransactionId":"1000000000000003","priceIncreaseStatus":1,"renewalPrice":9990,"currency":"USD"}
+          },
+          "subtype": "ACCEPTED"
+        }
+      },
+      "apple_expired_price_increase_declined": {
+        "delivery": {"platform":"apple","family":"subscription","event_id":"b0000000-0000-4000-8000-000000000027"},
+        "message": {
+          "notificationUUID": "b0000000-0000-4000-8000-000000000027",
+          "notificationType": "EXPIRED",
+          "version": "2.0",
+          "signedDate": 1794733500000,
+          "data": {
+            "environment": "Production",
+            "bundleId": "com.example.game",
+            "appAppleId": 1234567890,
+            "status": 2,
+            "signedTransactionInfo": {
+              "transactionId": "4000000000000002",
+              "originalTransactionId": "1000000000000003",
+              "productId": "example.vipplus.monthly",
+              "subscriptionGroupIdentifier": "21000001",
+              "purchaseDate": 1792054800000,
+              "originalPurchaseDate": 1792054800000,
+              "expiresDate": 1794733200000,
+              "appAccountToken": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a03",
+              "inAppOwnershipType": "PURCHASED",
+              "transactionReason": "PURCHASE",
+              "type": "Auto-Renewable Subscription",
+              "environment": "Production",
+              "bundleId": "com.example.game"
+            },
+            "signedRenewalInfo": {"environment":"Production","autoRenewStatus":1,"autoRenewProductId":"example.vipplus.monthly","originalTransactionId":"1000000000000003","priceIncreaseStatus":0,"expirationIntent":3,"isInBillingRetryPeriod":false}
+          },
+          "subtype": "PRICE_INCREASE"
+        }
+      }
+    }
+  },
+  "google": {
+    "messages": {
+      "google_purchased": {
+        "delivery": {"platform":"google","family":"subscription","event_id":"pubsub-0001"},
+        "message": {"version":"1.0","packageName":"com.example.game","eventTimeMillis":1793095200000,"subscriptionNotification":{"version":"1.0","notificationType":4,"purchaseToken":"example-purchase-token-001"}}
+      },
+      "google_canceled": {
+        "delivery": {"platform":"google","family":"subscription","event_id":"pubsub-0002"},
+        "message": {"version":"1.0","packageName":"com.example.game","eventTimeMillis":1793097000000,"subscriptionNotification":{"version":"1.0","notificationType":3,"purchaseToken":"example-purchase-token-001"}}
+      },
+      "google_restarted": {
+        "delivery": {"platform":"google","family":"subscription","event_id":"pubsub-0003"},
+        "message": {"version":"1.0","packageName":"com.example.game","eventTimeMillis":1793097900000,"subscriptionNotification":{"version":"1.0","notificationType":7,"purchaseToken":"example-purchase-token-001"}}
+      },
+      "google_in_grace_period": {
+        "delivery": {"platform":"google","family":"subscription","event_id":"pubsub-0004"},
+        "message": {"version":"1.0","packageName":"com.example.game","eventTimeMillis":1793098800000,"subscriptionNotification":{"version":"1.0","notificationType":6,"purchaseToken":"example-purchase-token-001"}}
+      },
+      "google_on_hold": {
+        "delivery": {"platform":"google","family":"subscription","event_id":"pubsub-0005"},
+        "message": {"version":"1.0","packageName":"com.example.game","eventTimeMillis":1793099100000,"subscriptionNotification":{"version":"1.0","notificationType":5,"purchaseToken":"example-purchase-token-001"}}
+      },
+      "google_recovered": {
+        "delivery": {"platform":"google","family":"subscription","event_id":"pubsub-0006"},
+        "message": {"version":"1.0","packageName":"com.example.game","eventTimeMillis":1793099400000,"subscriptionNotification":{"version":"1.0","notificationType":1,"purchaseToken":"example-purchase-token-001"}}
+      },
+      "google_revoked": {
+        "delivery": {"platform":"google","family":"subscription","event_id":"pubsub-0007"},
+        "message": {"version":"1.0","packageName":"com.example.game","eventTimeMillis":1793099700000,"subscriptionNotification":{"version":"1.0","notificationType":12,"purchaseToken":"example-purchase-token-001"}}
+      },
+      "google_expired": {
+        "delivery": {"platform":"google","family":"subscription","event_id":"pubsub-0008"},
+        "message": {"version":"1.0","packageName":"com.example.game","eventTimeMillis":1793100000000,"subscriptionNotification":{"version":"1.0","notificationType":13,"purchaseToken":"example-purchase-token-001"}}
+      },
+      "google_pending_purchase_canceled": {
+        "delivery": {"platform":"google","family":"subscription","event_id":"pubsub-0009"},
+        "message": {"version":"1.0","packageName":"com.example.game","eventTimeMillis":1793100300000,"subscriptionNotification":{"version":"1.0","notificationType":20,"purchaseToken":"example-purchase-token-003"}}
+      },
+      "google_price_change_updated": {
+        "delivery": {"platform":"google","family":"subscription","event_id":"pubsub-0010"},
+        "message": {"version":"1.0","packageName":"com.example.game","eventTimeMillis":1793100600000,"subscriptionNotification":{"version":"1.0","notificationType":19,"purchaseToken":"example-purchase-token-001"}}
+      },
+      "google_purchased_without_account_ids": {
+        "delivery": {"platform":"google","family":"subscription","event_id":"pubsub-0011"},
+        "message": {"version":"1.0","packageName":"com.example.game","eventTimeMillis":1793095200000,"subscriptionNotification":{"version":"1.0","notificationType":4,"purchaseToken":"example-purchase-token-002"}}
+      }
+    },
+    "fetches": {
+      "fetch_trial_active": {
+        "subscriptionState": "SUBSCRIPTION_STATE_ACTIVE",
+        "startTime": "2026-10-27T10:00:00Z",
+        "latestOrderId": "GPA.0000-0000-0000-00001",
+        "linkedPurchaseToken": null,
+        "acknowledgementState": "ACKNOWLEDGEMENT_STATE_PENDING",
+        "externalAccountIdentifiers": {"obfuscatedExternalAccountId":"6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a01"},
+        "lineItems": [{"productId":"example_vip","expiryTime":"2026-11-03T10:00:00Z","latestSuccessfulOrderId":"GPA.0000-0000-0000-00001","autoRenewingPlan":{"autoRenewEnabled":true},"offerDetails":{"basePlanId":"monthly"},"offerPhase":{"freeTrial":{}}}]
+      },
+      "fetch_trial_canceled": {
+        "subscriptionState": "SUBSCRIPTION_STATE_CANCELED",
+        "startTime": "2026-10-27T10:00:00Z",
+        "latestOrderId": "GPA.0000-0000-0000-00001",
+        "linkedPurchaseToken": null,
+        "acknowledgementState": "ACKNOWLEDGEMENT_STATE_PENDING",
+        "externalAccountIdentifiers": {"obfuscatedExternalAccountId":"6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a01"},
+        "lineItems": [{"productId":"example_vip","expiryTime":"2026-11-03T10:00:00Z","latestSuccessfulOrderId":"GPA.0000-0000-0000-00001","autoRenewingPlan":{"autoRenewEnabled":false},"offerDetails":{"basePlanId":"monthly"},"offerPhase":{"freeTrial":{}}}]
+      },
+      "fetch_active_auto_renew": {
+        "subscriptionState": "SUBSCRIPTION_STATE_ACTIVE",
+        "startTime": "2026-10-27T10:00:00Z",
+        "latestOrderId": "GPA.0000-0000-0000-00001",
+        "linkedPurchaseToken": null,
+        "acknowledgementState": "ACKNOWLEDGEMENT_STATE_PENDING",
+        "externalAccountIdentifiers": {"obfuscatedExternalAccountId":"6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a01"},
+        "lineItems": [{"productId":"example_vip","expiryTime":"2026-11-03T10:00:00Z","latestSuccessfulOrderId":"GPA.0000-0000-0000-00001","autoRenewingPlan":{"autoRenewEnabled":true},"offerDetails":{"basePlanId":"monthly"},"offerPhase":{"freeTrial":{}}}]
+      },
+      "fetch_grace": {
+        "subscriptionState": "SUBSCRIPTION_STATE_IN_GRACE_PERIOD",
+        "startTime": "2026-10-27T10:00:00Z",
+        "latestOrderId": "GPA.0000-0000-0000-00001",
+        "linkedPurchaseToken": null,
+        "acknowledgementState": "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+        "externalAccountIdentifiers": {"obfuscatedExternalAccountId":"6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a01"},
+        "lineItems": [{"productId":"example_vip","expiryTime":"2026-11-06T10:00:00Z","latestSuccessfulOrderId":"GPA.0000-0000-0000-00001","autoRenewingPlan":{"autoRenewEnabled":true},"offerDetails":{"basePlanId":"monthly"},"offerPhase":{"basePrice":{}}}],
+        "inGracePeriodStateContext": {"renewalDeclined":true}
+      },
+      "fetch_on_hold": {
+        "subscriptionState": "SUBSCRIPTION_STATE_ON_HOLD",
+        "startTime": "2026-10-27T10:00:00Z",
+        "latestOrderId": "GPA.0000-0000-0000-00001",
+        "linkedPurchaseToken": null,
+        "acknowledgementState": "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+        "externalAccountIdentifiers": {"obfuscatedExternalAccountId":"6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a01"},
+        "lineItems": [{"productId":"example_vip","expiryTime":"2026-11-03T10:00:00Z","latestSuccessfulOrderId":"GPA.0000-0000-0000-00001","autoRenewingPlan":{"autoRenewEnabled":true},"offerDetails":{"basePlanId":"monthly"},"offerPhase":{"basePrice":{}}}],
+        "onHoldStateContext": {"renewalDeclined":true}
+      },
+      "fetch_recovered": {
+        "subscriptionState": "SUBSCRIPTION_STATE_ACTIVE",
+        "startTime": "2026-10-27T10:00:00Z",
+        "latestOrderId": "GPA.0000-0000-0000-00002",
+        "linkedPurchaseToken": null,
+        "acknowledgementState": "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+        "externalAccountIdentifiers": {"obfuscatedExternalAccountId":"6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a01"},
+        "lineItems": [{"productId":"example_vip","expiryTime":"2026-12-03T10:00:00Z","latestSuccessfulOrderId":"GPA.0000-0000-0000-00002","autoRenewingPlan":{"autoRenewEnabled":true},"offerDetails":{"basePlanId":"monthly"},"offerPhase":{"basePrice":{}}}]
+      },
+      "fetch_expired_after_revoke": {
+        "subscriptionState": "SUBSCRIPTION_STATE_EXPIRED",
+        "startTime": "2026-10-27T10:00:00Z",
+        "latestOrderId": "GPA.0000-0000-0000-00001",
+        "linkedPurchaseToken": null,
+        "acknowledgementState": "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+        "externalAccountIdentifiers": {"obfuscatedExternalAccountId":"6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a01"},
+        "lineItems": [{"productId":"example_vip","expiryTime":"2026-11-03T10:00:00Z","latestSuccessfulOrderId":"GPA.0000-0000-0000-00001","autoRenewingPlan":{"autoRenewEnabled":false},"offerDetails":{"basePlanId":"monthly"},"offerPhase":{"basePrice":{}}}]
+      },
+      "fetch_no_account_ids": {
+        "subscriptionState": "SUBSCRIPTION_STATE_ACTIVE",
+        "startTime": "2026-10-27T10:00:00Z",
+        "latestOrderId": "GPA.0000-0000-0000-00009",
+        "linkedPurchaseToken": null,
+        "acknowledgementState": "ACKNOWLEDGEMENT_STATE_PENDING",
+        "lineItems": [{"productId":"example_vip","expiryTime":"2026-11-27T10:00:00Z","latestSuccessfulOrderId":"GPA.0000-0000-0000-00009","autoRenewingPlan":{"autoRenewEnabled":true},"offerDetails":{"basePlanId":"monthly"},"offerPhase":{"basePrice":{}}}]
+      },
+      "fetch_pending": {
+        "subscriptionState": "SUBSCRIPTION_STATE_PENDING",
+        "linkedPurchaseToken": null,
+        "acknowledgementState": "ACKNOWLEDGEMENT_STATE_PENDING",
+        "externalAccountIdentifiers": {"obfuscatedExternalAccountId":"6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a03"},
+        "lineItems": [{"productId":"example_vip","offerDetails":{"basePlanId":"monthly"}}]
+      },
+      "fetch_pending_purchase_canceled": {"subscriptionState":"SUBSCRIPTION_STATE_PENDING_PURCHASE_CANCELED","linkedPurchaseToken":null,"externalAccountIdentifiers":{"obfuscatedExternalAccountId":"6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a03"},"lineItems":[{"productId":"example_vip","offerDetails":{"basePlanId":"monthly"}}]},
+      "fetch_price_change_outstanding": {
+        "subscriptionState": "SUBSCRIPTION_STATE_ACTIVE",
+        "startTime": "2026-10-27T10:00:00Z",
+        "latestOrderId": "GPA.0000-0000-0000-00001",
+        "linkedPurchaseToken": null,
+        "acknowledgementState": "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED",
+        "externalAccountIdentifiers": {"obfuscatedExternalAccountId":"6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a01"},
+        "lineItems": [
+          {
+            "productId": "example_vip",
+            "expiryTime": "2026-11-27T10:00:00Z",
+            "latestSuccessfulOrderId": "GPA.0000-0000-0000-00001",
+            "autoRenewingPlan": {"autoRenewEnabled":true,"priceChangeDetails":{"priceChangeState":"OUTSTANDING"}},
+            "offerDetails": {"basePlanId":"monthly"},
+            "offerPhase": {"basePrice":{}}
+          }
+        ]
+      }
+    }
+  },
+  "sequences": {
+    "apple_trial_converts_then_cancels": {
+      "platform": "apple",
+      "account_id": "acct-001",
+      "arrival": ["apple_subscribed_free_trial","apple_did_renew_trial_converts","apple_auto_renew_disabled"],
+      "expected_outcomes": ["applied","applied","applied"],
+      "expected_states": ["trial","active","canceled"],
+      "expected_final": {"active":true,"state":"canceled","will_renew":false,"expires_at":"2026-11-27T12:00:00Z"}
+    },
+    "apple_out_of_order_renewal_flag": {
+      "platform": "apple",
+      "account_id": "acct-001",
+      "preloaded_through": "apple_did_renew_trial_converts",
+      "arrival": ["apple_auto_renew_enabled","apple_auto_renew_disabled"],
+      "expected_outcomes": ["applied","stale"],
+      "expected_final": {"active":true,"state":"active","will_renew":true,"expires_at":"2026-11-27T12:00:00Z"},
+      "why": "the second message carries an older signedDate than the stored snapshot, so it cannot flip the flag back"
+    },
+    "apple_duplicate_delivery": {
+      "platform": "apple",
+      "account_id": "acct-001",
+      "preloaded_through": "apple_did_renew_trial_converts",
+      "arrival": ["apple_auto_renew_disabled","apple_auto_renew_disabled"],
+      "expected_outcomes": ["applied","duplicate"],
+      "expected_final": {"active":true,"state":"canceled","will_renew":false,"expires_at":"2026-11-27T12:00:00Z"},
+      "why": "same event_id twice: the second delivery changes nothing and still succeeds"
+    },
+    "apple_refund_then_reversal": {
+      "platform": "apple",
+      "account_id": "acct-001",
+      "preloaded_through": "apple_did_renew_trial_converts",
+      "arrival": ["apple_refund","apple_refund_reversed"],
+      "expected_states": ["revoked","active"],
+      "expected_final": {"active":true,"state":"active","will_renew":true,"expires_at":"2026-11-27T12:00:00Z"},
+      "via": "purchase_record_hook",
+      "why": "a reversed refund restores the entitlement with the same expiry"
+    },
+    "apple_billing_failure_then_recovery": {
+      "platform": "apple",
+      "account_id": "acct-002",
+      "arrival": ["apple_fail_to_renew_grace","apple_grace_period_expired","apple_did_renew_billing_recovery"],
+      "expected_states": ["grace","retry","active"],
+      "checkpoints": [
+        {"at":"2026-10-21T00:00:00Z","expected":{"active":true,"state":"grace","expires_at":"2026-10-23T12:00:00Z"}},
+        {"at":"2026-10-24T00:00:00Z","expected":{"active":false,"state":"retry"}},
+        {"at":"2026-10-27T12:00:00Z","expected":{"active":true,"state":"active","expires_at":"2026-11-26T08:00:00Z"}}
+      ]
+    },
+    "apple_billing_failure_then_expiry": {"platform":"apple","account_id":"acct-002","arrival":["apple_fail_to_renew_grace","apple_grace_period_expired","apple_expired_billing_retry_ended"],"expected_states":["grace","retry","expired"],"expected_final":{"active":false,"state":"expired","will_renew":false}},
+    "apple_upgrade_downgrade_revert": {
+      "platform": "apple",
+      "account_id": "acct-003",
+      "arrival": ["apple_subscribed_initial_buy","apple_renewal_pref_upgrade","apple_renewal_pref_downgrade","apple_renewal_pref_reverted"],
+      "expected_detail": [{"plan_code":"vip-monthly-apple","pending_plan_code":null},{"plan_code":"vip-plus-monthly-apple","pending_plan_code":null},{"plan_code":"vip-plus-monthly-apple","pending_plan_code":"vip-monthly-apple"},{"plan_code":"vip-plus-monthly-apple","pending_plan_code":null}],
+      "asks_after_downgrade": [{"product_code":"vip-plus","expected":{"active":true,"state":"active","expires_at":"2026-11-15T09:00:00Z"}}]
+    },
+    "apple_price_increase_consent": {
+      "platform": "apple",
+      "account_id": "acct-003",
+      "preloaded_through": "apple_renewal_pref_upgrade",
+      "arrival": ["apple_price_increase_pending","apple_price_increase_accepted"],
+      "expected_detail": [{"price_change_state":"pending_consent","state":"active"},{"price_change_state":"accepted","state":"active"}]
+    },
+    "apple_price_increase_not_accepted": {"platform":"apple","account_id":"acct-003","preloaded_through":"apple_price_increase_pending","arrival":["apple_expired_price_increase_declined"],"expected_final":{"active":false,"state":"expired","will_renew":false,"end_reason":"price_increase_not_accepted"}},
+    "google_trial_cancel_restart_out_of_order": {
+      "platform": "google",
+      "account_id": "acct-001",
+      "arrival": ["google_restarted","google_canceled"],
+      "fetch_script": [{"message":"google_restarted","fetch_started_at":"2026-10-27T10:50:00Z","result":"fetch_active_auto_renew"},{"message":"google_canceled","fetch_started_at":"2026-10-27T10:51:00Z","result":"fetch_active_auto_renew"}],
+      "expected_outcomes": ["applied","applied_no_change"],
+      "expected_final": {"active":true,"state":"trial","will_renew":true,"expires_at":"2026-11-03T10:00:00Z"},
+      "why": "the notification type is only a wake-up; every fetch returns the store state at fetch time, so arrival order cannot matter"
+    },
+    "google_concurrent_refresh_older_result_loses": {
+      "platform": "google",
+      "account_id": "acct-001",
+      "arrival": ["google_canceled","google_restarted"],
+      "fetch_script": [{"message":"google_canceled","fetch_started_at":"2026-10-27T11:00:00Z","result":"fetch_trial_canceled","completes_after":"google_restarted"},{"message":"google_restarted","fetch_started_at":"2026-10-27T11:00:05Z","result":"fetch_active_auto_renew"}],
+      "expected_outcomes": ["stale","applied"],
+      "expected_final": {"active":true,"state":"trial","will_renew":true},
+      "why": "the fetch that started later wins even when the earlier fetch finishes last"
+    },
+    "google_billing_failure_then_recovery": {
+      "platform": "google",
+      "account_id": "acct-001",
+      "arrival": ["google_in_grace_period","google_on_hold","google_recovered"],
+      "fetch_script": [
+        {"message":"google_in_grace_period","fetch_started_at":"2026-10-27T11:00:10Z","result":"fetch_grace"},
+        {"message":"google_on_hold","fetch_started_at":"2026-10-27T11:05:10Z","result":"fetch_on_hold"},
+        {"message":"google_recovered","fetch_started_at":"2026-10-27T11:10:10Z","result":"fetch_recovered"}
+      ],
+      "expected_states": ["grace","retry","active"],
+      "expected_final": {"active":true,"state":"active","will_renew":true,"expires_at":"2026-12-03T10:00:00Z"}
+    },
+    "google_revoked_cannot_be_undone_by_expired_fetch": {
+      "platform": "google",
+      "account_id": "acct-001",
+      "preloaded_through": "google_purchased",
+      "arrival": ["google_revoked","google_expired"],
+      "fetch_script": [{"message":"google_revoked","fetch_started_at":"2026-10-27T11:15:10Z","result":"fetch_expired_after_revoke"},{"message":"google_expired","fetch_started_at":"2026-10-27T11:20:10Z","result":"fetch_expired_after_revoke"}],
+      "expected_states": ["revoked","revoked"],
+      "expected_final": {"active":false,"state":"revoked","will_renew":false},
+      "why": "the store reports a revoked subscription as expired; the revocation notice marks the chain and an expired fetch cannot clear the mark"
+    },
+    "google_unlinked_then_claimed": {
+      "platform": "google",
+      "arrival": ["google_purchased_without_account_ids"],
+      "fetch_script": [{"message":"google_purchased_without_account_ids","fetch_started_at":"2026-10-27T10:00:05Z","result":"fetch_no_account_ids"}],
+      "expected_outcomes": ["unlinked"],
+      "expected_chain": {"account_id":null,"state":"active"},
+      "then_claim": {"account_id":"acct-002","proof":{"purchase_token":"example-purchase-token-002"},"expected":{"linked":true,"entitlement":{"active":true,"state":"active"}}},
+      "then_claim_by_other": {"account_id":"acct-003","proof":{"purchase_token":"example-purchase-token-002"},"expected":{"error":"linked_to_other_account"}}
+    },
+    "google_pending_purchase_then_canceled": {
+      "platform": "google",
+      "account_id": "acct-003",
+      "arrival": ["google_pending_purchase_canceled"],
+      "fetch_script": [{"message":"google_pending_purchase_canceled","fetch_started_at":"2026-10-27T11:25:10Z","result":"fetch_pending_purchase_canceled"}],
+      "expected_final": {"active":false,"state":"none","will_renew":false}
+    },
+    "google_price_change_outstanding": {
+      "platform": "google",
+      "account_id": "acct-001",
+      "preloaded_through": "google_purchased",
+      "arrival": ["google_price_change_updated"],
+      "fetch_script": [{"message":"google_price_change_updated","fetch_started_at":"2026-10-27T11:30:10Z","result":"fetch_price_change_outstanding"}],
+      "expected_detail": [{"price_change_state":"pending_consent","state":"active"}]
+    }
+  }
+}

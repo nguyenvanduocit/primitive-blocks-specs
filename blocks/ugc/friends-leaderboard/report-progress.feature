@@ -40,6 +40,41 @@ Feature: Report progress
     And week_xp is unchanged at 700
     And streak_days is 2 and accuracy is 60
 
+  @security
+  Scenario Outline: With proof required, only a played attempt credits the week
+    Given REQUIRE_ATTEMPT_PROOF is true
+    And the case "unplayed-attempt-credits-nothing", where attemptState of its attempt_id answers <state>
+    When I send POST /api/board/me/report with the case report
+    Then the response status is 200
+    And xp is 1400
+    And week_xp is <week_xp>
+
+    Examples: (the case itself uses "open")
+      | state     | week_xp |
+      | open      | 100     |
+      | cancelled | 100     |
+      | expired   | 100     |
+      | rejected  | 100     |
+      | null      | 100     |
+      | confirmed | 500     |
+      | won       | 500     |
+      | failed    | 500     |
+
+  @security
+  Scenario: With proof required, a report without an attempt_id credits nothing
+    Given REQUIRE_ATTEMPT_PROOF is true
+    And the case "gain-below-cap"
+    When I send POST /api/board/me/report with the case report
+    Then the response status is 200
+    And xp is 1400 and week_xp is 100, not 500
+
+  @edge
+  Scenario: Without the setting, the attempt is not consulted
+    Given REQUIRE_ATTEMPT_PROOF is false
+    And the case "gain-below-cap" with an attempt_id whose attemptState is null
+    When I send POST /api/board/me/report with the case report
+    Then the profile matches the case "after" (xp 1400, week_xp 500)
+
   @error
   Scenario Outline: Out-of-range or malformed reports are rejected
     When I send POST /api/board/me/report with the "invalid" case "<name>"
@@ -59,6 +94,7 @@ Feature: Report progress
       | string-xp             |
       | client-sent-week-xp   |
       | client-sent-account-id|
+      | attempt-id-bad-shape  |
 
   @security
   Scenario: A report can only change the caller's own profile

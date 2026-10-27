@@ -1,0 +1,94 @@
+{
+  "_comment": "Example catalog and accounts used by the .feature files. Store product ids are placeholders (`example.*`, `example_*`). Prices are absent on purpose: the price shown to a player always comes from the store. `level` ranks products inside one `group_code`; a higher level also satisfies the lower levels of its group (README INV-9). `stipend_slice_days: null` means one stipend per paid term; a number splits a paid term into slices of that many days (README section 3, stipend schedule).",
+  "tenant_id": "tenant-001",
+  "products": [
+    {
+      "product_code": "vip",
+      "group_code": "vip-group",
+      "level": 1,
+      "stipend": { "currency": "gems", "amount": 300 }
+    },
+    {
+      "product_code": "vip-plus",
+      "group_code": "vip-group",
+      "level": 2,
+      "stipend": { "currency": "gems", "amount": 800 }
+    }
+  ],
+  "plans": [
+    {
+      "plan_code": "vip-monthly-apple",
+      "product_code": "vip",
+      "platform": "apple",
+      "store_product_id": "example.vip.monthly",
+      "store_base_plan_id": null,
+      "period": "P1M",
+      "stipend_slice_days": null,
+      "is_active": true
+    },
+    {
+      "plan_code": "vip-yearly-apple",
+      "product_code": "vip",
+      "platform": "apple",
+      "store_product_id": "example.vip.yearly",
+      "store_base_plan_id": null,
+      "period": "P1Y",
+      "stipend_slice_days": 30,
+      "is_active": true
+    },
+    {
+      "plan_code": "vip-plus-monthly-apple",
+      "product_code": "vip-plus",
+      "platform": "apple",
+      "store_product_id": "example.vipplus.monthly",
+      "store_base_plan_id": null,
+      "period": "P1M",
+      "stipend_slice_days": null,
+      "is_active": true
+    },
+    {
+      "plan_code": "vip-monthly-google",
+      "product_code": "vip",
+      "platform": "google",
+      "store_product_id": "example_vip",
+      "store_base_plan_id": "monthly",
+      "period": "P1M",
+      "stipend_slice_days": null,
+      "is_active": true
+    },
+    {
+      "plan_code": "vip-yearly-google",
+      "product_code": "vip",
+      "platform": "google",
+      "store_product_id": "example_vip",
+      "store_base_plan_id": "yearly",
+      "period": "P1Y",
+      "stipend_slice_days": 30,
+      "is_active": true
+    },
+    {
+      "plan_code": "vip-plus-monthly-google",
+      "product_code": "vip-plus",
+      "platform": "google",
+      "store_product_id": "example_vip_plus",
+      "store_base_plan_id": "monthly",
+      "period": "P1M",
+      "stipend_slice_days": null,
+      "is_active": true
+    }
+  ],
+  "accounts": [
+    {
+      "account_id": "acct-001",
+      "store_account_token": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a01"
+    },
+    {
+      "account_id": "acct-002",
+      "store_account_token": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a02"
+    },
+    {
+      "account_id": "acct-003",
+      "store_account_token": "6f1f0a3e-8c52-4d0a-9d55-0a4f5f6e1a03"
+    }
+  ]
+}

@@ -1,0 +1,316 @@
+{
+  "_comment": "Machine-readable form of the defaults in README section 7. Tests and implementers read this one file. Every value is a design default (no platform dictates it) unless a `source` key names the platform rule. Currency and route ids are placeholders the adopter replaces. Category subscription is a service notice: exempt from the marketing caps, own cap service_per_local_day, never a ladder step, never held out, default on only for an adult profile. event_routes[].params is the exact param set each emitter documents; subject_key, extra_fields and revision_from restate the emitter contract. A template uses a subset of params; unused or absent params never break the copy.",
+  "now": "2026-10-21T12:00:00Z",
+  "categories": {
+    "streak": {
+      "promotional": false,
+      "priority": 1,
+      "ttl_seconds": 7200,
+      "return_window_hours": 24,
+      "delivery_priority": "high",
+      "channel_id": "streak.v1"
+    },
+    "events": {
+      "promotional": true,
+      "priority": 2,
+      "ttl_seconds": 21600,
+      "return_window_hours": 24,
+      "delivery_priority": "high",
+      "channel_id": "events.v1"
+    },
+    "timers": {
+      "promotional": false,
+      "priority": 3,
+      "ttl_seconds": 3600,
+      "return_window_hours": 24,
+      "delivery_priority": "normal",
+      "channel_id": "timers.v1"
+    },
+    "rewards": {
+      "promotional": false,
+      "priority": 4,
+      "ttl_seconds": 21600,
+      "return_window_hours": 24,
+      "delivery_priority": "normal",
+      "channel_id": "rewards.v1"
+    },
+    "comeback": {
+      "promotional": true,
+      "priority": 5,
+      "ttl_seconds": 86400,
+      "return_window_hours": 72,
+      "delivery_priority": "normal",
+      "channel_id": "comeback.v1"
+    },
+    "subscription": {
+      "promotional": false,
+      "service_notice": true,
+      "priority": 0,
+      "ttl_seconds": 86400,
+      "return_window_hours": 24,
+      "delivery_priority": "normal",
+      "channel_id": "subscription.v1",
+      "default_enabled": {
+        "adult": true,
+        "other": false
+      }
+    }
+  },
+  "event_routes": {
+    "energy_full": {
+      "category": "timers",
+      "lane": "local",
+      "cancel_on_session": true,
+      "template": "timers.energy_full",
+      "route": "energy",
+      "subject_key": "energy:{meter_code}:{cycle_started_at epoch seconds}",
+      "params": [
+        "meter_code",
+        "cap",
+        "value",
+        "meter_revision"
+      ],
+      "extra_fields": [],
+      "revision_from": "params.meter_revision"
+    },
+    "queue_item_ready": {
+      "category": "timers",
+      "lane": "local",
+      "cancel_on_session": true,
+      "template": "timers.queue_item_ready",
+      "route": "queue",
+      "fire_at_alias": "ends_at",
+      "subject_key": "queue-item:{item_id}",
+      "params": [
+        "queue_code",
+        "queue_kind",
+        "job_id",
+        "slot_index"
+      ],
+      "extra_fields": [
+        "ends_at",
+        "revision"
+      ],
+      "revision_from": "revision"
+    },
+    "streak_at_risk": {
+      "category": "streak",
+      "lane": "local",
+      "cancel_on_session": false,
+      "template": "streak.at_risk",
+      "route": "daily",
+      "subject_key": "streak:{day_key}",
+      "params": [
+        "streak_length",
+        "freezes_held",
+        "cycle_day",
+        "reward_code",
+        "reward_amount"
+      ],
+      "extra_fields": [],
+      "revision_from": null
+    },
+    "event_ending_soon": {
+      "category": "events",
+      "lane": "remote",
+      "cancel_on_session": false,
+      "template": "events.ending_soon",
+      "route": "event",
+      "subject_key": "event:{event_id}",
+      "params": [
+        "event_id",
+        "event_title"
+      ],
+      "extra_fields": [],
+      "revision_from": null
+    },
+    "objective_reward_ready": {
+      "category": "rewards",
+      "lane": "remote",
+      "cancel_on_session": true,
+      "template": "rewards.ready",
+      "route": "objectives",
+      "subject_key": "objective:{objective_id}:{window_key}",
+      "params": [
+        "objective_id",
+        "scope"
+      ],
+      "extra_fields": [],
+      "revision_from": null
+    },
+    "subscription_trial_ending": {
+      "category": "subscription",
+      "lane": "remote",
+      "cancel_on_session": false,
+      "template": "subscription.trial_ending",
+      "route": "subscription",
+      "subject_key": "trial:{term_id}:{reminder_seq}",
+      "params": [
+        "plan_code",
+        "product_code",
+        "platform",
+        "period",
+        "renews_at",
+        "price_milliunits",
+        "currency_code"
+      ],
+      "optional_params": [
+        "price_milliunits",
+        "currency_code"
+      ],
+      "extra_fields": [],
+      "revision_from": null
+    }
+  },
+  "route_allowlist": {
+    "home": [],
+    "energy": [
+      "meter_code"
+    ],
+    "daily": [],
+    "event": [
+      "event_id"
+    ],
+    "objectives": [
+      "objective_id"
+    ],
+    "queue": [
+      "queue_code"
+    ],
+    "settings_notifications": [],
+    "subscription": []
+  },
+  "route_param_pattern": "^[A-Za-z0-9._:-]{1,64}$",
+  "caps": {
+    "per_local_day": 2,
+    "per_7_local_days": 8,
+    "service_per_local_day": 1
+  },
+  "quiet_hours": {
+    "enabled": true,
+    "start": "22:00",
+    "end": "08:00"
+  },
+  "holdout": {
+    "percent": 5,
+    "categories": [
+      "comeback"
+    ]
+  },
+  "age": {
+    "min_age": 16,
+    "unknown_policy": "block"
+  },
+  "priming": {
+    "triggers": [
+      "first_timer_started",
+      "streak_day_2",
+      "session_3"
+    ],
+    "requires_first_win": true,
+    "reask_max": 2,
+    "reask_min_sessions": 3,
+    "provisional_first": false,
+    "denied_hint_max": 2,
+    "denied_hint_min_sessions": 5
+  },
+  "tokens": {
+    "reupload_after_days": 7,
+    "stale_after_days": 30,
+    "prune_after_days": 270,
+    "max_devices_per_send": 3,
+    "local_max_pending": 20,
+    "local_report_max": 50,
+    "max_token_chars": 4096,
+    "max_pending_per_profile": 50,
+    "intent_retention_days": 90
+  },
+  "ladder": {
+    "send_at_local": "18:00",
+    "spread_minutes": 10,
+    "steps": [
+      {
+        "id": "lapse-d3",
+        "after_days": 3,
+        "template": "comeback.reminder",
+        "reward": null
+      },
+      {
+        "id": "lapse-d7",
+        "after_days": 7,
+        "template": "comeback.gift",
+        "reward": {
+          "currency": "coin",
+          "amount": 50,
+          "claim_until_day": 27
+        }
+      },
+      {
+        "id": "lapse-d14",
+        "after_days": 14,
+        "template": "comeback.update",
+        "reward": null
+      },
+      {
+        "id": "lapse-d28",
+        "after_days": 28,
+        "template": "comeback.final",
+        "reward": {
+          "currency": "coin",
+          "amount": 100,
+          "claim_until_day": 90
+        },
+        "final": true
+      }
+    ],
+    "stop": {
+      "max_lapse_days": 30,
+      "after_unopened_sends": 6
+    },
+    "comeback_cooldown_days": 30,
+    "reward_reason": "push-reengagement.comeback-reward"
+  },
+  "provider": {
+    "apns": {
+      "production_host": "api.push.apple.com:443",
+      "sandbox_host": "api.sandbox.push.apple.com:443",
+      "source": "https://developer.apple.com/documentation/usernotifications/sending-notification-requests-to-apns",
+      "jwt_refresh_minutes": 45,
+      "retry_5xx_seconds": 900,
+      "max_payload_bytes": 4096
+    },
+    "fcm": {
+      "endpoint": "https://fcm.googleapis.com/v1/projects/{project_id}/messages:send",
+      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+      "source": "https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages/send",
+      "retry_floor_seconds": 10,
+      "quota_default_wait_seconds": 60,
+      "max_ttl_seconds": 2419200,
+      "max_data_bytes": 4096
+    },
+    "max_attempts": 5,
+    "tick_seconds": 30,
+    "batch_size": 500,
+    "breaker": {
+      "min_sample": 50,
+      "config_error_ratio": 0.2,
+      "pause_minutes": 15
+    }
+  },
+  "attribution": {
+    "default_return_window_hours": 24
+  },
+  "copy": {
+    "title_max_chars": 50,
+    "body_max_chars": 140,
+    "default_locale": "en"
+  },
+  "consent_text_versions": [
+    "v1"
+  ],
+  "client": {
+    "comeback_pending_retry_seconds": 5,
+    "comeback_pending_retry_max": 3,
+    "handled_taps_max": 50
+  }
+}

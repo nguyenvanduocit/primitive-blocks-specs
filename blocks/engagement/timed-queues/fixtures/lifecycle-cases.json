@@ -1,0 +1,449 @@
+{
+  "_comment": "Item lifecycle vectors for engagement.timed-queues. Content from fixtures/catalog.json (definition_version 1, config_version cfg-1). Fixed clock: a case starts at 2026-10-21T12:00:00Z unless a step sets `at`. Account acct-001, tenant tenant-001. Item ids are assigned in creation order per case (item-0001, item-0002, ...). Ledger keys follow README section 6. A step lists only the facts it asserts; every other row and balance stays as before the step.",
+  "_usage": "`given` overrides the preset wallet of catalog.json `balances` and the config; `after` names an earlier case whose final state a case continues. `expect.ledger` lists ledger calls in order; a replay lists none. `expect.handoff` lists hand-off events by subject_key, state, fire_at and revision.",
+
+  "cases": [
+    {
+      "name": "start-craft-bread",
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "do": { "op": "start", "queue_id": "craft", "job_id": "craft.bread", "attempt_id": "att-001", "slot_index": 0 },
+          "expect": {
+            "item": { "id": "item-0001", "state": "running", "slot_index": 0, "starts_at": "2026-10-21T12:00:00Z", "ends_at": "2026-10-21T12:15:00Z", "duration_seconds": 900, "schedule_version": 1, "notice_revision": 1, "input_status": "spent", "cancel_refund_fraction": 0.5 },
+            "ledger": [{ "op": "spend", "currency": "flour", "amount": 3, "reason": "timed-queues.start", "key": "timed-queues:acct-001:item-0001:start:1" }],
+            "balances": { "flour": 6 },
+            "handoff": [{ "subject_key": "queue-item:item-0001", "state": "armed", "fire_at": "2026-10-21T12:15:00Z", "revision": 1 }],
+            "events": ["queue_item_started"]
+          }
+        }
+      ]
+    },
+    {
+      "name": "chain-and-lane-depth",
+      "after": "start-craft-bread",
+      "steps": [
+        {
+          "at": "2026-10-21T12:05:00Z",
+          "do": { "op": "start", "queue_id": "craft", "job_id": "craft.bread", "attempt_id": "att-002" },
+          "expect": {
+            "item": { "id": "item-0002", "state": "queued", "slot_index": 0, "starts_at": "2026-10-21T12:15:00Z", "ends_at": "2026-10-21T12:30:00Z", "schedule_version": 1 },
+            "ledger": [{ "op": "spend", "currency": "flour", "amount": 3, "reason": "timed-queues.start", "key": "timed-queues:acct-001:item-0002:start:1" }],
+            "balances": { "flour": 3 },
+            "handoff": [{ "subject_key": "queue-item:item-0002", "state": "armed", "fire_at": "2026-10-21T12:30:00Z", "revision": 1 }]
+          }
+        },
+        {
+          "at": "2026-10-21T12:06:00Z",
+          "do": { "op": "start", "queue_id": "craft", "job_id": "craft.bread", "attempt_id": "att-003" },
+          "expect": { "error": "lane_full", "ledger": [], "balances": { "flour": 3 }, "note": "craft lane_depth is 2: one running and one queued; the base slot is the only lane" }
+        }
+      ]
+    },
+    {
+      "name": "lazy-completion-no-writes",
+      "after": "chain-and-lane-depth",
+      "steps": [
+        {
+          "at": "2026-10-21T12:20:00Z",
+          "do": { "op": "list", "queue_id": "craft" },
+          "expect": {
+            "effective": { "item-0001": "ready", "item-0002": "running" },
+            "stored": { "item-0001": "running", "item-0002": "queued" },
+            "writes": 0,
+            "note": "no job ran at 12:15:00; the read derives the states and writes nothing"
+          }
+        },
+        {
+          "at": "2026-10-21T13:00:00Z",
+          "do": { "op": "start", "queue_id": "craft", "job_id": "craft.bread", "attempt_id": "att-004" },
+          "expect": {
+            "settled_before_the_write": { "item-0001": "ready", "item-0002": "ready" },
+            "item": { "id": "item-0003", "state": "running", "starts_at": "2026-10-21T13:00:00Z", "ends_at": "2026-10-21T13:15:00Z" },
+            "note": "ready items do not hold the lane: both lane slots are free, so the new item starts at once"
+          }
+        }
+      ]
+    },
+    {
+      "name": "collect-exactly-once",
+      "after": "chain-and-lane-depth",
+      "steps": [
+        {
+          "at": "2026-10-21T12:20:00Z",
+          "do": { "op": "collect", "item_id": "item-0001" },
+          "expect": {
+            "item": { "state": "collected", "collect_status": "granted" },
+            "ledger": [{ "op": "grant", "currency": "bread", "amount": 2, "reason": "timed-queues.collect", "key": "timed-queues:acct-001:item-0001:collect:1" }],
+            "balances": { "bread": 2 },
+            "events": ["queue_item_collected"],
+            "event_properties": { "queue_kind": "craft", "job_id": "craft.bread", "sped_up": false, "replayed": false },
+            "handoff": [{ "subject_key": "queue-item:item-0001", "state": "resolved" }]
+          }
+        },
+        {
+          "at": "2026-10-21T12:20:05Z",
+          "do": { "op": "collect", "item_id": "item-0001" },
+          "expect": { "already_collected": true, "ledger": [], "balances": { "bread": 2 }, "event_properties": { "replayed": true } }
+        },
+        {
+          "at": "2026-10-21T12:20:10Z",
+          "do": { "op": "collect", "item_id": "item-0002" },
+          "expect": { "error": "not_ready", "ends_at": "2026-10-21T12:30:00Z", "ledger": [] }
+        }
+      ]
+    },
+    {
+      "name": "collect-all",
+      "after": "chain-and-lane-depth",
+      "steps": [
+        {
+          "at": "2026-10-21T13:00:00Z",
+          "do": { "op": "collect-all" },
+          "expect": {
+            "results": [{ "item_id": "item-0001", "status": "collected" }, { "item_id": "item-0002", "status": "collected" }],
+            "more": false,
+            "balances": { "bread": 4 },
+            "suggestions": { "start_again": "craft.bread", "affordable": true }
+          }
+        },
+        {
+          "at": "2026-10-21T13:00:02Z",
+          "do": { "op": "collect-all" },
+          "expect": { "results": [], "more": false, "ledger": [], "balances": { "bread": 4 } }
+        }
+      ]
+    },
+    {
+      "name": "speed-up-shifts-the-chain",
+      "after": "chain-and-lane-depth",
+      "steps": [
+        {
+          "at": "2026-10-21T12:06:00Z",
+          "do": { "op": "speed-up", "item_id": "item-0001", "mode": "finish", "quote": { "remaining_seconds": 540, "price_amount": 3 }, "attempt_id": "su-001" },
+          "expect": {
+            "charged": 3,
+            "ledger": [{ "op": "spend", "currency": "gems", "amount": 3, "reason": "timed-queues.speed-up" }],
+            "balances": { "gems": 97 },
+            "items": {
+              "item-0001": { "state": "ready", "ends_at": "2026-10-21T12:06:00Z", "sped_up": true },
+              "item-0002": { "state": "running", "starts_at": "2026-10-21T12:06:00Z", "ends_at": "2026-10-21T12:21:00Z", "schedule_version": 2, "notice_revision": 2 }
+            },
+            "handoff": [
+              { "subject_key": "queue-item:item-0001", "state": "resolved" },
+              { "subject_key": "queue-item:item-0002", "state": "armed", "fire_at": "2026-10-21T12:21:00Z", "revision": 2 }
+            ],
+            "note": "item-0002 moves 540 seconds earlier; nothing moves later"
+          }
+        }
+      ]
+    },
+    {
+      "name": "cancel-queued-full-refund",
+      "after": "chain-and-lane-depth",
+      "steps": [
+        {
+          "at": "2026-10-21T12:05:30Z",
+          "do": { "op": "cancel", "item_id": "item-0002" },
+          "expect": {
+            "item": { "state": "cancelled", "cancel_reason": "player", "input_status": "refunded" },
+            "refund_lines": [{ "currency": "flour", "amount": 3 }],
+            "ledger": [{ "op": "grant", "currency": "flour", "amount": 3, "reason": "timed-queues.cancel-refund", "key": "timed-queues:acct-001:item-0002:refund:1" }],
+            "balances": { "flour": 6 },
+            "handoff": [{ "subject_key": "queue-item:item-0002", "state": "resolved" }]
+          }
+        },
+        {
+          "at": "2026-10-21T12:05:35Z",
+          "do": { "op": "cancel", "item_id": "item-0002" },
+          "expect": { "already_cancelled": true, "ledger": [], "balances": { "flour": 6 } }
+        }
+      ]
+    },
+    {
+      "name": "cancel-running-by-snapshot-fraction",
+      "given": { "balances": { "coins": 1000, "berries": 5 } },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "do": { "op": "start", "queue_id": "craft", "job_id": "craft.jam", "attempt_id": "att-010" },
+          "expect": {
+            "ledger": [
+              { "op": "spend", "currency": "coins", "amount": 40, "reason": "timed-queues.start", "key": "timed-queues:acct-001:item-0001:start:1" },
+              { "op": "spend", "currency": "berries", "amount": 5, "reason": "timed-queues.start", "key": "timed-queues:acct-001:item-0001:start:2" }
+            ],
+            "balances": { "coins": 960, "berries": 0 }
+          }
+        },
+        {
+          "at": "2026-10-21T12:10:00Z",
+          "do": { "op": "cancel", "item_id": "item-0001" },
+          "expect": {
+            "refund_lines": [{ "currency": "coins", "amount": 20 }, { "currency": "berries", "amount": 2 }],
+            "ledger": [
+              { "op": "grant", "currency": "coins", "amount": 20, "reason": "timed-queues.cancel-refund", "key": "timed-queues:acct-001:item-0001:refund:1" },
+              { "op": "grant", "currency": "berries", "amount": 2, "reason": "timed-queues.cancel-refund", "key": "timed-queues:acct-001:item-0001:refund:2" }
+            ],
+            "balances": { "coins": 980, "berries": 2 },
+            "note": "floor(40 * 0.5) = 20 and floor(5 * 0.5) = 2; the odd unit is not returned and the start sheet said 50 percent"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ready-item-cannot-be-cancelled",
+      "after": "start-craft-bread",
+      "steps": [
+        {
+          "at": "2026-10-21T12:16:00Z",
+          "do": { "op": "cancel", "item_id": "item-0001" },
+          "expect": { "error": "invalid_transition", "state": "ready", "ledger": [], "balances": { "flour": 6 } }
+        }
+      ]
+    },
+    {
+      "name": "start-rejected-before-any-spend",
+      "given": { "balances": { "coins": 1000, "berries": 2 } },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "do": { "op": "start", "queue_id": "craft", "job_id": "craft.jam", "attempt_id": "att-011" },
+          "expect": { "error": "insufficient_balance", "currency": "berries", "needed": 5, "balance": 2, "shortfall": 3, "ledger": [], "items_created": 0, "note": "the balance pre-check rejects before reserving anything" }
+        }
+      ]
+    },
+    {
+      "name": "start-undo-when-a-later-line-fails",
+      "given": { "balances": { "coins": 1000, "berries": 5 } },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "do": { "op": "start", "queue_id": "craft", "job_id": "craft.jam", "attempt_id": "att-012", "race": "another device spends 4 berries after the pre-check and before the second spend" },
+          "expect": {
+            "error": "insufficient_balance",
+            "currency": "berries",
+            "needed": 5,
+            "balance": 1,
+            "ledger": [
+              { "op": "spend", "currency": "coins", "amount": 40, "reason": "timed-queues.start", "key": "timed-queues:acct-001:item-0001:start:1" },
+              { "op": "spend", "currency": "berries", "amount": 5, "reason": "timed-queues.start", "key": "timed-queues:acct-001:item-0001:start:2", "result": "rejected" },
+              { "op": "grant", "currency": "coins", "amount": 40, "reason": "timed-queues.cancel-refund", "key": "timed-queues:acct-001:item-0001:start-undo:1" }
+            ],
+            "item": { "state": "cancelled", "cancel_reason": "input_rejected", "input_status": "failed", "starts_at": null, "ends_at": null },
+            "balances": { "coins": 1000, "berries": 1 },
+            "slot_free": true
+          }
+        },
+        {
+          "at": "2026-10-21T12:00:03Z",
+          "do": { "op": "start", "queue_id": "craft", "job_id": "craft.jam", "attempt_id": "att-012" },
+          "expect": { "replayed": true, "error": "insufficient_balance", "ledger": [], "note": "the attempt id is spent; a new attempt id starts a new try" }
+        }
+      ]
+    },
+    {
+      "name": "crash-after-spend-before-confirm",
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "do": { "op": "start", "queue_id": "craft", "job_id": "craft.bread", "attempt_id": "att-020", "crash": "after the flour spend, before T2" },
+          "expect": { "item": { "id": "item-0001", "state": "queued", "input_status": "pending", "starts_at": null, "ends_at": null }, "balances": { "flour": 6 }, "visible_to_client": false }
+        },
+        {
+          "at": "2026-10-21T12:01:10Z",
+          "do": { "op": "recovery-sweep" },
+          "expect": {
+            "ledger": [{ "op": "spend", "currency": "flour", "amount": 3, "key": "timed-queues:acct-001:item-0001:start:1", "result": "replayed original entry, no second entry" }],
+            "item": { "state": "running", "input_status": "spent", "starts_at": "2026-10-21T12:01:10Z", "ends_at": "2026-10-21T12:16:10Z" },
+            "balances": { "flour": 6 },
+            "note": "times are stamped at confirmation, so the player is not credited the minute the request was dead"
+          }
+        }
+      ]
+    },
+    {
+      "name": "crash-before-spend-balance-gone",
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "do": { "op": "start", "queue_id": "craft", "job_id": "craft.bread", "attempt_id": "att-021", "crash": "after T1, before any spend; another device then uses all flour" },
+          "expect": { "item": { "state": "queued", "input_status": "pending" }, "balances": { "flour": 0 } }
+        },
+        {
+          "at": "2026-10-21T12:01:10Z",
+          "do": { "op": "recovery-sweep" },
+          "expect": { "item": { "state": "cancelled", "cancel_reason": "input_rejected", "input_status": "failed" }, "ledger": [], "balances": { "flour": 0 }, "slot_free": true }
+        }
+      ]
+    },
+    {
+      "name": "replay-and-conflict",
+      "after": "start-craft-bread",
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:04Z",
+          "do": { "op": "start", "queue_id": "craft", "job_id": "craft.bread", "attempt_id": "att-001", "slot_index": 0 },
+          "expect": { "replayed": true, "item": { "id": "item-0001", "ends_at": "2026-10-21T12:15:00Z" }, "ledger": [], "balances": { "flour": 6 }, "event_properties": { "replayed": true } }
+        },
+        {
+          "at": "2026-10-21T12:00:05Z",
+          "do": { "op": "start", "queue_id": "craft", "job_id": "craft.jam", "attempt_id": "att-001" },
+          "expect": { "error": "attempt_conflict", "ledger": [] }
+        }
+      ]
+    },
+    {
+      "name": "two-devices-start-at-once",
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "do": { "op": "start-concurrently", "phone": { "attempt_id": "att-030", "queue_id": "expedition", "job_id": "expedition.long", "slot_index": 0 }, "tablet": { "attempt_id": "att-031", "queue_id": "expedition", "job_id": "expedition.long", "slot_index": 0 } },
+          "expect": {
+            "winner": "phone",
+            "tablet_first_answer": "start_in_progress",
+            "tablet_retry_answer": "lane_full",
+            "ledger_spends": 1,
+            "balances": { "coins": 900 },
+            "items_created": 1,
+            "note": "expedition lane_depth is 1; the tablet may start in slot 1, which is a different lane, with its own attempt"
+          }
+        }
+      ]
+    },
+    {
+      "name": "prerequisites-and-repeatability",
+      "given": { "balances": { "coins": 5000 } },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "start", "queue_id": "build", "job_id": "build.farm.l3", "attempt_id": "att-040" }, "expect": { "error": "job_locked", "reason": "prerequisite", "missing": ["build.farm.l2"], "ledger": [] } },
+        { "at": "2026-10-21T12:00:01Z", "do": { "op": "start", "queue_id": "build", "job_id": "build.farm.l2", "attempt_id": "att-041" }, "expect": { "item": { "id": "item-0001", "state": "running", "ends_at": "2026-10-21T14:00:01Z" }, "balances": { "coins": 4500 } } },
+        { "at": "2026-10-21T12:00:02Z", "do": { "op": "start", "queue_id": "build", "job_id": "build.farm.l2", "attempt_id": "att-042" }, "expect": { "error": "job_locked", "reason": "max_active", "ledger": [] } },
+        { "at": "2026-10-21T14:10:00Z", "do": { "op": "collect", "item_id": "item-0001" }, "expect": { "item": { "state": "collected" }, "host_effect_calls": [{ "code": "farm.level", "amount": 2, "idempotency_key": "item-0001" }] } },
+        { "at": "2026-10-21T14:10:01Z", "do": { "op": "start", "queue_id": "build", "job_id": "build.farm.l2", "attempt_id": "att-043" }, "expect": { "error": "job_locked", "reason": "not_repeatable", "ledger": [] } },
+        { "at": "2026-10-21T14:10:02Z", "do": { "op": "start", "queue_id": "build", "job_id": "build.farm.l3", "attempt_id": "att-044" }, "expect": { "item": { "state": "running", "duration_seconds": 28800 } } }
+      ]
+    },
+    {
+      "name": "stacked-time-cap",
+      "given": { "balances": { "coins": 5000 }, "config": { "MAX_LANE_SECONDS": 30000 }, "collected_jobs": ["build.farm.l2"] },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "start", "queue_id": "build", "job_id": "build.farm.l3", "attempt_id": "att-050" }, "expect": { "item": { "id": "item-0001", "state": "running", "ends_at": "2026-10-21T20:00:00Z" } } },
+        { "at": "2026-10-21T12:30:00Z", "do": { "op": "start", "queue_id": "build", "job_id": "build.storage.l2", "attempt_id": "att-051" }, "expect": { "error": "lane_time_cap", "projected_seconds": 34200, "cap_seconds": 30000, "ledger": [] } },
+        { "at": "2026-10-21T15:00:00Z", "do": { "op": "start", "queue_id": "build", "job_id": "build.storage.l2", "attempt_id": "att-052" }, "expect": { "item": { "state": "queued", "starts_at": "2026-10-21T20:00:00Z", "ends_at": "2026-10-21T22:00:00Z" }, "note": "18000 seconds left on the running item plus 7200 is 25200, under the cap" } }
+      ]
+    },
+    {
+      "name": "ready-uncollected-cap",
+      "given": { "config": { "READY_UNCOLLECTED_MAX": 2 }, "balances": { "flour": 9 }, "items": [{ "id": "item-r1", "queue_id": "craft", "state": "ready" }, { "id": "item-r2", "queue_id": "craft", "state": "ready" }] },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "start", "queue_id": "craft", "job_id": "craft.bread", "attempt_id": "att-060" }, "expect": { "error": "ready_uncollected_cap", "ready_count": 2, "ledger": [] } },
+        { "at": "2026-10-21T12:00:10Z", "do": { "op": "collect", "item_id": "item-r1" }, "expect": { "item": { "state": "collected" } } },
+        { "at": "2026-10-21T12:00:20Z", "do": { "op": "start", "queue_id": "craft", "job_id": "craft.bread", "attempt_id": "att-061" }, "expect": { "item": { "state": "running" } } }
+      ]
+    },
+    {
+      "name": "collect-blocked-by-balance-limit",
+      "given": { "balances": { "bread": 99999 }, "items": [{ "id": "item-0001", "queue_id": "craft", "job_id": "craft.bread", "state": "ready", "output_snapshot": [{ "kind": "item", "code": "bread", "amount": 2 }] }] },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "do": { "op": "collect", "item_id": "item-0001" },
+          "expect": { "error": "collect_blocked_cap", "currency": "bread", "room_needed": 1, "item": { "state": "ready", "collect_status": "blocked_cap" }, "balances": { "bread": 99999 }, "output_lost": false }
+        },
+        {
+          "at": "2026-10-21T12:05:00Z",
+          "do": { "op": "collect", "item_id": "item-0001", "after": "the player spent 10 bread; balance 99989" },
+          "expect": { "item": { "state": "collected", "collect_status": "granted" }, "ledger": [{ "op": "grant", "currency": "bread", "amount": 2, "key": "timed-queues:acct-001:item-0001:collect:1" }], "balances": { "bread": 99991 } }
+        }
+      ]
+    },
+    {
+      "name": "collect-with-two-lines-resumes",
+      "given": { "items": [{ "id": "item-0001", "queue_id": "expedition", "job_id": "expedition.long", "state": "ready", "output_snapshot": [{ "kind": "currency", "code": "coins", "amount": 400 }, { "kind": "item", "code": "booster_small", "amount": 1 }] }] },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "collect", "item_id": "item-0001", "fault": "ledger unavailable on line 2" }, "expect": { "http_status": 503, "item": { "state": "ready", "collect_status": "pending" }, "ledger": [{ "op": "grant", "currency": "coins", "amount": 400, "key": "timed-queues:acct-001:item-0001:collect:1", "result": "applied" }] } },
+        { "at": "2026-10-21T12:01:10Z", "do": { "op": "recovery-sweep" }, "expect": { "ledger": [{ "op": "grant", "currency": "coins", "amount": 400, "key": "timed-queues:acct-001:item-0001:collect:1", "result": "replayed original entry" }, { "op": "grant", "currency": "booster_small", "amount": 1, "key": "timed-queues:acct-001:item-0001:collect:2", "result": "applied" }], "item": { "state": "collected", "collect_status": "granted" }, "balances": { "coins": 1400, "booster_small": 1 } } }
+      ]
+    },
+    {
+      "name": "retired-job-finishes-and-cannot-start",
+      "given": { "items": [{ "id": "item-0001", "queue_id": "craft", "job_id": "craft.old-recipe", "state": "running", "ends_at": "2026-10-21T12:10:00Z" }] },
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "start", "queue_id": "craft", "job_id": "craft.old-recipe", "attempt_id": "att-070" }, "expect": { "error": "job_retired", "ledger": [] } },
+        { "at": "2026-10-21T12:11:00Z", "do": { "op": "collect", "item_id": "item-0001" }, "expect": { "item": { "state": "collected" }, "balances": { "bread": 1 } } }
+      ]
+    },
+    {
+      "name": "config-lengthen-leaves-running-items-alone",
+      "after": "start-craft-bread",
+      "steps": [
+        { "at": "2026-10-21T12:05:00Z", "do": { "op": "publish", "changes": { "craft.bread": { "duration_seconds": 1800 } }, "definition_version": 2 }, "expect": { "published": true, "items_changed": 0 } },
+        { "at": "2026-10-21T12:14:59Z", "do": { "op": "list", "queue_id": "craft" }, "expect": { "effective": { "item-0001": "running" }, "items": { "item-0001": { "ends_at": "2026-10-21T12:15:00Z", "duration_seconds": 900, "definition_version": 1 } } } },
+        { "at": "2026-10-21T12:16:00Z", "do": { "op": "start", "queue_id": "craft", "job_id": "craft.bread", "attempt_id": "att-080" }, "expect": { "item": { "id": "item-0002", "definition_version": 2, "duration_seconds": 1800, "starts_at": "2026-10-21T12:16:00Z", "ends_at": "2026-10-21T12:46:00Z" } } }
+      ]
+    },
+    {
+      "name": "operator-rebase-shortens-only",
+      "after": "chain-and-lane-depth",
+      "steps": [
+        { "at": "2026-10-21T12:05:00Z", "do": { "op": "publish", "changes": { "craft.bread": { "duration_seconds": 600 } }, "definition_version": 2 }, "expect": { "items_changed": 0 } },
+        {
+          "at": "2026-10-21T12:05:10Z",
+          "do": { "op": "rebase_shorter", "job_id": "craft.bread", "definition_version": 2, "reason": "event: faster crafting for running items" },
+          "expect": {
+            "items": {
+              "item-0001": { "ends_at": "2026-10-21T12:10:00Z", "schedule_version": 2, "notice_revision": 2 },
+              "item-0002": { "starts_at": "2026-10-21T12:10:00Z", "ends_at": "2026-10-21T12:20:00Z", "schedule_version": 2, "notice_revision": 2, "duration_seconds": 600 }
+            },
+            "handoff": [
+              { "subject_key": "queue-item:item-0001", "state": "armed", "fire_at": "2026-10-21T12:10:00Z", "revision": 2 },
+              { "subject_key": "queue-item:item-0002", "state": "armed", "fire_at": "2026-10-21T12:20:00Z", "revision": 2 }
+            ],
+            "note": "rebase lowers the snapshot duration of every queued and running item of the job to the new value and never raises it; item-0002 then starts when item-0001 now ends"
+          }
+        },
+        { "at": "2026-10-21T12:06:00Z", "do": { "op": "rebase_shorter", "job_id": "craft.bread", "definition_version": 2 }, "expect": { "items_changed": 0, "note": "idempotent" } },
+        { "at": "2026-10-21T12:07:00Z", "do": { "op": "publish", "changes": { "craft.bread": { "duration_seconds": 1200 } }, "definition_version": 3 }, "expect": { "items_changed": 0 } },
+        { "at": "2026-10-21T12:07:10Z", "do": { "op": "rebase_shorter", "job_id": "craft.bread", "definition_version": 3 }, "expect": { "items_changed": 0, "note": "min(ends_at, starts_at + 1200) never lengthens" } }
+      ]
+    },
+    {
+      "name": "snapshot-keeps-refund-input-and-output",
+      "after": "start-craft-bread",
+      "steps": [
+        { "at": "2026-10-21T12:02:00Z", "do": { "op": "publish", "changes": { "craft.bread": { "input": [{ "currency": "flour", "amount": 6 }], "output": [{ "kind": "item", "code": "bread", "amount": 3 }], "cancel_refund_fraction": 1.0 } }, "definition_version": 2 }, "expect": { "items_changed": 0 } },
+        { "at": "2026-10-21T12:03:00Z", "do": { "op": "cancel", "item_id": "item-0001" }, "expect": { "refund_lines": [{ "currency": "flour", "amount": 1 }], "note": "floor(3 * 0.5) from the item's snapshot, not floor(6 * 1.0) from the new definition" } }
+      ]
+    },
+    {
+      "name": "snapshot-keeps-output",
+      "after": "start-craft-bread",
+      "steps": [
+        { "at": "2026-10-21T12:02:00Z", "do": { "op": "publish", "changes": { "craft.bread": { "output": [{ "kind": "item", "code": "bread", "amount": 3 }] } }, "definition_version": 2 }, "expect": { "items_changed": 0 } },
+        { "at": "2026-10-21T12:20:00Z", "do": { "op": "collect", "item_id": "item-0001" }, "expect": { "ledger": [{ "op": "grant", "currency": "bread", "amount": 2, "key": "timed-queues:acct-001:item-0001:collect:1" }] } }
+      ]
+    },
+    {
+      "name": "invalid-set-leaves-the-previous-set-active",
+      "steps": [
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "publish", "changes": { "craft.jam": { "input": [{ "currency": "coins", "amount": 40 }, { "currency": "gems", "amount": 1 }] } }, "definition_version": 2 }, "expect": { "published": false, "error": "premium_input", "active_definition_version": 1 } }
+      ]
+    },
+    {
+      "name": "merge-keeps-the-busier-lane",
+      "given": { "note": "guest account guest-9 and account acct-001 both have craft slot 0 busy" },
+      "steps": [
+        {
+          "at": "2026-10-21T12:00:00Z",
+          "do": { "op": "mergeAccounts", "from": "guest-9", "into": "acct-001", "merge_id": "merge-1", "from_items": [{ "id": "g-1", "queue_id": "craft", "slot_index": 0, "state": "running", "ends_at": "2026-10-21T12:10:00Z", "input_snapshot": [{ "currency": "flour", "amount": 3 }] }, { "id": "g-r", "queue_id": "craft", "slot_index": 0, "state": "ready" }], "into_items": [{ "id": "a-1", "queue_id": "craft", "slot_index": 0, "state": "running", "ends_at": "2026-10-21T13:00:00Z" }] },
+          "expect": {
+            "kept": ["a-1", "g-r"],
+            "cancelled": [{ "id": "g-1", "cancel_reason": "operator", "refund_fraction": 1, "refund_lines": [{ "currency": "flour", "amount": 3 }] }],
+            "rule": "the lane with the larger remaining time keeps its items; ready items of both accounts are kept; the other lane's queued and running items are cancelled with a full refund"
+          }
+        },
+        { "at": "2026-10-21T12:00:00Z", "do": { "op": "mergeAccounts", "from": "guest-9", "into": "acct-001", "merge_id": "merge-1", "repeat": true }, "expect": { "result": "the first result of merge-1 is returned", "changes": 0 } },
+        { "at": "2026-10-21T12:00:01Z", "do": { "op": "mergeAccounts", "from": "guest-9", "into": "acct-001", "merge_id": "merge-2", "from_items": [{ "id": "g-2", "queue_id": "craft", "slot_index": 0, "state": "queued", "input_status": "pending" }] }, "expect": { "error": "merge_blocked_pending", "changes": 0 } }
+      ]
+    }
+  ]
+}

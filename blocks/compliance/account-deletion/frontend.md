@@ -64,6 +64,10 @@ async function onConfirmClick(): Promise<boolean> {
 
 In the native app the same step is the system sheet (Google, or Sign in with Apple on iOS), not a popup. For Apple, keep the returned authorization code and send it with the request; it is what makes revocation possible. **[origin]** `nativeAuth.ts:25`, `firebasePort.ts:154-156`.
 
+## Guest accounts
+
+A guest (`auth.guest-account`) has no provider sheet, so Pattern 1 does not apply to it. **[extrapolated]** The confirm dialog still states what is deleted, that it cannot be undone and what stays, and says that the game lives on this device in place of "you will be asked to confirm it is you". On confirm the client reads the device secret from secure storage, sends it with the prefetched challenge as the `guest` proof (`backend.md` Pattern 1b), and on `204` removes every device copy of the credential as `auth.guest-account` section 3.9 lists them, then follows Pattern 3. A guest whose credential is gone has no session and cannot reach Settings; it uses the recovery-code route of that block.
+
 ## Pattern 2: Deletion state and messages
 
 <!-- PATTERN: deletion-state -->

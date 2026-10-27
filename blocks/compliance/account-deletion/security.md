@@ -53,16 +53,30 @@ Provenance tags: **[origin]** = behavior shipped in the origin app (Firebase, cl
 - Events and metrics carry provider and outcome only.
 - The Apple signing key (direct variant) lives in the secret store, never in client code or the repository.
 
+### 6. Guest account deleted with a session alone or a copied credential
+
+**Impact**: Critical. A guest has no provider to re-authenticate with: the device credential is the account. A stolen session token must not be able to erase it, and anyone who holds the credential can.
+
+**Mitigations** (all **[extrapolated]**; the origin has no guests):
+- The proof is the device credential shown again together with a single-use challenge issued to this session (`backend.md` Pattern 1b). The session alone never deletes a guest. This is the same rule `auth.guest-account` applies to link start and recovery codes.
+- The credential is looked up by its SHA-256 hash and only among the active `device` credentials of the session's account. An unknown, retired or other account's secret answers the same `401 reauth_required`; the answer never says which case it was.
+- The challenge is single use and expires after `ACCOUNT_DELETION_CHALLENGE_TTL_SECONDS`; a replayed challenge answers `401 reauth_required` and changes nothing.
+- The challenge and deletion endpoints are rate limited per session and per IP as for the provider proofs (`429 rate_limited`).
+- The secret is read from secure storage for this one request; it is never logged, never stored by this block and never echoed.
+
+**Accepted property**: whoever holds the unlocked device holds the guest account, and the platform's screen lock is the only stronger factor. The dialog says the game lives on this device and that deletion cannot be undone. The recovery-code route for a guest without a credential, and its limits, belong to `auth.guest-account` (section 3.9).
+
 ## Validation Rules
 
 | Field | Validation | Error |
 |---|---|---|
 | session | valid, unexpired | `401 no_session` |
-| `provider` | one of the user's linked providers (`google`, `apple`) | `400 invalid_provider` |
+| `provider` | one of the user's linked providers (`google`, `apple`), or `guest` for an active guest account | `400 invalid_provider` |
 | `id_token` | present; signature, `iss`, `aud`, `exp` valid per `auth.google-login` | `401 reauth_required` |
 | `id_token.sub` | equals the user's subject for `provider` | `403 wrong_account` |
-| `nonce` | issued to this session, unused, unexpired; equals the token's `nonce` claim | `401 reauth_required` |
+| `nonce` | issued to this session, unused, unexpired; equals the token's `nonce` claim (`guest`: the body's `nonce`, there is no token) | `401 reauth_required` |
 | `id_token.iat` | within `ACCOUNT_DELETION_REAUTH_MAX_AGE_SECONDS` | `401 reauth_required` |
+| `device_secret` | `guest` only; its SHA-256 equals the `secret_hash` of an active `device` credential of the session's account | `401 reauth_required` |
 | `authorization_code` | optional; Apple only; forwarded to revocation, never stored | none |
 | body size | small fixed limit (tokens only) | `413` |
 
@@ -77,10 +91,12 @@ Provenance tags: **[origin]** = behavior shipped in the origin app (Firebase, cl
 |---|---|---|
 | `APPLE_PRIVATE_KEY` | secret store / environment variable | direct Apple revocation only; never commit; rotate per your key policy |
 | Provider client secrets | environment variables | as in `auth.google-login` |
+| Guest device secret | the guest's secure storage on the device | sent once in the deletion request body; never logged or stored by this block; the server holds only its hash (`auth.guest-account`) |
 | Firebase web API key | build-time config | **[origin]** a public project identifier, not a secret; access is decided by authentication and rules (`CONTRACT.md:123`). Do not treat it as a credential and do not paste it into docs |
 
 ## Compliance Notes
 
 - This block does not restate any store's policy text, review deadlines or exemptions, because the origin repository does not contain them. The origin labels its feature with a store guideline number in its own contract; read the current store policy yourself.
 - Whether an app-store reviewer accepts an in-app deletion that keeps on-device data, or keeps purchase records, was **not tested** in the origin: Apple's review outcome for that app is unknown. Say plainly in the dialog and privacy page what stays.
+- Whether Google Play treats a silently created guest as an account for its deletion policy is not settled by its page. `auth.guest-account` treats guests as in scope on both stores (its section 3.9, a design choice), and the `guest` proof exists so a guest can delete in the app.
 - The store listing forms ask for a deletion URL (the origin's Play data-safety import has `PSL_ACCOUNT_DELETION_URL` and `PSL_DATA_DELETION_URL`, both pointing at the privacy page). Whether a URL is mandatory is marked "maybe required" in that form, not decided by the evidence. The privacy page must still describe the in-app path.

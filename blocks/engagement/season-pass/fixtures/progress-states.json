@@ -1,0 +1,243 @@
+{
+  "_comment": "Seed players for claim, premium, skip, boost, cap and settlement scenarios. State is as of the fixed clock 2026-10-21T12:00:00Z unless a scenario says otherwise. Balances are ledger balances (owned by billing.virtual-currency). 'counters' are the sums of allowed_xp already booked in xp_events for the named day_key (the account's local date) and for the whole season. All ids are placeholders.",
+  "tenant_id": "tenant-001",
+  "now": "2026-10-21T12:00:00Z",
+  "season_id": "season-2026-10",
+  "accounts": [
+    {
+      "_comment": "Free player at tier 5 with 50 XP into the tier. Claimable: free tiers 3, 4, 5. Local time is UTC+7 (no daylight saving), so 12:00Z is 19:00 on 2026-10-21 and 17:00:00Z is 00:00:00 on 2026-10-22.",
+      "account_id": "acc-ann",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "total_xp": 750,
+      "premium_state": "none",
+      "claims": [
+        {
+          "track": "free",
+          "tier": 1,
+          "state": "granted"
+        }
+      ],
+      "balances": {
+        "coin": 0,
+        "gem": 100
+      },
+      "counters": {
+        "day_key": "2026-10-21",
+        "day": {
+          "objective.completed": 280,
+          "level.completed": 0,
+          "event.stage_completed": 0
+        },
+        "season": {
+          "objective.completed": 1500,
+          "level.completed": 800,
+          "event.stage_completed": 440
+        }
+      },
+      "expected_claimable": [
+        {
+          "track": "free",
+          "tier": 3
+        },
+        {
+          "track": "free",
+          "tier": 4
+        },
+        {
+          "track": "free",
+          "tier": 5
+        }
+      ]
+    },
+    {
+      "_comment": "Premium holder at tier 7 (exactly 1150 XP). Premium bought 2026-10-12T14:00:00Z with txn-1001. Claimable: premium tiers 4, 5, 6, 7 (four rewards). Time zone UTC-7 in October: 12:00Z is 05:00 on 2026-10-21.",
+      "account_id": "acc-bob",
+      "timezone": "America/Los_Angeles",
+      "total_xp": 1150,
+      "premium_state": "active",
+      "premium_purchase_ref": "txn-1001",
+      "claims": [
+        {
+          "track": "free",
+          "tier": 1,
+          "state": "granted"
+        },
+        {
+          "track": "free",
+          "tier": 3,
+          "state": "granted"
+        },
+        {
+          "track": "free",
+          "tier": 4,
+          "state": "granted"
+        },
+        {
+          "track": "free",
+          "tier": 5,
+          "state": "granted"
+        },
+        {
+          "track": "free",
+          "tier": 7,
+          "state": "granted"
+        },
+        {
+          "track": "premium",
+          "tier": 1,
+          "state": "granted"
+        },
+        {
+          "track": "premium",
+          "tier": 2,
+          "state": "granted"
+        },
+        {
+          "track": "premium",
+          "tier": 3,
+          "state": "granted"
+        }
+      ],
+      "balances": {
+        "coin": 800,
+        "gem": 500
+      },
+      "counters": {
+        "day_key": "2026-10-21",
+        "day": {
+          "objective.completed": 300
+        },
+        "season": {
+          "objective.completed": 2000
+        }
+      },
+      "expected_claimable": [
+        {
+          "track": "premium",
+          "tier": 4
+        },
+        {
+          "track": "premium",
+          "tier": 5
+        },
+        {
+          "track": "premium",
+          "tier": 6
+        },
+        {
+          "track": "premium",
+          "tier": 7
+        }
+      ]
+    },
+    {
+      "_comment": "Free player at tier 7 who is about to buy premium (txn-2001). Claimable before the purchase: free tier 7. After activation eight rewards are claimable in total: free tier 7 plus premium tiers 1 to 7.",
+      "account_id": "acc-cy",
+      "timezone": "UTC",
+      "total_xp": 1150,
+      "premium_state": "none",
+      "claims": [
+        {
+          "track": "free",
+          "tier": 1,
+          "state": "granted"
+        },
+        {
+          "track": "free",
+          "tier": 3,
+          "state": "granted"
+        },
+        {
+          "track": "free",
+          "tier": 4,
+          "state": "granted"
+        },
+        {
+          "track": "free",
+          "tier": 5,
+          "state": "granted"
+        }
+      ],
+      "balances": {
+        "coin": 0,
+        "gem": 0
+      },
+      "expected_claimable": [
+        {
+          "track": "free",
+          "tier": 7
+        }
+      ],
+      "expected_claimable_after_premium": 8
+    },
+    {
+      "_comment": "Late joiner: no progress row yet. Used for the catch-up option and for the first-event path.",
+      "account_id": "acc-dee",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "total_xp": 0,
+      "premium_state": "none",
+      "claims": [],
+      "balances": {
+        "coin": 0,
+        "gem": 0
+      }
+    },
+    {
+      "_comment": "Premium holder whose purchase txn-3001 is refunded. Premium tiers 1 and 2 are claimed (gem 10, coin 200). Her gem balance is 4 because she spent 6, so a claw back of unspent value takes 4 gem and 200 coin and the ledger never goes below zero.",
+      "account_id": "acc-eve",
+      "timezone": "UTC",
+      "total_xp": 350,
+      "premium_state": "active",
+      "premium_purchase_ref": "txn-3001",
+      "claims": [
+        {
+          "track": "premium",
+          "tier": 1,
+          "state": "granted"
+        },
+        {
+          "track": "premium",
+          "tier": 2,
+          "state": "granted"
+        }
+      ],
+      "balances": {
+        "coin": 500,
+        "gem": 4
+      }
+    },
+    {
+      "_comment": "Player at the final defined tier plus two repeat tiers (total_xp 2600 is tier 12), premium active, nothing claimed above tier 10. Used for repeat-tier claims.",
+      "account_id": "acc-fay",
+      "timezone": "UTC",
+      "total_xp": 2600,
+      "premium_state": "active",
+      "premium_purchase_ref": "txn-8001",
+      "claims": [],
+      "balances": {
+        "coin": 0,
+        "gem": 0
+      },
+      "expected_claimable_count": 19,
+      "expected_claimable_breakdown": "7 free (tiers 1,3,4,5,7,8,10) + 10 premium (tiers 1 to 10) + 2 repeat premium (tiers 11, 12)"
+    },
+    {
+      "_comment": "Guest account that earned 300 XP and claimed free tier 1; merged into acc-ann in the account lifecycle scenarios. After the merge acc-ann has total_xp 1050 (tier 6) and free tier 1 claimed once.",
+      "account_id": "acc-guest",
+      "timezone": "UTC",
+      "total_xp": 300,
+      "premium_state": "none",
+      "claims": [
+        {
+          "track": "free",
+          "tier": 1,
+          "state": "granted"
+        }
+      ],
+      "balances": {
+        "coin": 100,
+        "gem": 0
+      }
+    }
+  ]
+}

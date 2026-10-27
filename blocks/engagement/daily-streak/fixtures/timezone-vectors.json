@@ -1,0 +1,160 @@
+{
+  "_comment": "Computed with tz database 2026a (Node 26 bundled data). Re-verify with the tz data of the stack under test; a stack whose data differs has an outdated database, not a different expectation.",
+  "instant_to_day_key": [
+    { "zone": "America/New_York", "instant": "2026-03-08T04:59:59Z", "day_key": "2026-03-07", "note": "last second before the 23-hour day (spring forward at 02:00 local)" },
+    { "zone": "America/New_York", "instant": "2026-03-08T05:00:00Z", "day_key": "2026-03-08", "note": "first instant of the 23-hour day" },
+    { "zone": "America/New_York", "instant": "2026-03-09T03:59:59Z", "day_key": "2026-03-08", "note": "last second of the 23-hour day" },
+    { "zone": "America/New_York", "instant": "2026-03-09T04:00:00Z", "day_key": "2026-03-09", "note": "first instant of the next day" },
+    { "zone": "America/New_York", "instant": "2025-11-02T03:59:59Z", "day_key": "2025-11-01", "note": "last second before the 25-hour day (fall back at 02:00 local)" },
+    { "zone": "America/New_York", "instant": "2025-11-02T04:00:00Z", "day_key": "2025-11-02", "note": "first instant of the 25-hour day" },
+    { "zone": "America/New_York", "instant": "2025-11-03T04:59:59Z", "day_key": "2025-11-02", "note": "last second of the 25-hour day" },
+    { "zone": "America/New_York", "instant": "2025-11-03T05:00:00Z", "day_key": "2025-11-03", "note": "first instant of the next day" },
+    {
+      "zone": "America/Havana",
+      "instant": "2026-03-08T04:59:59Z",
+      "day_key": "2026-03-07",
+      "note": "zone whose DST jump happens at midnight: local 00:00 of 2026-03-08 does not exist, the clock goes from 23:59:59 to 01:00:00"
+    },
+    { "zone": "America/Havana", "instant": "2026-03-08T05:00:00Z", "day_key": "2026-03-08", "note": "first instant of 2026-03-08 in that zone (local time 01:00:00)" },
+    { "zone": "Asia/Tokyo", "instant": "2026-10-31T14:59:59Z", "day_key": "2026-10-31", "note": "month end: last second of October" },
+    { "zone": "Asia/Tokyo", "instant": "2026-10-31T15:00:00Z", "day_key": "2026-11-01", "note": "month end: first second of November" },
+    { "zone": "Etc/UTC", "instant": "2026-12-31T23:59:59Z", "day_key": "2026-12-31", "note": "year end" },
+    { "zone": "Etc/UTC", "instant": "2027-01-01T00:00:00Z", "day_key": "2027-01-01", "note": "year start" },
+    { "zone": "Pacific/Auckland", "instant": "2028-02-28T10:59:59Z", "day_key": "2028-02-28", "note": "leap year: day before the leap day" },
+    { "zone": "Pacific/Auckland", "instant": "2028-02-28T11:00:00Z", "day_key": "2028-02-29", "note": "leap year: first instant of 2028-02-29" },
+    { "zone": "America/Los_Angeles", "instant": "2026-10-27T12:00:00Z", "day_key": "2026-10-27", "note": "the fixed test clock seen from Los Angeles" },
+    { "zone": "Asia/Tokyo", "instant": "2026-10-27T12:00:00Z", "day_key": "2026-10-27", "note": "the fixed test clock seen from Tokyo" },
+    { "zone": "Pacific/Kiritimati", "instant": "2026-10-27T12:00:00Z", "day_key": "2026-10-28", "note": "the fixed test clock seen from UTC+14: already the next date" }
+  ],
+  "day_bounds": [
+    { "zone": "America/New_York", "day_key": "2026-03-08", "starts_at": "2026-03-08T05:00:00Z", "ends_at": "2026-03-09T04:00:00Z", "hours": 23, "note": "23-hour day" },
+    { "zone": "America/New_York", "day_key": "2025-11-02", "starts_at": "2025-11-02T04:00:00Z", "ends_at": "2025-11-03T05:00:00Z", "hours": 25, "note": "25-hour day" },
+    {
+      "zone": "America/New_York",
+      "day_key": "2026-03-09",
+      "starts_at": "2026-03-09T04:00:00Z",
+      "ends_at": "2026-03-10T04:00:00Z",
+      "hours": 24,
+      "note": "ordinary 24-hour day after a DST change"
+    },
+    {
+      "zone": "America/Havana",
+      "day_key": "2026-03-08",
+      "starts_at": "2026-03-08T05:00:00Z",
+      "ends_at": "2026-03-09T04:00:00Z",
+      "hours": 23,
+      "note": "day that starts at local 01:00 because 00:00 does not exist"
+    },
+    {
+      "zone": "Australia/Lord_Howe",
+      "day_key": "2026-10-04",
+      "starts_at": "2026-10-03T13:30:00Z",
+      "ends_at": "2026-10-04T13:00:00Z",
+      "hours": 23.5,
+      "note": "30-minute DST shift: 23.5-hour day"
+    },
+    {
+      "zone": "Australia/Lord_Howe",
+      "day_key": "2026-04-05",
+      "starts_at": "2026-04-04T13:00:00Z",
+      "ends_at": "2026-04-05T13:30:00Z",
+      "hours": 24.5,
+      "note": "30-minute DST shift: 24.5-hour day"
+    },
+    { "zone": "Europe/Berlin", "day_key": "2026-10-25", "starts_at": "2026-10-24T22:00:00Z", "ends_at": "2026-10-25T23:00:00Z", "hours": 25, "note": "25-hour day" },
+    { "zone": "Etc/UTC", "day_key": "2026-10-27", "starts_at": "2026-10-27T00:00:00Z", "ends_at": "2026-10-28T00:00:00Z", "hours": 24, "note": "ordinary day" }
+  ],
+  "day_index": [
+    { "day_key": "1970-01-01", "day_index": 0 },
+    { "day_key": "2026-10-27", "day_index": 20753 },
+    { "day_key": "2026-10-31", "day_index": 20757 },
+    { "day_key": "2026-11-01", "day_index": 20758 },
+    { "day_key": "2026-12-31", "day_index": 20818 },
+    { "day_key": "2027-01-01", "day_index": 20819 },
+    { "day_key": "2027-02-28", "day_index": 20877 },
+    { "day_key": "2027-03-01", "day_index": 20878 },
+    { "day_key": "2028-02-28", "day_index": 21242 },
+    { "day_key": "2028-02-29", "day_index": 21243 },
+    { "day_key": "2028-03-01", "day_index": 21244 }
+  ],
+  "consecutive_pairs": [
+    { "from": "2026-10-31", "to": "2026-11-01", "difference": 1, "missed_days": 0, "note": "month end" },
+    { "from": "2026-12-31", "to": "2027-01-01", "difference": 1, "missed_days": 0, "note": "year end" },
+    { "from": "2027-02-28", "to": "2027-03-01", "difference": 1, "missed_days": 0, "note": "February of a non-leap year" },
+    { "from": "2028-02-28", "to": "2028-02-29", "difference": 1, "missed_days": 0, "note": "leap day" },
+    { "from": "2028-02-29", "to": "2028-03-01", "difference": 1, "missed_days": 0, "note": "after the leap day" },
+    { "from": "2028-02-28", "to": "2028-03-01", "difference": 2, "missed_days": 1, "note": "leap day skipped by the player: one missed day" }
+  ],
+  "skipped_date": {
+    "zone": "Pacific/Apia",
+    "note": "Samoa skipped 2011-12-30 (UTC-10 to UTC+14 at 2011-12-30T10:00:00Z). A date that did not exist in the zone is never a missed day.",
+    "credited_claim": { "instant": "2011-12-29T22:00:00Z", "day_key": "2011-12-29" },
+    "next_claim": { "instant": "2011-12-30T22:00:00Z", "day_key": "2011-12-31" },
+    "calendar_difference": 2,
+    "skipped_day_keys": [ "2011-12-30" ],
+    "missed_days_after_exclusion": 0,
+    "state_before": { "current_streak": 5 },
+    "expected": { "current_streak": 6 }
+  },
+  "timezone_validation": {
+    "valid": [ "Europe/Berlin", "America/Argentina/Buenos_Aires", "Asia/Kolkata", "Etc/UTC", "Pacific/Kiritimati" ],
+    "invalid": [ "", "Mars/Olympus_Mons", "UTC+2", "+02:00", "Europe/Berlin ", "europe/berlin" ],
+    "rule": "Accept only identifiers the server tz database lists, compared as written (no trimming, no case folding). Offsets and free-form names are rejected with invalid_timezone."
+  },
+  "timezone_rate_limit": {
+    "settings": { "TIMEZONE_CHANGES_PER_WINDOW": 2, "TIMEZONE_WINDOW_DAYS": 30 },
+    "note": "A change counts when changed_at is later than now minus the window. The first zone set, a request for the zone already in force and an invalid zone never count.",
+    "sequence": [
+      { "at": "2026-09-15T08:00:00Z", "request": "Europe/Berlin", "expect": "accepted", "counts": false, "note": "first set creates the state" },
+      { "at": "2026-10-01T09:00:00Z", "request": "Asia/Tokyo", "expect": "accepted", "counts": true },
+      { "at": "2026-10-10T09:00:00Z", "request": "America/New_York", "expect": "accepted", "counts": true },
+      { "at": "2026-10-20T09:00:00Z", "request": "Europe/London", "expect": "timezone_rate_limited", "next_change_at": "2026-10-31T09:00:00Z" },
+      { "at": "2026-10-31T08:59:59Z", "request": "Europe/London", "expect": "timezone_rate_limited", "next_change_at": "2026-10-31T09:00:00Z" },
+      {
+        "at": "2026-10-31T09:00:00Z",
+        "request": "Europe/London",
+        "expect": "accepted",
+        "counts": true,
+        "note": "the 2026-10-01 change is exactly one window old and falls outside the window"
+      }
+    ]
+  },
+  "timezone_switch": [
+    {
+      "note": "Flying east: the Los Angeles day 2026-10-27 stays claimable until it ends there; no day is excused",
+      "old_zone": "America/Los_Angeles",
+      "new_zone": "Asia/Tokyo",
+      "requested_at": "2026-10-28T04:00:00Z",
+      "old_zone_day_key_at_request": "2026-10-27",
+      "effective_at": "2026-10-28T07:00:00Z",
+      "new_zone_day_key_at_effective_at": "2026-10-28",
+      "excused_day_keys": [],
+      "first_day_key_in_new_zone": "2026-10-28",
+      "ends_at_of_that_day": "2026-10-28T15:00:00Z"
+    },
+    {
+      "note": "Flying west after claiming 2026-10-27: the new zone is still on 2026-10-27 at the switch, so the next claim waits for 2026-10-28 and nothing is lost",
+      "old_zone": "Asia/Tokyo",
+      "new_zone": "America/Los_Angeles",
+      "requested_at": "2026-10-27T12:00:00Z",
+      "old_zone_day_key_at_request": "2026-10-27",
+      "effective_at": "2026-10-27T15:00:00Z",
+      "new_zone_day_key_at_effective_at": "2026-10-27",
+      "excused_day_keys": [],
+      "first_day_key_in_new_zone": "2026-10-27",
+      "ends_at_of_that_day": "2026-10-28T07:00:00Z"
+    },
+    {
+      "note": "A 25-hour offset difference: the new zone jumps one extra date at the switch, that date is excused",
+      "old_zone": "Pacific/Pago_Pago",
+      "new_zone": "Pacific/Kiritimati",
+      "requested_at": "2026-10-27T20:00:00Z",
+      "old_zone_day_key_at_request": "2026-10-27",
+      "effective_at": "2026-10-28T11:00:00Z",
+      "new_zone_day_key_at_effective_at": "2026-10-29",
+      "excused_day_keys": [ "2026-10-28" ],
+      "first_day_key_in_new_zone": "2026-10-29",
+      "ends_at_of_that_day": "2026-10-29T10:00:00Z"
+    }
+  ]
+}

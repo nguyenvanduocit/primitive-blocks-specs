@@ -1,0 +1,56 @@
+{
+  "_comment": "Accounts, credentials and tombstones for guest-issuance.feature, lifecycle-and-recovery.feature and switch-and-delete.feature. All data is example data. `secret` values exist only in this fixture so a test can present them; the server stores only `secret_hash` (SHA-256 hex of the secret, produced by running the hash on these strings). Ids are example UUIDs.",
+  "_usage": "`clock` is the test clock. `exchange_cases` list what POST /api/guest/session answers for each secret; the outcome table is README section 3.2. Timestamps are server instants.",
+
+  "clock": "2026-10-27T12:00:00Z",
+  "tenant_id": "tenant-001",
+
+  "accounts": [
+    { "name": "guest-active",    "id": "a0000000-0000-4000-8000-000000000001", "kind": "guest",  "status": "active",    "created_at": "2026-10-01T09:00:00Z", "last_active_at": "2026-10-26T20:00:00Z", "linked_at": null },
+    { "name": "guest-dormant",   "id": "a0000000-0000-4000-8000-000000000002", "kind": "guest",  "status": "dormant",   "created_at": "2026-03-01T09:00:00Z", "last_active_at": "2026-07-01T00:00:00Z", "dormant_at": "2026-09-29T00:00:00Z", "linked_at": null },
+    { "name": "linked",          "id": "a0000000-0000-4000-8000-000000000003", "kind": "linked", "status": "active",    "created_at": "2026-09-01T09:00:00Z", "last_active_at": "2026-10-26T08:00:00Z", "linked_at": "2026-10-10T10:00:00Z" },
+    { "name": "guest-recovered", "id": "a0000000-0000-4000-8000-000000000004", "kind": "guest",  "status": "active",    "created_at": "2026-08-01T09:00:00Z", "last_active_at": "2026-10-25T08:00:00Z", "linked_at": null },
+    { "name": "guest-abandoned", "id": "a0000000-0000-4000-8000-000000000005", "kind": "guest",  "status": "abandoned", "created_at": "2026-09-15T09:00:00Z", "last_active_at": "2026-10-20T08:00:00Z", "abandoned_at": "2026-10-20T08:05:00Z", "merged_into_account_id": "a0000000-0000-4000-8000-000000000003", "linked_at": null },
+    { "name": "guest-replayed",  "id": "a0000000-0000-4000-8000-000000000006", "kind": "guest",  "status": "active",    "created_at": "2026-10-27T11:50:00Z", "last_active_at": "2026-10-27T11:50:00Z", "linked_at": null }
+  ],
+
+  "credentials": [
+    { "account": "guest-active",    "purpose": "device",   "secret": "device-secret-example-0001", "secret_hash": "59ae234186b1cbdd657564baf561014a6c37395ebe5f695dfe8ecb68ac47f38f", "status": "active" },
+    { "account": "guest-dormant",   "purpose": "device",   "secret": "device-secret-example-0002", "secret_hash": "00a68a3f8aab3e55ea16a587828892a16aa5bb1f2fe60302eb309c7c6d3f906d", "status": "active" },
+    { "account": "linked",          "purpose": "device",   "secret": "device-secret-example-0003", "secret_hash": "a9f4fa4b55458428b731bdc0888cf7cd5ab6cd55237abd86e748bd367be3f63a", "status": "retired", "retired_reason": "linked" },
+    { "account": "guest-recovered", "purpose": "device",   "secret": "device-secret-example-0004", "secret_hash": "285b9a9ec90b53abf4b22f40be46ef8d2d4d9ff3724fe72a2f433a6247b6548e", "status": "retired", "retired_reason": "recovered" },
+    { "account": "guest-recovered", "purpose": "device",   "secret": "device-secret-example-0009", "secret_hash": "8b154106684ca69eff92ee9b8a2cd49c5eaa7f6dd72811afdd5c47c145711576", "status": "active" },
+    { "account": "guest-abandoned", "purpose": "device",   "secret": "device-secret-example-0005", "secret_hash": "9865ec4aa2f0285b37b1366d860c79c251c23b3f8e2a55ab8fcb4f85b82a1567", "status": "retired", "retired_reason": "abandoned" },
+    { "account": "guest-replayed",  "purpose": "device",   "secret": "device-secret-example-0008", "secret_hash": "cba222d00434802251aac9a62c7d00630ce73d27f7a01897a1feab332cd59da6", "status": "retired", "retired_reason": "rotated", "creation_request_id": "req-replay-01" },
+    { "account": "guest-replayed",  "purpose": "device",   "secret": "device-secret-example-0010", "secret_hash": "ddfae5bef64b100805293277591afec1d46676e2abc8b2d8c5b5f2e1d0de9180", "status": "active", "creation_request_id": "req-replay-01" },
+    { "account": "guest-active",    "purpose": "recovery", "secret": "AB0D-EFGH-JKMN-PQRS-TVWX-1Z23", "canonical": "AB0DEFGHJKMNPQRSTVWX1Z23", "secret_hash": "27a9bda77341d3b712ff98ef437ddbd711439e58835b0e24b74fbb9d4987f164", "status": "active" }
+  ],
+
+  "tombstones": [
+    { "secret": "device-secret-example-0006", "secret_hash": "30bd2161ef5d9b161e40c0e3fa6edc1acc1e1fa9d15982a668c2692f67d5f29a", "reason": "inactive",  "created_at": "2026-09-01T00:00:00Z", "expires_at": "2027-09-01T00:00:00Z" },
+    { "secret": "device-secret-example-0007", "secret_hash": "cdd0cdce2bcf4b1bfdbf8511be5f90d17cb209c6aa44dcae0e163b27a533c644", "reason": "deleted",   "created_at": "2026-10-01T00:00:00Z", "expires_at": "2027-10-01T00:00:00Z" }
+  ],
+
+  "exchange_cases": [
+    { "name": "active guest starts silently",        "secret": "device-secret-example-0001", "expect": { "status": 200, "reactivated": false } },
+    { "name": "dormant guest is reactivated",        "secret": "device-secret-example-0002", "expect": { "status": 200, "reactivated": true, "dormant_days": 28 } },
+    { "name": "secret retired by a link",            "secret": "device-secret-example-0003", "expect": { "status": 403, "error": "account_linked" } },
+    { "name": "secret retired by recovery",          "secret": "device-secret-example-0004", "expect": { "status": 410, "error": "credential_retired", "reason": "recovered" } },
+    { "name": "new secret after recovery works",     "secret": "device-secret-example-0009", "expect": { "status": 200, "reactivated": false } },
+    { "name": "secret of an abandoned guest",        "secret": "device-secret-example-0005", "expect": { "status": 410, "error": "account_abandoned" } },
+    { "name": "first secret after a creation replay", "secret": "device-secret-example-0008", "expect": { "status": 410, "error": "credential_retired", "reason": "rotated" } },
+    { "name": "second secret after a creation replay", "secret": "device-secret-example-0010", "expect": { "status": 200, "reactivated": false } },
+    { "name": "tombstone, inactive",                 "secret": "device-secret-example-0006", "expect": { "status": 410, "error": "guest_purged", "reason": "inactive" } },
+    { "name": "tombstone, deleted by the player",    "secret": "device-secret-example-0007", "expect": { "status": 410, "error": "guest_purged", "reason": "deleted" } },
+    { "name": "unknown secret, no reason claimed",   "secret": "device-secret-example-0099", "expect": { "status": 401, "error": "credential_invalid", "no_reason_field": true } }
+  ],
+
+  "recovery_cases": [
+    { "name": "valid code on a new device", "input": "ab0d-efgh-jkmn-pqrs-tvwx-1z23", "expect": { "status": 200, "account": "guest-active", "old_device_credential": "retired:recovered", "code": "retired:used", "new_code_prompted": true } },
+    { "name": "look-alike letters are read as digits", "input": "abOd-efgh-jkmn-pqrs-tvwx-lz23", "expect": { "status": 200, "account": "guest-active" } },
+    { "name": "code of an account that was linked", "input": "ab0d-efgh-jkmn-pqrs-tvwx-1z23", "state": "account guest-active linked after the code was created", "expect": { "status": 403, "error": "account_linked" } },
+    { "name": "code already used", "input": "ab0d-efgh-jkmn-pqrs-tvwx-1z23", "state": "code used once before", "expect": { "status": 410, "error": "credential_retired", "reason": "used" } },
+    { "name": "wrong length is refused before any lookup", "input": "AB0D-EFGH", "expect": { "status": 401, "error": "credential_invalid", "database_reads": 0, "counts_as_attempt": false } },
+    { "name": "unknown code", "input": "ZZZZ-ZZZZ-ZZZZ-ZZZZ-ZZZZ-ZZZZ", "expect": { "status": 401, "error": "credential_invalid", "counts_as_attempt": true } }
+  ]
+}

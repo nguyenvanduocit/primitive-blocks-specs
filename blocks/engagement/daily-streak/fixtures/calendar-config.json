@@ -1,0 +1,41 @@
+{
+  "_comment": "Example calendar and default settings. All amounts are example data for tests, not benchmarks; tune them with the economy owner (see kit guide 03).",
+  "calendar": {
+    "version": "example-2026-10",
+    "cycle_length": 7,
+    "days": [
+      { "day": 1, "lines": [ { "kind": "currency", "code": "coin", "amount": 100 } ] },
+      { "day": 2, "lines": [ { "kind": "currency", "code": "coin", "amount": 150 } ] },
+      { "day": 3, "lines": [ { "kind": "currency", "code": "coin", "amount": 200 } ] },
+      { "day": 4, "lines": [ { "kind": "currency", "code": "coin", "amount": 250 } ] },
+      { "day": 5, "lines": [ { "kind": "currency", "code": "coin", "amount": 300 }, { "kind": "item", "code": "booster-rocket", "amount": 1 } ] },
+      { "day": 6, "lines": [ { "kind": "currency", "code": "coin", "amount": 400 } ] },
+      { "day": 7, "lines": [ { "kind": "currency", "code": "coin", "amount": 500 }, { "kind": "currency", "code": "gem", "amount": 20 }, { "kind": "freeze", "amount": 1 } ] }
+    ],
+    "milestones": [
+      { "id": "m7", "streak": 7, "once": true, "lines": [ { "kind": "currency", "code": "gem", "amount": 30 } ] },
+      { "id": "m30", "streak": 30, "once": true, "lines": [ { "kind": "currency", "code": "gem", "amount": 100 }, { "kind": "item", "code": "avatar-frame-gold", "amount": 1 } ] },
+      { "id": "m100", "streak": 100, "once": true, "lines": [ { "kind": "currency", "code": "gem", "amount": 300 } ] },
+      { "id": "m365", "streak": 365, "once": true, "lines": [ { "kind": "currency", "code": "gem", "amount": 1000 }, { "kind": "item", "code": "avatar-frame-year", "amount": 1 } ] }
+    ]
+  },
+  "settings": {
+    "CLAIM_REQUIREMENT": "play_to_claim",
+    "PLAY_ACTIONS": ["level_complete"],
+    "PLAY_TARGET": 1,
+    "MISS_POLICY": "freeze_protected",
+    "DECAY_PER_MISSED_DAY": 2,
+    "FREEZE_CAP": 2,
+    "FREEZE_PRICE_CURRENCY": null,
+    "FREEZE_PRICE_AMOUNT": null,
+    "REPAIR_WINDOW_DAYS": 2,
+    "REPAIR_MIN_STREAK": 3,
+    "REPAIR_PRICE_CURRENCY": null,
+    "REPAIR_PRICE_PER_MISSED_DAY": null,
+    "REPAIR_PLAY_TARGET": 3,
+    "LOSS_PROMPT_CAP": 1,
+    "TIMEZONE_CHANGES_PER_WINDOW": 2,
+    "TIMEZONE_WINDOW_DAYS": 30,
+    "DOWNTIME_EXCUSE_FRACTION": 0.5
+  }
+}

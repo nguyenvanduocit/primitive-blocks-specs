@@ -1,0 +1,695 @@
+{
+  "_comment": "Template catalog and copy-rule cases. Copy is English placeholder text; the `de` entries are marked placeholders, real translations belong to the adopter. Template syntax is in templates._syntax. A template may name a reward only if its step carries one; a template may state a deadline only through `{ends_in}` bound to a server `ends_at` (time_binding). Service templates (category subscription) also pass the upsell lint (copy_rules.upsell_patterns) and must state the price after the trial and the renewal date.",
+  "templates": {
+    "_syntax": {
+      "required": "{name} is a required variable; when it is absent the intent is suppressed with template_error",
+      "optional": "[[ ... ]] is an optional segment; it is omitted whole, with its own spaces, when any variable inside it is absent",
+      "declared": "a template names only variables listed in vars (required) or optional_vars; each is an emitter param listed in config-defaults.json event_routes[].params or a derived variable described in derived_vars; emitter params the template does not name are ignored"
+    },
+    "timers.energy_full": {
+      "category": "timers",
+      "vars": [],
+      "copy": {
+        "en": {
+          "title": "Energy is full",
+          "body": "Your energy is at the maximum. Ready when you are."
+        },
+        "de": {
+          "title": "[de] Energy is full",
+          "body": "[de] Your energy is at the maximum. Ready when you are."
+        }
+      },
+      "optional_vars": [],
+      "params_used": []
+    },
+    "timers.queue_item_ready": {
+      "category": "timers",
+      "vars": [],
+      "copy": {
+        "en": {
+          "title": "A timer has finished",
+          "body": "Something is ready to collect."
+        }
+      },
+      "optional_vars": [],
+      "params_used": []
+    },
+    "streak.at_risk": {
+      "category": "streak",
+      "vars": [
+        "streak_length"
+      ],
+      "optional_vars": [
+        "reward_amount",
+        "reward_name"
+      ],
+      "params_used": [
+        "streak_length",
+        "reward_amount",
+        "reward_code"
+      ],
+      "derived_vars": {
+        "reward_name": "the localized display name of reward_code from the adopter's item catalog; absent when the code is unknown or reward_code is absent"
+      },
+      "copy": {
+        "en": {
+          "title": "Your {streak_length}-day streak",
+          "body": "Play once today to keep it going.[[ Today's reward: {reward_amount} {reward_name}.]]"
+        },
+        "en-GB": {
+          "title": "Your {streak_length}-day streak",
+          "body": "Play once today to keep it going.[[ Today's reward: {reward_amount} {reward_name}.]]"
+        }
+      }
+    },
+    "events.ending_soon": {
+      "category": "events",
+      "vars": [
+        "event_title",
+        "ends_in"
+      ],
+      "optional_vars": [],
+      "params_used": [
+        "event_title"
+      ],
+      "derived_vars": {
+        "ends_in": "expires_at minus the send instant, rendered in the locale"
+      },
+      "time_binding": "expires_at",
+      "copy": {
+        "en": {
+          "title": "{event_title} ends in {ends_in}",
+          "body": "There is still time to collect the event rewards."
+        }
+      }
+    },
+    "rewards.ready": {
+      "category": "rewards",
+      "vars": [],
+      "optional_vars": [],
+      "params_used": [],
+      "copy": {
+        "en": {
+          "title": "A reward is ready",
+          "body": "Open the game to collect it."
+        }
+      },
+      "note": "the copy never says or implies that the reward expires; the emitter's expires_at only ends the reminder"
+    },
+    "comeback.reminder": {
+      "category": "comeback",
+      "vars": [],
+      "copy": {
+        "en": {
+          "title": "Your game is where you left it",
+          "body": "Pick up from your last level whenever you like."
+        }
+      },
+      "optional_vars": [],
+      "params_used": []
+    },
+    "comeback.gift": {
+      "category": "comeback",
+      "vars": [
+        "reward_amount",
+        "reward_name"
+      ],
+      "requires_reward": true,
+      "copy": {
+        "en": {
+          "title": "A welcome-back gift is ready",
+          "body": "{reward_amount} {reward_name} are waiting for your next visit."
+        }
+      },
+      "optional_vars": [],
+      "params_used": [],
+      "derived_vars": {
+        "reward_amount": "the ladder step's reward amount",
+        "reward_name": "display name of the step's reward currency"
+      }
+    },
+    "comeback.update": {
+      "category": "comeback",
+      "vars": [],
+      "copy": {
+        "en": {
+          "title": "There is something new to try",
+          "body": "New content arrived since your last visit."
+        }
+      },
+      "optional_vars": [],
+      "params_used": []
+    },
+    "comeback.final": {
+      "category": "comeback",
+      "vars": [
+        "reward_amount",
+        "reward_name"
+      ],
+      "requires_reward": true,
+      "copy": {
+        "en": {
+          "title": "A welcome-back gift is ready",
+          "body": "{reward_amount} {reward_name} are waiting whenever you return. This is our last reminder."
+        }
+      },
+      "optional_vars": [],
+      "params_used": [],
+      "derived_vars": {
+        "reward_amount": "the ladder step's reward amount",
+        "reward_name": "display name of the step's reward currency"
+      }
+    },
+    "subscription.trial_ending": {
+      "category": "subscription",
+      "service_notice": true,
+      "vars": [
+        "renewal_date"
+      ],
+      "optional_vars": [
+        "price_text"
+      ],
+      "params_used": [
+        "renews_at",
+        "price_milliunits",
+        "currency_code",
+        "period"
+      ],
+      "derived_vars": {
+        "renewal_date": "renews_at (the first charge date) as a long date in the profile locale and timezone",
+        "price_text": "price_milliunits divided by 1000, formatted as currency_code in the profile locale, followed by a period phrase when period is P1W (per week), P1M (per month), P2M, P3M or P6M (every N months) or P1Y (per year); absent when price_milliunits or currency_code is absent"
+      },
+      "copy": {
+        "en": {
+          "title": "Your free trial ends on {renewal_date}",
+          "body": "[[About {price_text} after that. ]]The exact amount, which taxes can change, is on the store screen. Manage or cancel in Settings."
+        },
+        "en-GB": {
+          "title": "Your free trial ends on {renewal_date}",
+          "body": "[[About {price_text} after that. ]]The exact amount, which taxes can change, is on the store screen. Manage or cancel in Settings."
+        }
+      }
+    }
+  },
+  "locale_resolution_cases": [
+    {
+      "profile_locale": "en-GB",
+      "template": "streak.at_risk",
+      "resolved": "en-GB",
+      "why": "exact tag match"
+    },
+    {
+      "profile_locale": "en-AU",
+      "template": "streak.at_risk",
+      "resolved": "en",
+      "why": "language subtag fallback"
+    },
+    {
+      "profile_locale": "de-AT",
+      "template": "timers.energy_full",
+      "resolved": "de",
+      "why": "language subtag fallback"
+    },
+    {
+      "profile_locale": "ja",
+      "template": "timers.energy_full",
+      "resolved": "en",
+      "why": "default locale fallback"
+    }
+  ],
+  "render_cases": [
+    {
+      "id": "R1-event-title-ok",
+      "template": "events.ending_soon",
+      "locale": "en",
+      "params": {
+        "event_id": "spring-rush",
+        "event_title": "Spring Rush"
+      },
+      "expires_at_minus_send": "3 hours",
+      "title": "Spring Rush ends in 3 hours",
+      "outcome": "ok"
+    },
+    {
+      "id": "R2-event-title-missing",
+      "template": "events.ending_soon",
+      "locale": "en",
+      "params": {
+        "event_id": "spring-rush"
+      },
+      "outcome": "template_error",
+      "why": "event_title is a required variable and is absent; the intent is suppressed, never rendered with a blank"
+    },
+    {
+      "id": "R3-streak-with-reward",
+      "template": "streak.at_risk",
+      "locale": "en",
+      "params": {
+        "streak_length": 6,
+        "freezes_held": 1,
+        "cycle_day": 4,
+        "reward_code": "coin",
+        "reward_amount": 20
+      },
+      "reward_names": {
+        "coin": "coins"
+      },
+      "title": "Your 6-day streak",
+      "body": "Play once today to keep it going. Today's reward: 20 coins.",
+      "outcome": "ok",
+      "why": "freezes_held and cycle_day are declared by the emitter and not named by the template, so they are ignored"
+    },
+    {
+      "id": "R4-streak-no-reward",
+      "template": "streak.at_risk",
+      "locale": "en",
+      "params": {
+        "streak_length": 6,
+        "freezes_held": 1,
+        "cycle_day": 4
+      },
+      "title": "Your 6-day streak",
+      "body": "Play once today to keep it going.",
+      "outcome": "ok",
+      "why": "the optional reward segment is omitted whole when reward_amount or reward_name is absent"
+    },
+    {
+      "id": "R5-streak-unknown-reward-code",
+      "template": "streak.at_risk",
+      "locale": "en",
+      "params": {
+        "streak_length": 6,
+        "reward_code": "unknown-code",
+        "reward_amount": 20
+      },
+      "reward_names": {},
+      "body": "Play once today to keep it going.",
+      "outcome": "ok",
+      "why": "reward_name is derived and absent for an unknown code, so the segment is omitted"
+    },
+    {
+      "id": "R6-trial-price-en",
+      "template": "subscription.trial_ending",
+      "locale": "en",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "params": {
+        "plan_code": "vip-monthly",
+        "product_code": "vip.monthly",
+        "platform": "ios",
+        "period": "P1M",
+        "renews_at": "2026-11-02T12:00:00Z",
+        "price_milliunits": 4990,
+        "currency_code": "USD"
+      },
+      "title": "Your free trial ends on November 2, 2026",
+      "body": "About $4.99 per month after that. The exact amount, which taxes can change, is on the store screen. Manage or cancel in Settings.",
+      "outcome": "ok"
+    },
+    {
+      "id": "R7-trial-price-en-gb",
+      "template": "subscription.trial_ending",
+      "locale": "en-GB",
+      "timezone": "Europe/London",
+      "params": {
+        "plan_code": "vip-monthly",
+        "product_code": "vip.monthly",
+        "platform": "android",
+        "period": "P3M",
+        "renews_at": "2026-11-02T12:00:00Z",
+        "price_milliunits": 11990,
+        "currency_code": "GBP"
+      },
+      "title": "Your free trial ends on 2 November 2026",
+      "body": "About £11.99 every 3 months after that. The exact amount, which taxes can change, is on the store screen. Manage or cancel in Settings.",
+      "outcome": "ok"
+    },
+    {
+      "id": "R8-trial-unknown-price",
+      "template": "subscription.trial_ending",
+      "locale": "en",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "params": {
+        "plan_code": "vip-monthly",
+        "product_code": "vip.monthly",
+        "platform": "ios",
+        "period": "P1M",
+        "renews_at": "2026-11-02T12:00:00Z"
+      },
+      "title": "Your free trial ends on November 2, 2026",
+      "body": "The exact amount, which taxes can change, is on the store screen. Manage or cancel in Settings.",
+      "outcome": "ok",
+      "why": "price_milliunits and currency_code are unknown: the price sentence is omitted and the rest reads correctly"
+    },
+    {
+      "id": "R9-trial-no-renewal-date",
+      "template": "subscription.trial_ending",
+      "locale": "en",
+      "params": {
+        "plan_code": "vip-monthly",
+        "product_code": "vip.monthly",
+        "platform": "ios",
+        "period": "P1M"
+      },
+      "outcome": "template_error",
+      "why": "renews_at is absent, so the required renewal_date cannot be derived; the notice is suppressed rather than sent without a date"
+    }
+  ],
+  "copy_lint_cases": [
+    {
+      "text": "Don't let your streak die!",
+      "violations": [
+        "guilt"
+      ]
+    },
+    {
+      "text": "Your pet is sad without you",
+      "violations": [
+        "guilt"
+      ]
+    },
+    {
+      "text": "Only 2 left, hurry!",
+      "violations": [
+        "false_scarcity",
+        "fake_urgency"
+      ]
+    },
+    {
+      "text": "Last chance to claim your gift",
+      "violations": [
+        "fake_urgency"
+      ],
+      "note": "literal deadline words without a time_binding"
+    },
+    {
+      "text": "{event_title} ends in {ends_in}",
+      "violations": [],
+      "time_binding": "expires_at"
+    },
+    {
+      "text": "A welcome-back gift is ready",
+      "violations": []
+    },
+    {
+      "text": "Pick up from your last level whenever you like.",
+      "violations": []
+    },
+    {
+      "text": "Your free trial ends on {renewal_date}",
+      "violations": [],
+      "service_template": true
+    },
+    {
+      "text": "Upgrade now and save 40%",
+      "violations": [
+        "upsell"
+      ],
+      "service_template": true
+    },
+    {
+      "text": "Don't lose your VIP perks!",
+      "violations": [
+        "guilt"
+      ],
+      "service_template": true
+    },
+    {
+      "text": "Special offer: stay for half price",
+      "violations": [
+        "upsell"
+      ],
+      "service_template": true
+    }
+  ],
+  "copy_rules": {
+    "guilt_patterns": [
+      "don't let",
+      "let down",
+      "abandon",
+      "is sad",
+      "is lonely",
+      "is crying",
+      "misses you so much",
+      "don't lose"
+    ],
+    "fake_urgency_patterns": [
+      "last chance",
+      "hurry",
+      "act now",
+      "expires soon",
+      "don't miss out"
+    ],
+    "false_scarcity_patterns": [
+      "only \\d+ left",
+      "almost gone",
+      "selling fast"
+    ],
+    "upsell_patterns": [
+      "upgrade",
+      "discount",
+      "% off",
+      "special offer",
+      "limited offer",
+      "best value",
+      "exclusive deal",
+      "save \\d+"
+    ]
+  },
+  "handoff_param_cases": [
+    {
+      "id": "H1-streak_at_risk",
+      "event": {
+        "account_id": "acc-ann",
+        "server_ts": "2026-10-21T12:00:00Z",
+        "event_name": "streak_at_risk",
+        "subject_key": "streak:2026-10-21",
+        "state": "armed",
+        "fire_at": "2026-10-21T14:00:00Z",
+        "expires_at": "2026-10-21T17:00:00Z",
+        "params": {
+          "streak_length": 6,
+          "freezes_held": 1,
+          "cycle_day": 4,
+          "reward_code": "coin",
+          "reward_amount": 20
+        }
+      },
+      "lane": "local",
+      "category": "streak",
+      "local_key": "streak:streak:2026-10-21",
+      "route": {
+        "route": "daily",
+        "params": {}
+      },
+      "locale": "en",
+      "reward_names": {
+        "coin": "coins"
+      },
+      "expect": {
+        "title": "Your 6-day streak",
+        "body": "Play once today to keep it going. Today's reward: 20 coins."
+      }
+    },
+    {
+      "id": "H2-energy_full",
+      "event": {
+        "account_id": "acc-ann",
+        "server_ts": "2026-10-21T12:00:00Z",
+        "event_name": "energy_full",
+        "subject_key": "energy:main:1792584000",
+        "state": "armed",
+        "fire_at": "2026-10-21T14:00:00Z",
+        "expires_at": "2026-10-21T20:00:00Z",
+        "params": {
+          "meter_code": "main",
+          "cap": 30,
+          "value": 12,
+          "meter_revision": 41
+        }
+      },
+      "lane": "local",
+      "category": "timers",
+      "local_key": "timers:energy:main:1792584000",
+      "route": {
+        "route": "energy",
+        "params": {
+          "meter_code": "main"
+        }
+      },
+      "locale": "en",
+      "expect": {
+        "title": "Energy is full",
+        "body": "Your energy is at the maximum. Ready when you are."
+      }
+    },
+    {
+      "id": "H3-queue_item_ready",
+      "event": {
+        "account_id": "acc-ann",
+        "server_ts": "2026-10-21T12:00:00Z",
+        "event_name": "queue_item_ready",
+        "subject_key": "queue-item:item-7f3a",
+        "state": "armed",
+        "fire_at": "2026-10-21T13:00:00Z",
+        "expires_at": "2026-10-21T19:00:00Z",
+        "params": {
+          "queue_code": "queue-chests",
+          "queue_kind": "chest",
+          "job_id": "job-1",
+          "slot_index": 1
+        },
+        "ends_at": "2026-10-21T13:00:00Z",
+        "revision": 3
+      },
+      "lane": "local",
+      "category": "timers",
+      "local_key": "timers:queue-item:item-7f3a",
+      "route": {
+        "route": "queue",
+        "params": {
+          "queue_code": "queue-chests"
+        }
+      },
+      "locale": "en",
+      "expect": {
+        "title": "A timer has finished",
+        "body": "Something is ready to collect."
+      }
+    },
+    {
+      "id": "H4-event_ending_soon",
+      "event": {
+        "account_id": "acc-ann",
+        "server_ts": "2026-10-21T12:00:00Z",
+        "event_name": "event_ending_soon",
+        "subject_key": "event:spring-rush",
+        "state": "armed",
+        "fire_at": "2026-10-21T15:00:00Z",
+        "expires_at": "2026-10-21T18:00:00Z",
+        "params": {
+          "event_id": "spring-rush",
+          "event_title": "Spring Rush"
+        }
+      },
+      "lane": "remote",
+      "category": "events",
+      "dedupe_key": "handoff:acc-ann:events:event:spring-rush",
+      "route": {
+        "route": "event",
+        "params": {
+          "event_id": "spring-rush"
+        }
+      },
+      "locale": "en",
+      "send_at": "2026-10-21T15:00:00Z",
+      "expect": {
+        "title": "Spring Rush ends in 3 hours",
+        "body": "There is still time to collect the event rewards."
+      }
+    },
+    {
+      "id": "H5-objective_reward_ready",
+      "event": {
+        "account_id": "acc-ann",
+        "server_ts": "2026-10-21T12:00:00Z",
+        "event_name": "objective_reward_ready",
+        "subject_key": "objective:daily-1:2026-10-21",
+        "state": "armed",
+        "fire_at": "2026-10-21T13:00:00Z",
+        "expires_at": "2026-10-22T13:00:00Z",
+        "params": {
+          "objective_id": "daily-1",
+          "scope": "daily"
+        }
+      },
+      "lane": "remote",
+      "category": "rewards",
+      "dedupe_key": "handoff:acc-ann:rewards:objective:daily-1:2026-10-21",
+      "route": {
+        "route": "objectives",
+        "params": {
+          "objective_id": "daily-1"
+        }
+      },
+      "locale": "en",
+      "expect": {
+        "title": "A reward is ready",
+        "body": "Open the game to collect it."
+      },
+      "copy_rule": "no wording that implies the reward expires"
+    },
+    {
+      "id": "H6-subscription_trial_ending",
+      "event": {
+        "account_id": "acc-ann",
+        "server_ts": "2026-10-21T12:00:00Z",
+        "event_name": "subscription_trial_ending",
+        "subject_key": "trial:term-42:1",
+        "state": "armed",
+        "fire_at": "2026-10-30T12:00:00Z",
+        "expires_at": "2026-11-02T12:00:00Z",
+        "params": {
+          "plan_code": "vip-monthly",
+          "product_code": "vip.monthly",
+          "platform": "ios",
+          "period": "P1M",
+          "renews_at": "2026-11-02T12:00:00Z",
+          "price_milliunits": 4990,
+          "currency_code": "USD"
+        }
+      },
+      "lane": "remote",
+      "category": "subscription",
+      "dedupe_key": "handoff:acc-ann:subscription:trial:term-42:1",
+      "route": {
+        "route": "subscription",
+        "params": {}
+      },
+      "locale": "en",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "expect": {
+        "title": "Your free trial ends on November 2, 2026",
+        "body": "About $4.99 per month after that. The exact amount, which taxes can change, is on the store screen. Manage or cancel in Settings."
+      }
+    }
+  ],
+  "revision_cases": [
+    {
+      "id": "V1-newer-replaces",
+      "event": "queue_item_ready",
+      "stored_revision": 3,
+      "incoming_revision": 4,
+      "outcome": "replaced"
+    },
+    {
+      "id": "V2-equal-is-a-replay",
+      "event": "queue_item_ready",
+      "stored_revision": 3,
+      "incoming_revision": 3,
+      "outcome": "unchanged"
+    },
+    {
+      "id": "V3-older-is-ignored",
+      "event": "queue_item_ready",
+      "stored_revision": 3,
+      "incoming_revision": 2,
+      "outcome": "ignored"
+    },
+    {
+      "id": "V4-energy-meter-revision",
+      "event": "energy_full",
+      "stored_revision": 41,
+      "incoming_revision": 40,
+      "outcome": "ignored",
+      "revision_from": "params.meter_revision"
+    },
+    {
+      "id": "V5-no-revision-field",
+      "event": "event_ending_soon",
+      "stored_revision": null,
+      "incoming_revision": null,
+      "outcome": "replaced",
+      "why": "an event without a revision field is always applied; the same subject_key updates the same row"
+    }
+  ]
+}

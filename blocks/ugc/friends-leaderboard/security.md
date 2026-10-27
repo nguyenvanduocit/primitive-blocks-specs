@@ -44,12 +44,14 @@ Anonymous read of the board is a **product decision**, not an accident: the user
 - Monotonic totals (I-7), so a leaderboard position cannot be lowered or "rolled back"
 - Weekly credit capped per report (I-8): a single report cannot add more than `BURST_XP` plus time-based allowance to the week
 - Week and `updated_at` come from the server clock, never from the client
+- With `REQUIRE_ATTEMPT_PROOF = true` (extrapolated), the weekly credit needs a report that names an `attempt_id` which `engagement.energy-lives` reports as `confirmed`, `won` or `failed`; an unplayed, unknown or missing attempt credits `0` (`backend.md` "Proof of play"; its limit is item 5 below)
 
 **What the bounds do not stop** (stated plainly; do not hide this from the product owner):
 1. **All-time XP is forgeable in one request.** The credit cap limits `week_xp` only. A report with `xp = MAX_XP` is accepted and raises the all-time total; the capped week credit does not block it (shipped rule test: `xp` 50,000 with `weekXp` 4,500 succeeds, `rules.test.ts:351-353`). The original project documents this: "A forged all-time total is possible; a forged week is bounded by that cap" (`server/README.md` "Rules worth knowing"). HIGH
 2. **The weekly cap is per report, and the shipped rules do not limit report frequency.** Each accepted report gets the `BURST_XP` allowance even when the previous write was seconds ago (`rules.test.ts:355-360`: 500 allowed on a one-minute-old document). Repeated small reports can therefore accumulate far more than `XP_PER_HOUR` suggests. This is an inference from the rule text and that test, not an observed exploit. MEDIUM. Mitigation in this block (extrapolated): set `REPORT_MIN_INTERVAL_SECONDS` above zero, or replace the per-report burst by a token bucket (capacity `BURST_XP`, refill `XP_PER_HOUR`) so the allowance cannot be re-spent
 3. **Streak, accuracy, level and answered are only range-bounded.** A report may set `streak_days = 3650` or `accuracy = 100` at once; `level` is not tied to `xp`. They are display fields and are not ranked on, except that streak breaks ties. HIGH (`:58-67` has no relation between fields; test `rules.test.ts:234-239` edits `streakDays` freely)
-4. **Many accounts per person.** Nothing ties a profile to a verified human beyond the sign-in provider. LOW (general property of open sign-in, not tested)
+4. **Many accounts per person.** Nothing ties a profile to a verified human beyond the sign-in provider, and a guest account (`auth.guest-account`) needs no provider at all, so extra accounts are cheap. The proof of play above ties a credit to a played attempt of that account (its limit is item 5). LOW (general property of open sign-in, not tested)
+5. **One played attempt can be named by several reports.** The block keeps no list of attempt ids it already credited, so a replayed `attempt_id` still unlocks the credit; each report stays inside the per-report cap (item 2). Keep a unique record of credited `(tenant_id, attempt_id)` pairs in the project if one credit per session matters. MEDIUM (follows from the design; not tested)
 
 **Consequence for the spec:** `README.md` "When NOT to use" excludes any ranking with real stakes. Add server-side recomputation from signed answer events if you need integrity; that is a different block.
 
@@ -141,6 +143,7 @@ If the product targets minors, or a jurisdiction that requires consent before pu
 | `level` | Integer, `1..MAX_LEVEL` | `invalid_stats` (422) |
 | `streak_days` | Integer, `0..MAX_STREAK_DAYS` | `invalid_stats` (422) |
 | `accuracy` | Integer, `0..100` | `invalid_stats` (422) |
+| `attempt_id` (report) | Optional string matching `^[A-Za-z0-9_-]{2,64}$`; its state is read server-side from `engagement.energy-lives`, never from the body | `invalid_stats` (422) for a malformed value; an unplayed or unknown attempt is not an error |
 | `public_board` | Boolean | `invalid_request` (422) |
 | `period` (board) | One of `week`, `all` | `invalid_period` (422) |
 | `account_id`, `profile_id` for self, `tenant_id`, `week_start_day`, `updated_at`, `rank` | **Never accepted from the body**; derived server-side | - |

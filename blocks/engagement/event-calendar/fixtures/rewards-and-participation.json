@@ -1,0 +1,227 @@
+{
+  "clock": "2026-10-27T12:00:00Z",
+  "tenant_id": "tenant-001",
+  "event": "evt-weekly-sprint-w44",
+  "ledger": {
+    "reason": "event-calendar.reward",
+    "idempotency_key_pattern": "event-calendar:{account_id}:{event_id}:{reward_key}:{currency}",
+    "source_ref_pattern": "event:{event_id}:reward:{reward_key}"
+  },
+  "table_maximum_per_player": { "coins": 410, "booster-hint": 1, "frame-sprint": 1 },
+  "progress_cases": [
+    {
+      "name": "crosses-m1",
+      "participation": { "account_id": "acc-ann", "joined": true, "progress": 90 },
+      "call": { "amount": 30, "source_ref": "level-complete:lv-31:attempt-7" },
+      "expect": {
+        "status": 200, "progress": 120, "duplicate": false, "capped": false,
+        "new_claims": [{ "reward_key": "m1", "status": "granted", "grant_path": "milestone_auto" }],
+        "ledger_grants": [
+          { "account_id": "acc-ann", "currency": "coins", "amount": 50, "idempotency_key": "event-calendar:acc-ann:evt-weekly-sprint-w44:m1:coins", "source_ref": "event:evt-weekly-sprint-w44:reward:m1" }
+        ]
+      }
+    },
+    {
+      "name": "manual-milestone-is-earned-not-paid",
+      "participation": { "account_id": "acc-ann", "joined": true, "progress": 280 },
+      "call": { "amount": 60, "source_ref": "level-complete:lv-52:attempt-1" },
+      "expect": {
+        "status": 200, "progress": 340, "duplicate": false, "capped": false,
+        "new_claims": [{ "reward_key": "m2", "status": "earned", "grant_path": null }],
+        "ledger_grants": []
+      }
+    },
+    {
+      "name": "progress-is-capped",
+      "participation": { "account_id": "acc-ann", "joined": true, "progress": 560 },
+      "call": { "amount": 100, "source_ref": "level-complete:lv-88:attempt-3" },
+      "expect": {
+        "status": 200, "progress": 600, "applied_amount": 40, "duplicate": false, "capped": true,
+        "new_claims": [{ "reward_key": "m3", "status": "earned", "grant_path": null }],
+        "ledger_grants": []
+      }
+    },
+    {
+      "name": "same-source-ref-counts-once",
+      "participation": { "account_id": "acc-ann", "joined": true, "progress": 120 },
+      "calls": [
+        { "amount": 30, "source_ref": "level-complete:lv-33:attempt-1" },
+        { "amount": 30, "source_ref": "level-complete:lv-33:attempt-1" }
+      ],
+      "expect": { "second_response": { "status": 200, "duplicate": true }, "progress": 150, "ledger_grants": [] }
+    },
+    {
+      "name": "increment-above-the-per-call-bound",
+      "participation": { "account_id": "acc-ann", "joined": true, "progress": 0 },
+      "call": { "amount": 101, "source_ref": "level-complete:lv-1:attempt-1" },
+      "expect": { "status": 422, "error": "invalid_progress", "progress": 0 }
+    },
+    {
+      "name": "opt-in-event-needs-a-join",
+      "participation": null,
+      "account_id": "acc-ben",
+      "call": { "amount": 10, "source_ref": "level-complete:lv-2:attempt-1" },
+      "expect": { "status": 409, "error": "not_joined" }
+    },
+    {
+      "name": "write-at-the-end-instant",
+      "clock": "2026-11-02T00:00:00Z",
+      "participation": { "account_id": "acc-ann", "joined": true, "progress": 120 },
+      "call": { "amount": 10, "source_ref": "level-complete:lv-34:attempt-1" },
+      "expect": { "status": 409, "error": "event_ended", "progress": 120 }
+    }
+  ],
+  "claim_cases": [
+    {
+      "name": "manual-claim-grants-every-line-once",
+      "participation": { "account_id": "acc-ann", "progress": 340, "claims": [{ "reward_key": "m1", "status": "granted" }, { "reward_key": "m2", "status": "earned" }] },
+      "request": { "reward_keys": ["m2"] },
+      "expect": {
+        "status": 200,
+        "results": [{ "reward_key": "m2", "status": "granted", "grant_path": "player_claim" }],
+        "ledger_grants": [
+          { "currency": "coins", "amount": 100, "idempotency_key": "event-calendar:acc-ann:evt-weekly-sprint-w44:m2:coins" },
+          { "currency": "booster-hint", "amount": 1, "idempotency_key": "event-calendar:acc-ann:evt-weekly-sprint-w44:m2:booster-hint" }
+        ],
+        "replay_effect": "same results, no new ledger effect",
+        "parallel_effect": "two simultaneous requests both answer 200 with the same entry ids; the ledger applies each line once"
+      }
+    },
+    {
+      "name": "claim-before-earning",
+      "participation": { "account_id": "acc-ann", "progress": 340, "claims": [{ "reward_key": "m1", "status": "granted" }, { "reward_key": "m2", "status": "earned" }] },
+      "request": { "reward_keys": ["m3"] },
+      "expect": { "status": 409, "error": "reward_not_earned" }
+    },
+    {
+      "name": "ledger-unavailable-then-recovers",
+      "participation": { "account_id": "acc-ann", "progress": 340, "claims": [{ "reward_key": "m2", "status": "earned" }] },
+      "request": { "reward_keys": ["m2"] },
+      "ledger_script": ["unavailable", "applied"],
+      "expect": {
+        "first_attempt": { "status": 503, "error": "grant_pending", "claim_status": "earned", "attempts": 1 },
+        "after_retry": { "claim_status": "granted", "attempts": 2, "same_idempotency_key_both_times": true }
+      }
+    }
+  ],
+  "settlement_cases": [
+    {
+      "name": "settlement-at-the-end-instant",
+      "clock": "2026-11-02T00:00:00Z",
+      "participation": [
+        { "account_id": "acc-ann", "joined": true, "progress": 600, "claims": [{ "reward_key": "m1", "status": "granted" }, { "reward_key": "m2", "status": "earned" }, { "reward_key": "m3", "status": "earned" }] },
+        { "account_id": "acc-ben", "joined": true, "progress": 120, "claims": [{ "reward_key": "m1", "status": "granted" }] },
+        { "account_id": "acc-cara", "joined": true, "progress": 0, "claims": [] }
+      ],
+      "expect": {
+        "acc-ann": { "new_claims": [{ "reward_key": "done", "status": "granted", "grant_path": "settlement" }, { "reward_key": "part", "status": "granted", "grant_path": "settlement" }], "still_earned": ["m2", "m3"] },
+        "acc-ben": { "new_claims": [{ "reward_key": "part", "status": "granted", "grant_path": "settlement" }], "still_earned": [] },
+        "acc-cara": { "new_claims": [], "still_earned": [], "settled": true },
+        "second_run": "no new claim rows, no ledger calls"
+      }
+    },
+    {
+      "name": "manual-rewards-are-swept-after-the-claim-grace",
+      "participation": { "account_id": "acc-ann", "claims": [{ "reward_key": "m2", "status": "earned" }] },
+      "archive_at": "2026-11-05T00:00:00Z",
+      "checks": [
+        { "clock": "2026-11-04T23:59:59Z", "expect": { "m2": "earned" } },
+        { "clock": "2026-11-05T00:00:00Z", "expect": { "m2": "granted", "grant_path": "sweep", "idempotency_key": "event-calendar:acc-ann:evt-weekly-sprint-w44:m2:coins" } }
+      ]
+    }
+  ],
+  "emergency_end_cases": [
+    {
+      "name": "end-now-with-compensation",
+      "operation": { "kind": "end_now", "closes_at": "2026-10-27T12:00:00Z", "reason": "reward-table-defect", "compensation": [{ "currency": "coins", "amount": 300 }] },
+      "participation": [
+        { "account_id": "acc-ann", "progress": 120, "earned_coins_after_as_earned_settlement": 60 },
+        { "account_id": "acc-ben", "progress": 350, "earned_coins_after_as_earned_settlement": 160 },
+        { "account_id": "acc-cara", "progress": 600, "earned_coins_after_as_earned_settlement": 410 },
+        { "account_id": "acc-dan", "progress": 0, "earned_coins_after_as_earned_settlement": 0 }
+      ],
+      "expect_compensation_coins": { "acc-ann": 300, "acc-ben": 250, "acc-cara": 0, "acc-dan": 0 },
+      "rule": "compensation per currency = min(requested amount, table maximum - amount already earned); players with progress 0 receive none"
+    }
+  ],
+  "merge_cases": [
+    {
+      "name": "guest-into-signed-in",
+      "merge_id": "merge-0001",
+      "from": { "account_id": "acc-guest-9", "joined": true, "entries": [{ "source_ref": "guest-level:lv-3:attempt-1", "amount": 100 }, { "source_ref": "guest-level:lv-4:attempt-1", "amount": 30 }], "claims": [{ "reward_key": "m1", "status": "granted", "grant_path": "milestone_auto" }] },
+      "into": { "account_id": "acc-ann", "joined": true, "entries": [{ "source_ref": "level-complete:lv-30:attempt-2", "amount": 90 }], "claims": [] },
+      "expect": { "progress": 220, "claims": [{ "reward_key": "m1", "status": "granted", "grant_path": "milestone_auto" }], "new_ledger_calls": 0, "from_rows_remaining": 0, "result": { "events_moved": 0, "events_merged": 1, "claims_kept": 0, "claims_moved": 1 } },
+      "repeat": { "merge_id": "merge-0001", "expect": "the stored result again; no row changes; no ledger call" },
+      "second_target": { "merge_id": "merge-0002", "from": "acc-guest-9", "into": "acc-ben", "expect_error": "already_merged" }
+    },
+    {
+      "name": "guest-moves-into-an-account-without-a-row",
+      "merge_id": "merge-0003",
+      "from": { "account_id": "acc-guest-9", "joined": true, "entries": [{ "source_ref": "guest-level:lv-3:attempt-1", "amount": 100 }], "claims": [{ "reward_key": "m1", "status": "granted", "grant_path": "milestone_auto" }] },
+      "into": { "account_id": "acc-ben", "participation": null },
+      "expect": { "progress": 100, "claims": [{ "reward_key": "m1", "status": "granted" }], "new_ledger_calls": 0, "result": { "events_moved": 1, "events_merged": 0, "claims_kept": 0, "claims_moved": 1 } }
+    },
+    {
+      "name": "unpaid-claim-moves-and-an-equal-claim-on-the-target-wins",
+      "merge_id": "merge-0004",
+      "from": { "account_id": "acc-guest-9", "claims": [{ "reward_key": "m2", "status": "earned" }] },
+      "into": { "account_id": "acc-ann", "claims": [{ "reward_key": "m2", "status": "earned" }] },
+      "expect": { "claims": [{ "reward_key": "m2", "status": "earned" }], "one_row_for_m2": true, "new_ledger_calls": 0, "result": { "events_moved": 0, "events_merged": 1, "claims_kept": 1, "claims_moved": 0 } }
+    }
+  ],
+  "holdings_cases": [
+    {
+      "name": "progress-only",
+      "account_id": "acc-guest-9",
+      "state": "joined evt-weekly-sprint-w44 with progress 130 and m1 granted",
+      "expect": [{ "category": "progress", "label_key": "event-calendar.participation", "paid": false, "effect": "carried" }]
+    },
+    {
+      "name": "unpaid-rewards-add-currency-and-items",
+      "account_id": "acc-ann",
+      "state": "progress 340 and m2 earned (coins and booster-hint)",
+      "expect": [
+        { "category": "currency", "label_key": "event-calendar.unpaid-reward", "paid": false, "effect": "carried" },
+        { "category": "items", "label_key": "event-calendar.unpaid-reward", "paid": false, "effect": "carried" },
+        { "category": "progress", "label_key": "event-calendar.participation", "paid": false, "effect": "carried" }
+      ],
+      "order": "category ascending, then label_key"
+    },
+    {
+      "name": "nothing-held",
+      "account_id": "acc-cara",
+      "state": "no participation in a live event, no earned claim, only archived events",
+      "expect": []
+    }
+  ],
+  "delete_cases": [
+    {
+      "name": "deleteAccount-is-complete-and-repeatable",
+      "account_id": "acc-ann",
+      "expect": { "rows_remaining": { "event_participation": 0, "event_progress_entries": 0, "event_reward_claims": 0, "event_account_merges": 0 }, "ledger_entries": "untouched", "armed_handoffs": "resolved", "second_call": "succeeds and changes nothing" }
+    }
+  ],
+  "ending_soon_handoff": {
+    "note": "Hand-off event for messaging.push-reengagement. fire_at is the account's ending_soon_at; expires_at is the account's effective end.",
+    "armed": {
+      "event_name": "event_ending_soon",
+      "account_id": "acc-ann",
+      "server_ts": "2026-10-27T12:00:00.000Z",
+      "subject_key": "event:evt-weekly-sprint-w44",
+      "state": "armed",
+      "fire_at": "2026-11-01T00:00:00Z",
+      "expires_at": "2026-11-02T00:00:00Z",
+      "params": { "event_id": "evt-weekly-sprint-w44", "event_title": "Weekly Sprint" }
+    },
+    "resolved": {
+      "event_name": "event_ending_soon",
+      "account_id": "acc-ann",
+      "server_ts": "2026-10-30T09:00:00.000Z",
+      "subject_key": "event:evt-weekly-sprint-w44",
+      "state": "resolved",
+      "fire_at": "2026-11-01T00:00:00Z",
+      "expires_at": "2026-11-02T00:00:00Z",
+      "params": { "event_id": "evt-weekly-sprint-w44", "event_title": "Weekly Sprint" }
+    }
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "clock": "2026-10-27T12:00:00Z",
+  "tenant_id": "tenant-001",
+  "note": "Account facts as the host's AccountFacts port returns them at the fixed clock. previous_session_ended_at is the end of the session before the current one (null on a first session).",
+  "accounts": [
+    {
+      "account_id": "acc-ann",
+      "platform": "ios",
+      "app_version": "2.5.0",
+      "country": "VN",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "created_at": "2026-06-01T08:00:00Z",
+      "previous_session_ended_at": "2026-10-27T09:00:00Z",
+      "note": "active player on the current build, UTC+7"
+    },
+    {
+      "account_id": "acc-ben",
+      "platform": "android",
+      "app_version": "2.3.5",
+      "country": "US",
+      "timezone": "America/New_York",
+      "created_at": "2026-03-10T14:00:00Z",
+      "previous_session_ended_at": "2026-10-27T08:00:00Z",
+      "note": "active player on a build older than 2.4.0, UTC-4 on this date"
+    },
+    {
+      "account_id": "acc-cara",
+      "platform": "ios",
+      "app_version": "2.5.0",
+      "country": "KI",
+      "timezone": "Pacific/Kiritimati",
+      "created_at": "2026-08-02T01:00:00Z",
+      "previous_session_ended_at": "2026-10-27T09:30:00Z",
+      "note": "UTC+14: already inside the next local calendar day"
+    },
+    {
+      "account_id": "acc-dan",
+      "platform": "android",
+      "app_version": "2.5.0",
+      "country": "DE",
+      "timezone": "Europe/Berlin",
+      "created_at": "2026-01-15T09:00:00Z",
+      "previous_session_ended_at": "2026-09-20T18:00:00Z",
+      "note": "lapsed: the previous session ended more than 14 days before the clock; UTC+1 on this date"
+    },
+    {
+      "account_id": "acc-eve",
+      "platform": "ios",
+      "app_version": "2.5.0",
+      "country": "US",
+      "timezone": "America/New_York",
+      "created_at": "2026-10-25T20:00:00Z",
+      "previous_session_ended_at": "2026-10-27T10:00:00Z",
+      "note": "new player: account age under 7 days; first listed the welcome event at the fixed clock"
+    },
+    {
+      "account_id": "acc-fay",
+      "platform": "web",
+      "app_version": "2.5.0",
+      "country": "AS",
+      "timezone": "Pacific/Pago_Pago",
+      "created_at": "2026-02-02T03:00:00Z",
+      "previous_session_ended_at": "2026-10-27T11:00:00Z",
+      "note": "UTC-11: still inside the previous local calendar day's end"
+    },
+    {
+      "account_id": "acc-gus",
+      "platform": "android",
+      "app_version": "2.5.0",
+      "country": "US",
+      "timezone": "America/New_York",
+      "created_at": "2026-10-25T20:00:00Z",
+      "previous_session_ended_at": null,
+      "note": "same creation instant as acc-eve but never listed the welcome event before the aging-out scenario"
+    },
+    {
+      "account_id": "acc-qa-1",
+      "platform": "ios",
+      "app_version": "2.5.0",
+      "country": "VN",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "created_at": "2026-05-05T08:00:00Z",
+      "previous_session_ended_at": "2026-10-27T10:00:00Z",
+      "note": "tester on the allow-list of evt-qa-short"
+    },
+    {
+      "account_id": "acc-guest-9",
+      "platform": "ios",
+      "app_version": "2.5.0",
+      "country": "VN",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "created_at": "2026-10-20T08:00:00Z",
+      "previous_session_ended_at": "2026-10-27T07:00:00Z",
+      "note": "guest account merged into acc-ann in the merge case"
+    }
+  ],
+  "operators": [
+    { "operator_id": "op-owner", "roles": ["calendar_author", "calendar_publisher", "calendar_operator"] },
+    { "operator_id": "op-qa", "roles": ["calendar_preview"] }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "_comment": "Rule tables for money handling: pack contents and first-purchase bonus, clawback and reinstatement, consumption percentage, the refund-review threshold, the spend limit and its cool-off. Amounts of currency are integers; money is in micro-units. The catalog is fixtures/catalog.json.",
+  "_usage": "Used by pack-purchase.feature, refund-and-clawback.feature and spending-controls.feature and as unit-test tables for clawbackPlan, checkLimit and the contents calculation. Clock 2026-10-27T12:00:00Z. Spend limit period 2592000 seconds (30 days), cool-off 86400 seconds, refund review threshold 3 within 15552000 seconds (180 days).",
+
+  "clock": "2026-10-27T12:00:00Z",
+
+  "contents_and_bonus": [
+    { "id": "medium_first_purchase_scope_product", "scope": "product", "product": "gems_medium", "prior_purchases": [],
+      "expect": { "bonus_applied": true, "granted": { "gems": 1050 }, "breakdown": { "gems": { "amount": 500, "bonus": 50, "first_purchase_bonus": 500 } } } },
+    { "id": "medium_second_purchase", "scope": "product", "product": "gems_medium", "prior_purchases": [{ "product": "gems_medium", "state": "verified" }],
+      "expect": { "bonus_applied": false, "granted": { "gems": 550 } } },
+    { "id": "other_product_first_purchase_scope_product", "scope": "product", "product": "gems_large", "prior_purchases": [{ "product": "gems_medium", "state": "verified" }],
+      "expect": { "bonus_applied": true, "granted": { "gems": 2600 } } },
+    { "id": "other_product_scope_account", "scope": "account", "product": "gems_large", "prior_purchases": [{ "product": "gems_medium", "state": "verified" }],
+      "expect": { "bonus_applied": false, "granted": { "gems": 1400 } } },
+    { "id": "refunded_first_purchase_still_consumes_bonus", "scope": "product", "product": "gems_medium", "prior_purchases": [{ "product": "gems_medium", "state": "refunded" }],
+      "expect": { "bonus_applied": false, "granted": { "gems": 550 } } },
+    { "id": "pending_first_purchase_does_not_consume_bonus", "scope": "product", "product": "gems_medium", "prior_purchases": [{ "product": "gems_medium", "state": "pending" }],
+      "expect": { "bonus_applied": true, "granted": { "gems": 1050 } } },
+    { "id": "canceled_and_rejected_do_not_consume_bonus", "scope": "product", "product": "gems_medium", "prior_purchases": [{ "product": "gems_medium", "state": "canceled" }, { "product": "gems_medium", "state": "rejected" }],
+      "expect": { "bonus_applied": true, "granted": { "gems": 1050 } } },
+    { "id": "starter_bundle_has_three_lines_and_no_bonus", "scope": "product", "product": "starter_bundle", "prior_purchases": [],
+      "expect": { "bonus_applied": false, "granted": { "gems": 300, "coins": 5000, "booster_shield": 3 } } }
+  ],
+
+  "starter_visibility": [
+    { "id": "never_bought", "purchases": [], "expect": { "visible": true, "remaining_purchases": 1 } },
+    { "id": "bought", "purchases": [{ "state": "verified" }], "expect": { "visible": false, "remaining_purchases": 0 } },
+    { "id": "pending_hides", "purchases": [{ "state": "pending" }], "expect": { "visible": false, "remaining_purchases": 0 } },
+    { "id": "refunded_still_hides", "purchases": [{ "state": "refunded" }], "expect": { "visible": false, "remaining_purchases": 0 } },
+    { "id": "canceled_does_not_hide", "purchases": [{ "state": "canceled" }], "expect": { "visible": true, "remaining_purchases": 1 } },
+    { "id": "window_expired", "window_seconds": 259200, "account_created_at": "2026-10-20T11:59:59Z", "purchases": [], "expect": { "visible": false, "ends_at": "2026-10-23T11:59:59Z" } },
+    { "id": "window_open", "window_seconds": 259200, "account_created_at": "2026-10-25T12:00:00Z", "purchases": [], "expect": { "visible": true, "ends_at": "2026-10-28T12:00:00Z" } }
+  ],
+
+  "clawback": [
+    { "id": "full_balance", "purchase": "gems_medium", "granted": { "gems": 550 }, "balances": { "gems": 550 },
+      "expect": { "take": { "gems": 550 }, "shortfall": { "gems": 0 }, "balances_after": { "gems": 0 }, "entries": 1 } },
+    { "id": "half_spent", "purchase": "gems_medium", "granted": { "gems": 550 }, "balances": { "gems": 200 },
+      "expect": { "take": { "gems": 200 }, "shortfall": { "gems": 350 }, "balances_after": { "gems": 0 }, "entries": 1 } },
+    { "id": "fully_spent", "purchase": "gems_medium", "granted": { "gems": 550 }, "balances": { "gems": 0 },
+      "expect": { "take": { "gems": 0 }, "shortfall": { "gems": 550 }, "balances_after": { "gems": 0 }, "entries": 0 }, "note": "no entry is written when nothing can be taken" },
+    { "id": "balance_larger_than_granted", "purchase": "gems_medium", "granted": { "gems": 550 }, "balances": { "gems": 900 },
+      "expect": { "take": { "gems": 550 }, "shortfall": { "gems": 0 }, "balances_after": { "gems": 350 }, "entries": 1 }, "note": "earned gems stay; only what the purchase granted is taken" },
+    { "id": "first_purchase_bonus_included", "purchase": "gems_medium", "granted": { "gems": 1050 }, "balances": { "gems": 1050 },
+      "expect": { "take": { "gems": 1050 }, "shortfall": { "gems": 0 }, "balances_after": { "gems": 0 }, "entries": 1 } },
+    { "id": "starter_bundle_with_items", "purchase": "starter_bundle", "granted": { "gems": 300, "coins": 5000, "booster_shield": 3 }, "balances": { "gems": 300, "coins": 1200, "booster_shield": 1 },
+      "expect": { "take": { "gems": 300, "coins": 1200, "booster_shield": 1 }, "shortfall": { "gems": 0, "coins": 3800, "booster_shield": 2 }, "balances_after": { "gems": 0, "coins": 0, "booster_shield": 0 }, "entries": 3 } }
+  ],
+
+  "reinstatement": [
+    { "id": "after_half_spent", "from": "half_spent", "balances_before": { "gems": 0 }, "reinstate": { "gems": 200 }, "balances_after": { "gems": 200 },
+      "note": "the amount taken is returned; the 350 shortfall is not granted, the player had already spent it" },
+    { "id": "after_starter_bundle", "from": "starter_bundle_with_items", "balances_before": { "gems": 0, "coins": 0, "booster_shield": 0 }, "reinstate": { "gems": 300, "coins": 1200, "booster_shield": 1 }, "balances_after": { "gems": 300, "coins": 1200, "booster_shield": 1 } },
+    { "id": "nothing_taken_nothing_returned", "from": "fully_spent", "balances_before": { "gems": 0 }, "reinstate": {}, "balances_after": { "gems": 0 } },
+    { "id": "second_refund_cycle_uses_a_new_key", "from": "half_spent", "cycles": [
+        { "cycle": 1, "clawback_key": "virtual-currency:clawback:{purchase_id}:gems:1", "reinstate_key": "virtual-currency:reinstate:{purchase_id}:gems:1" },
+        { "cycle": 2, "clawback_key": "virtual-currency:clawback:{purchase_id}:gems:2", "reinstate_key": "virtual-currency:reinstate:{purchase_id}:gems:2" } ] }
+  ],
+
+  "consumption_percentage": [
+    { "id": "unspent", "granted": 1050, "spent_since_verified": 0, "expect_milliunits": 0 },
+    { "id": "half", "granted": 1050, "spent_since_verified": 525, "expect_milliunits": 50000 },
+    { "id": "floor", "granted": 1050, "spent_since_verified": 1, "expect_milliunits": 95 },
+    { "id": "capped", "granted": 1050, "spent_since_verified": 2000, "expect_milliunits": 100000 },
+    { "id": "all", "granted": 1050, "spent_since_verified": 1050, "expect_milliunits": 100000, "refund_preference_when_decline_if_consumed": "DECLINE" },
+    { "id": "no_consent", "consented": false, "expect": "no call to Apple" }
+  ],
+
+  "refund_review": [
+    { "id": "two_refunds", "refunded_at": ["2026-10-20T09:00:00Z", "2026-10-25T09:00:00Z"], "expect_reason": null },
+    { "id": "three_refunds_in_window", "refunded_at": ["2026-09-01T09:00:00Z", "2026-10-20T09:00:00Z", "2026-10-25T09:00:00Z"], "expect_reason": "review" },
+    { "id": "oldest_outside_window", "refunded_at": ["2026-04-29T12:00:00Z", "2026-10-20T09:00:00Z", "2026-10-25T09:00:00Z"], "expect_reason": null, "note": "180 days before the clock is 2026-04-30T12:00:00Z" },
+    { "id": "operator_refund_does_not_count", "refunds": [{ "at": "2026-10-20T09:00:00Z", "refund_reason": "apple:0" }, { "at": "2026-10-25T09:00:00Z", "refund_reason": "google:remorse" }, { "at": "2026-10-26T09:00:00Z", "refund_reason": "operator:unauthorized" }], "expect_reason": null, "note": "refunds whose refund_reason starts with operator: are not counted" },
+    { "id": "oldest_exactly_on_the_boundary", "refunded_at": ["2026-04-30T12:00:00Z", "2026-10-20T09:00:00Z", "2026-10-25T09:00:00Z"], "expect_reason": null, "note": "inside the window means later than the boundary" }
+  ],
+
+  "spend_limit": {
+    "period_seconds": 2592000,
+    "limit": { "micros": 20000000, "currency": "USD" },
+    "check": [
+      { "id": "fits", "purchases": [{ "at": "2026-10-20T09:00:00Z", "micros": 4990000, "currency": "USD", "state": "verified" }, { "at": "2026-10-22T09:00:00Z", "micros": 4990000, "currency": "USD", "state": "verified" }],
+        "candidate": { "micros": 4990000, "currency": "USD" }, "expect": { "allowed": true, "remaining_micros": 5030000 } },
+      { "id": "crosses_the_limit", "purchases": [{ "at": "2026-10-10T09:00:00Z", "micros": 9990000, "currency": "USD", "state": "verified" }, { "at": "2026-10-15T09:00:00Z", "micros": 7010000, "currency": "USD", "state": "verified" }],
+        "candidate": { "micros": 4990000, "currency": "USD" }, "expect": { "allowed": false, "reason": "limit_reached", "remaining_micros": 3000000, "next_room_at": "2026-11-09T09:00:00Z" } },
+      { "id": "two_purchases_must_leave", "purchases": [{ "at": "2026-10-10T09:00:00Z", "micros": 3000000, "currency": "USD", "state": "verified" }, { "at": "2026-10-12T09:00:00Z", "micros": 4000000, "currency": "USD", "state": "verified" }, { "at": "2026-10-20T09:00:00Z", "micros": 8000000, "currency": "USD", "state": "verified" }],
+        "candidate": { "micros": 9990000, "currency": "USD" }, "expect": { "allowed": false, "reason": "limit_reached", "remaining_micros": 5000000, "next_room_at": "2026-11-11T09:00:00Z" },
+        "note": "spent is 15000000 and 9990000 needs spent at or below 10010000. When the first purchase leaves (2026-11-09T09:00:00Z) spent is 12000000, still too much; when the second leaves spent is 8000000 and the candidate fits" },
+      { "id": "tie_leaves_together", "purchases": [{ "at": "2026-10-12T09:00:00Z", "micros": 4000000, "currency": "USD", "state": "verified" }, { "at": "2026-10-12T09:00:00Z", "micros": 4000000, "currency": "USD", "state": "pending" }, { "at": "2026-10-20T09:00:00Z", "micros": 8000000, "currency": "USD", "state": "verified" }],
+        "candidate": { "micros": 9990000, "currency": "USD" }, "expect": { "allowed": false, "reason": "limit_reached", "remaining_micros": 4000000, "next_room_at": "2026-11-11T09:00:00Z" },
+        "note": "two purchases at the same instant leave together; spent drops from 16000000 to 8000000 at once" },
+      { "id": "price_above_the_limit", "purchases": [], "candidate": { "micros": 25000000, "currency": "USD" },
+        "expect": { "allowed": false, "reason": "limit_reached", "remaining_micros": 20000000, "next_room_at": null }, "note": "the price alone is above the limit, so it never fits" },
+      { "id": "exact_fit", "purchases": [{ "at": "2026-10-20T09:00:00Z", "micros": 15010000, "currency": "USD", "state": "verified" }],
+        "candidate": { "micros": 4990000, "currency": "USD" }, "expect": { "allowed": true, "remaining_micros": 0 } },
+      { "id": "currency_mismatch", "purchases": [], "candidate": { "micros": 4990000, "currency": "EUR" }, "expect": { "allowed": false, "reason": "limit_currency_mismatch", "remaining_micros": 20000000 } },
+      { "id": "refunded_purchase_frees_room", "purchases": [{ "at": "2026-10-20T09:00:00Z", "micros": 15010000, "currency": "USD", "state": "refunded" }],
+        "candidate": { "micros": 4990000, "currency": "USD" }, "expect": { "allowed": true, "remaining_micros": 15010000 } },
+      { "id": "pending_counts", "purchases": [{ "at": "2026-10-26T09:00:00Z", "micros": 15010000, "currency": "USD", "state": "pending" }],
+        "candidate": { "micros": 4990000, "currency": "USD" }, "expect": { "allowed": true, "remaining_micros": 0 } },
+      { "id": "window_boundary", "purchases": [{ "at": "2026-09-27T12:00:00Z", "micros": 9990000, "currency": "USD", "state": "verified" }, { "at": "2026-09-27T12:00:01Z", "micros": 5000000, "currency": "USD", "state": "verified" }],
+        "candidate": { "micros": 4990000, "currency": "USD" }, "expect": { "allowed": true, "remaining_micros": 10010000 },
+        "note": "the first purchase is exactly one period old and is not counted; the second is counted" },
+      { "id": "unknown_price_counts_zero", "purchases": [{ "at": "2026-10-20T09:00:00Z", "micros": null, "currency": null, "state": "verified" }],
+        "candidate": { "micros": 4990000, "currency": "USD" }, "expect": { "allowed": true, "remaining_micros": 15010000 } },
+      { "id": "no_limit", "limit": null, "purchases": [], "candidate": { "micros": 4990000, "currency": "USD" }, "expect": { "allowed": true, "remaining_micros": null } }
+    ],
+    "cool_off_seconds": 86400,
+    "change": [
+      { "id": "first_limit_applies_at_once", "now": "2026-10-27T12:00:00Z", "stored": null, "request": { "micros": 10000000, "currency": "USD" },
+        "expect": { "in_force": { "micros": 10000000, "currency": "USD" }, "pending": null } },
+      { "id": "lowering_applies_at_once", "now": "2026-10-27T12:00:00Z", "stored": { "micros": 20000000, "currency": "USD" }, "request": { "micros": 10000000, "currency": "USD" },
+        "expect": { "in_force": { "micros": 10000000, "currency": "USD" }, "pending": null } },
+      { "id": "raising_waits", "now": "2026-10-27T12:00:00Z", "stored": { "micros": 20000000, "currency": "USD" }, "request": { "micros": 50000000, "currency": "USD" },
+        "expect": { "in_force": { "micros": 20000000, "currency": "USD" }, "pending": { "micros": 50000000, "currency": "USD", "effective_at": "2026-10-28T12:00:00Z" } } },
+      { "id": "removal_waits", "now": "2026-10-27T12:00:00Z", "stored": { "micros": 20000000, "currency": "USD" }, "request": null,
+        "expect": { "in_force": { "micros": 20000000, "currency": "USD" }, "pending": { "remove": true, "effective_at": "2026-10-28T12:00:00Z" } } },
+      { "id": "currency_change_waits", "now": "2026-10-27T12:00:00Z", "stored": { "micros": 20000000, "currency": "USD" }, "request": { "micros": 20000000, "currency": "EUR" },
+        "expect": { "in_force": { "micros": 20000000, "currency": "USD" }, "pending": { "micros": 20000000, "currency": "EUR", "effective_at": "2026-10-28T12:00:00Z" } } },
+      { "id": "new_request_restarts_the_cool_off", "now": "2026-10-27T18:00:00Z", "stored": { "micros": 20000000, "currency": "USD" },
+        "pending_before": { "micros": 50000000, "currency": "USD", "effective_at": "2026-10-28T12:00:00Z" }, "request": { "micros": 60000000, "currency": "USD" },
+        "expect": { "in_force": { "micros": 20000000, "currency": "USD" }, "pending": { "micros": 60000000, "currency": "USD", "effective_at": "2026-10-28T18:00:00Z" } } },
+      { "id": "lowering_clears_a_pending_raise", "now": "2026-10-27T18:00:00Z", "stored": { "micros": 20000000, "currency": "USD" },
+        "pending_before": { "micros": 50000000, "currency": "USD", "effective_at": "2026-10-28T12:00:00Z" }, "request": { "micros": 10000000, "currency": "USD" },
+        "expect": { "in_force": { "micros": 10000000, "currency": "USD" }, "pending": null } },
+      { "id": "cancel_pending", "now": "2026-10-27T18:00:00Z", "stored": { "micros": 20000000, "currency": "USD" },
+        "pending_before": { "micros": 50000000, "currency": "USD", "effective_at": "2026-10-28T12:00:00Z" }, "action": "cancel_pending",
+        "expect": { "in_force": { "micros": 20000000, "currency": "USD" }, "pending": null } }
+    ],
+    "read_through_the_cool_off": [
+      { "read_at": "2026-10-28T11:59:59Z", "expect_in_force": { "micros": 20000000, "currency": "USD" } },
+      { "read_at": "2026-10-28T12:00:00Z", "expect_in_force": { "micros": 50000000, "currency": "USD" }, "note": "the read applies the pending change" },
+      { "read_at": "2026-10-29T12:00:00Z", "expect_in_force": { "micros": 50000000, "currency": "USD" }, "note": "applying twice changes nothing" }
+    ]
+  }
+}

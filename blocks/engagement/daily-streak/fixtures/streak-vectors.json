@@ -1,0 +1,607 @@
+{
+  "_comment": "Arithmetic vectors. settings_override replaces keys of calendar-config.json settings. All cases run at today = 2026-10-27 in a zone where that is the local date. rows lists the daily_claims rows the operation writes; reward_lines are the effective lines stored on the claim row.",
+  "calendar": "fixtures/calendar-config.json",
+  "cases": [
+    {
+      "id": "first-claim",
+      "note": "No state yet: the first claim starts the streak at 1 on cycle day 1",
+      "settings_override": {},
+      "state_before": { "current_streak": 0, "longest_streak": 0, "settled_through_day_key": null, "freezes_held": 0, "milestones_granted": [], "repair_offer": null },
+      "today": "2026-10-27",
+      "action": "claim",
+      "expected": {
+        "status": "claimed",
+        "current_streak": 1,
+        "longest_streak": 1,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null,
+        "cycle_day": 1,
+        "reward_lines": [ { "kind": "currency", "code": "coin", "amount": 100 } ],
+        "milestone_ids": [],
+        "rows": [ { "kind": "claim", "day_key": "2026-10-27" } ]
+      }
+    },
+    {
+      "id": "consecutive-increment",
+      "note": "Yesterday was credited: the streak grows by exactly 1 and the cycle day follows the streak",
+      "settings_override": {},
+      "state_before": {
+        "current_streak": 3,
+        "longest_streak": 3,
+        "settled_through_day_key": "2026-10-26",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim",
+      "expected": {
+        "status": "claimed",
+        "current_streak": 4,
+        "longest_streak": 4,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null,
+        "cycle_day": 4,
+        "reward_lines": [ { "kind": "currency", "code": "coin", "amount": 250 } ],
+        "milestone_ids": [],
+        "rows": [ { "kind": "claim", "day_key": "2026-10-27" } ]
+      }
+    },
+    {
+      "id": "same-day-replay",
+      "note": "Today is already credited: nothing changes and the original claim is returned",
+      "settings_override": {},
+      "state_before": {
+        "current_streak": 4,
+        "longest_streak": 4,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim",
+      "expected": {
+        "status": "already_claimed",
+        "current_streak": 4,
+        "longest_streak": 4,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      }
+    },
+    {
+      "id": "not-available-yet",
+      "note": "The zone moved behind the last credited day: no claim and no loss until the local date advances",
+      "settings_override": {},
+      "state_before": {
+        "current_streak": 4,
+        "longest_streak": 4,
+        "settled_through_day_key": "2026-10-28",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim",
+      "expected": {
+        "status": "not_available_yet",
+        "current_streak": 4,
+        "longest_streak": 4,
+        "settled_through_day_key": "2026-10-28",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      }
+    },
+    {
+      "id": "requirement-not-met",
+      "note": "play_to_claim with no qualifying play today",
+      "settings_override": {},
+      "state_before": {
+        "current_streak": 4,
+        "longest_streak": 4,
+        "settled_through_day_key": "2026-10-26",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim",
+      "play_count": 0,
+      "expected": {
+        "status": "requirement_not_met",
+        "current_streak": 4,
+        "longest_streak": 4,
+        "settled_through_day_key": "2026-10-26",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      }
+    },
+    {
+      "id": "missed-one-day-reset-offer",
+      "note": "Reset policy, one missed day, lost streak is at least REPAIR_MIN_STREAK: the claim is held until the player decides",
+      "settings_override": { "MISS_POLICY": "reset" },
+      "state_before": {
+        "current_streak": 5,
+        "longest_streak": 5,
+        "settled_through_day_key": "2026-10-25",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim",
+      "expected": {
+        "status": "repair_decision_required",
+        "current_streak": 0,
+        "longest_streak": 5,
+        "settled_through_day_key": "2026-10-26",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": { "streak_before": 5, "gap_first_day_key": "2026-10-26", "expires_day_key": "2026-10-28" }
+      }
+    },
+    {
+      "id": "missed-one-day-reset-decline",
+      "note": "The player declines the repair: streak restarts at 1, longest_streak keeps 5, the offer is gone",
+      "settings_override": { "MISS_POLICY": "reset" },
+      "state_before": {
+        "current_streak": 5,
+        "longest_streak": 5,
+        "settled_through_day_key": "2026-10-25",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim_decline",
+      "expected": {
+        "status": "claimed",
+        "current_streak": 1,
+        "longest_streak": 5,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null,
+        "cycle_day": 1,
+        "reward_lines": [ { "kind": "currency", "code": "coin", "amount": 100 } ],
+        "milestone_ids": [],
+        "rows": [ { "kind": "claim", "day_key": "2026-10-27" } ],
+        "notice": { "type": "streak_lost", "streak_before": 5, "missed_days": 1, "repair_offered": true }
+      }
+    },
+    {
+      "id": "missed-many-days-outside-window",
+      "note": "Six missed days exceed REPAIR_WINDOW_DAYS: no offer, the claim goes through at streak 1",
+      "settings_override": { "MISS_POLICY": "reset" },
+      "state_before": {
+        "current_streak": 12,
+        "longest_streak": 12,
+        "settled_through_day_key": "2026-10-20",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim",
+      "expected": {
+        "status": "claimed",
+        "current_streak": 1,
+        "longest_streak": 12,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null,
+        "cycle_day": 1,
+        "reward_lines": [ { "kind": "currency", "code": "coin", "amount": 100 } ],
+        "milestone_ids": [],
+        "rows": [ { "kind": "claim", "day_key": "2026-10-27" } ],
+        "notice": { "type": "streak_lost", "streak_before": 12, "missed_days": 6, "repair_offered": false }
+      }
+    },
+    {
+      "id": "short-streak-no-offer",
+      "note": "A lost streak below REPAIR_MIN_STREAK gets no repair offer",
+      "settings_override": { "MISS_POLICY": "reset" },
+      "state_before": {
+        "current_streak": 2,
+        "longest_streak": 2,
+        "settled_through_day_key": "2026-10-25",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim",
+      "expected": {
+        "status": "claimed",
+        "current_streak": 1,
+        "longest_streak": 2,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null,
+        "cycle_day": 1,
+        "reward_lines": [ { "kind": "currency", "code": "coin", "amount": 100 } ],
+        "milestone_ids": [],
+        "rows": [ { "kind": "claim", "day_key": "2026-10-27" } ],
+        "notice": { "type": "streak_lost", "streak_before": 2, "missed_days": 1, "repair_offered": false }
+      }
+    },
+    {
+      "id": "decay-two-missed-days",
+      "note": "Decay policy: 2 missed days at DECAY_PER_MISSED_DAY 2 take 4 days off the streak; the player declines the repair",
+      "settings_override": { "MISS_POLICY": "decay" },
+      "state_before": {
+        "current_streak": 10,
+        "longest_streak": 10,
+        "settled_through_day_key": "2026-10-24",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim_decline",
+      "expected": {
+        "status": "claimed",
+        "current_streak": 7,
+        "longest_streak": 10,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 1,
+        "milestones_granted": [ "m7" ],
+        "repair_offer": null,
+        "cycle_day": 7,
+        "reward_lines": [
+          { "kind": "currency", "code": "coin", "amount": 500 },
+          { "kind": "currency", "code": "gem", "amount": 20 },
+          { "kind": "freeze", "amount": 1 },
+          { "kind": "currency", "code": "gem", "amount": 30 }
+        ],
+        "milestone_ids": [ "m7" ],
+        "rows": [ { "kind": "claim", "day_key": "2026-10-27" } ],
+        "notice": { "type": "streak_decayed", "streak_before": 10, "streak_after": 6, "missed_days": 2, "repair_offered": true }
+      }
+    },
+    {
+      "id": "freeze-covers-one-day",
+      "note": "One freeze is consumed for the one missed day; the streak is held, not incremented, then the claim adds 1",
+      "settings_override": {},
+      "state_before": {
+        "current_streak": 8,
+        "longest_streak": 8,
+        "settled_through_day_key": "2026-10-25",
+        "freezes_held": 2,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim",
+      "expected": {
+        "status": "claimed",
+        "current_streak": 9,
+        "longest_streak": 9,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 1,
+        "milestones_granted": [],
+        "repair_offer": null,
+        "cycle_day": 2,
+        "reward_lines": [ { "kind": "currency", "code": "coin", "amount": 150 } ],
+        "milestone_ids": [],
+        "rows": [ { "kind": "frozen", "day_key": "2026-10-26" }, { "kind": "claim", "day_key": "2026-10-27" } ],
+        "notice": { "type": "freeze_used", "days": 1, "freezes_left": 1 }
+      }
+    },
+    {
+      "id": "freeze-covers-two-days",
+      "note": "Two freezes cover two missed days exactly",
+      "settings_override": {},
+      "state_before": {
+        "current_streak": 8,
+        "longest_streak": 8,
+        "settled_through_day_key": "2026-10-24",
+        "freezes_held": 2,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim",
+      "expected": {
+        "status": "claimed",
+        "current_streak": 9,
+        "longest_streak": 9,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null,
+        "cycle_day": 2,
+        "reward_lines": [ { "kind": "currency", "code": "coin", "amount": 150 } ],
+        "milestone_ids": [],
+        "rows": [ { "kind": "frozen", "day_key": "2026-10-25" }, { "kind": "frozen", "day_key": "2026-10-26" }, { "kind": "claim", "day_key": "2026-10-27" } ],
+        "notice": { "type": "freeze_used", "days": 2, "freezes_left": 0 }
+      }
+    },
+    {
+      "id": "freeze-insufficient-all-or-nothing",
+      "note": "One freeze cannot cover two missed days: the streak is lost and the freeze is kept",
+      "settings_override": {},
+      "state_before": {
+        "current_streak": 8,
+        "longest_streak": 8,
+        "settled_through_day_key": "2026-10-24",
+        "freezes_held": 1,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim_decline",
+      "expected": {
+        "status": "claimed",
+        "current_streak": 1,
+        "longest_streak": 8,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 1,
+        "milestones_granted": [],
+        "repair_offer": null,
+        "cycle_day": 1,
+        "reward_lines": [ { "kind": "currency", "code": "coin", "amount": 100 } ],
+        "milestone_ids": [],
+        "rows": [ { "kind": "claim", "day_key": "2026-10-27" } ],
+        "notice": { "type": "streak_lost", "streak_before": 8, "missed_days": 2, "repair_offered": true }
+      }
+    },
+    {
+      "id": "milestone-7-first-time",
+      "note": "Reaching streak 7 pays cycle day 7 and the one-time milestone m7; the freeze line adds one freeze",
+      "settings_override": {},
+      "state_before": {
+        "current_streak": 6,
+        "longest_streak": 6,
+        "settled_through_day_key": "2026-10-26",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim",
+      "expected": {
+        "status": "claimed",
+        "current_streak": 7,
+        "longest_streak": 7,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 1,
+        "milestones_granted": [ "m7" ],
+        "repair_offer": null,
+        "cycle_day": 7,
+        "reward_lines": [
+          { "kind": "currency", "code": "coin", "amount": 500 },
+          { "kind": "currency", "code": "gem", "amount": 20 },
+          { "kind": "freeze", "amount": 1 },
+          { "kind": "currency", "code": "gem", "amount": 30 }
+        ],
+        "milestone_ids": [ "m7" ],
+        "rows": [ { "kind": "claim", "day_key": "2026-10-27" } ]
+      }
+    },
+    {
+      "id": "milestone-7-already-granted",
+      "note": "The same crossing pays no second m7",
+      "settings_override": {},
+      "state_before": {
+        "current_streak": 6,
+        "longest_streak": 6,
+        "settled_through_day_key": "2026-10-26",
+        "freezes_held": 0,
+        "milestones_granted": [ "m7" ],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim",
+      "expected": {
+        "status": "claimed",
+        "current_streak": 7,
+        "longest_streak": 7,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 1,
+        "milestones_granted": [ "m7" ],
+        "repair_offer": null,
+        "cycle_day": 7,
+        "reward_lines": [ { "kind": "currency", "code": "coin", "amount": 500 }, { "kind": "currency", "code": "gem", "amount": 20 }, { "kind": "freeze", "amount": 1 } ],
+        "milestone_ids": [],
+        "rows": [ { "kind": "claim", "day_key": "2026-10-27" } ]
+      }
+    },
+    {
+      "id": "freeze-line-clipped-by-cap",
+      "note": "FREEZE_CAP 2 is full: the freeze line stays in the record with amount 0 and capped true",
+      "settings_override": {},
+      "state_before": {
+        "current_streak": 6,
+        "longest_streak": 6,
+        "settled_through_day_key": "2026-10-26",
+        "freezes_held": 2,
+        "milestones_granted": [ "m7" ],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim",
+      "expected": {
+        "status": "claimed",
+        "current_streak": 7,
+        "longest_streak": 7,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 2,
+        "milestones_granted": [ "m7" ],
+        "repair_offer": null,
+        "cycle_day": 7,
+        "reward_lines": [
+          { "kind": "currency", "code": "coin", "amount": 500 },
+          { "kind": "currency", "code": "gem", "amount": 20 },
+          { "kind": "freeze", "amount": 0, "capped": true }
+        ],
+        "milestone_ids": [],
+        "rows": [ { "kind": "claim", "day_key": "2026-10-27" } ]
+      }
+    },
+    {
+      "id": "cycle-wrap",
+      "note": "Streak 8 is cycle day 1 again",
+      "settings_override": {},
+      "state_before": {
+        "current_streak": 7,
+        "longest_streak": 7,
+        "settled_through_day_key": "2026-10-26",
+        "freezes_held": 0,
+        "milestones_granted": [ "m7" ],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim",
+      "expected": {
+        "status": "claimed",
+        "current_streak": 8,
+        "longest_streak": 8,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 0,
+        "milestones_granted": [ "m7" ],
+        "repair_offer": null,
+        "cycle_day": 1,
+        "reward_lines": [ { "kind": "currency", "code": "coin", "amount": 100 } ],
+        "milestone_ids": [],
+        "rows": [ { "kind": "claim", "day_key": "2026-10-27" } ]
+      }
+    },
+    {
+      "id": "milestone-30-crossing",
+      "note": "Reaching 30 pays m30 with its item line exactly once",
+      "settings_override": {},
+      "state_before": {
+        "current_streak": 29,
+        "longest_streak": 29,
+        "settled_through_day_key": "2026-10-26",
+        "freezes_held": 0,
+        "milestones_granted": [ "m7" ],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "claim",
+      "expected": {
+        "status": "claimed",
+        "current_streak": 30,
+        "longest_streak": 30,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 0,
+        "milestones_granted": [ "m7", "m30" ],
+        "repair_offer": null,
+        "cycle_day": 2,
+        "reward_lines": [
+          { "kind": "currency", "code": "coin", "amount": 150 },
+          { "kind": "currency", "code": "gem", "amount": 100 },
+          { "kind": "item", "code": "avatar-frame-gold", "amount": 1 }
+        ],
+        "milestone_ids": [ "m30" ],
+        "rows": [ { "kind": "claim", "day_key": "2026-10-27" } ]
+      }
+    },
+    {
+      "id": "repair-one-day",
+      "note": "Repair restores streak_before and writes a repaired row for the missed day",
+      "settings_override": { "MISS_POLICY": "reset" },
+      "state_before": {
+        "current_streak": 5,
+        "longest_streak": 5,
+        "settled_through_day_key": "2026-10-25",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "repair",
+      "expected": {
+        "status": "repaired",
+        "current_streak": 5,
+        "longest_streak": 5,
+        "settled_through_day_key": "2026-10-26",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null,
+        "rows": [ { "kind": "repaired", "day_key": "2026-10-26" } ]
+      }
+    },
+    {
+      "id": "repair-two-days-keeps-freeze",
+      "note": "Repair covers two missed days; the held freeze stays unused",
+      "settings_override": {},
+      "state_before": {
+        "current_streak": 8,
+        "longest_streak": 8,
+        "settled_through_day_key": "2026-10-24",
+        "freezes_held": 1,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "repair",
+      "expected": {
+        "status": "repaired",
+        "current_streak": 8,
+        "longest_streak": 8,
+        "settled_through_day_key": "2026-10-26",
+        "freezes_held": 1,
+        "milestones_granted": [],
+        "repair_offer": null,
+        "rows": [ { "kind": "repaired", "day_key": "2026-10-25" }, { "kind": "repaired", "day_key": "2026-10-26" } ]
+      }
+    },
+    {
+      "id": "repair-then-claim",
+      "note": "After a repair the same day can be claimed: streak 5 becomes 6 on cycle day 6",
+      "settings_override": { "MISS_POLICY": "reset" },
+      "state_before": {
+        "current_streak": 5,
+        "longest_streak": 5,
+        "settled_through_day_key": "2026-10-25",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "repair_then_claim",
+      "expected": {
+        "status": "claimed",
+        "current_streak": 6,
+        "longest_streak": 6,
+        "settled_through_day_key": "2026-10-27",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null,
+        "cycle_day": 6,
+        "reward_lines": [ { "kind": "currency", "code": "coin", "amount": 400 } ],
+        "milestone_ids": [],
+        "rows": [ { "kind": "repaired", "day_key": "2026-10-26" }, { "kind": "claim", "day_key": "2026-10-27" } ]
+      }
+    },
+    {
+      "id": "repair-after-window",
+      "note": "Three missed days are outside REPAIR_WINDOW_DAYS 2: no offer exists",
+      "settings_override": { "MISS_POLICY": "reset" },
+      "state_before": {
+        "current_streak": 8,
+        "longest_streak": 8,
+        "settled_through_day_key": "2026-10-23",
+        "freezes_held": 0,
+        "milestones_granted": [],
+        "repair_offer": null
+      },
+      "today": "2026-10-27",
+      "action": "repair",
+      "expected": { "status": "repair_not_available", "reason": "window_closed" }
+    }
+  ]
+}

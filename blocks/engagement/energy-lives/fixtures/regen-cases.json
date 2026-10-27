@@ -1,0 +1,591 @@
+{
+  "_comment": "Pure meter derivation cases (README section 3.1, backend.md \"advance\"). Each case lists the config versions in order, the stored meter, the server time, and the derived result. Times are UTC instants; versions use the column names of energy_meter_configs. Expected values were computed with the `advance` rule in backend.md (a JavaScript translation run on each case). Stacks A, B and C have not run them.",
+  "cases": [
+    {
+      "id": "partial-interval-kept",
+      "note": "Ten minutes into an interval: no point yet, the ten minutes stay as progress.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 2,
+        "anchor_at": "2026-10-21T11:50:00Z"
+      },
+      "now": "2026-10-21T12:00:00Z",
+      "expect": {
+        "value": 2,
+        "anchor_at": "2026-10-21T11:50:00Z",
+        "next_tick_at": "2026-10-21T12:20:00Z",
+        "full_at": "2026-10-21T13:20:00Z"
+      }
+    },
+    {
+      "id": "exactly-on-tick",
+      "note": "A tick completes at its end instant, inclusive.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 2,
+        "anchor_at": "2026-10-21T11:50:00Z"
+      },
+      "now": "2026-10-21T12:20:00Z",
+      "expect": {
+        "value": 3,
+        "anchor_at": "2026-10-21T12:20:00Z",
+        "next_tick_at": "2026-10-21T12:50:00Z",
+        "full_at": "2026-10-21T13:20:00Z"
+      }
+    },
+    {
+      "id": "long-absence-stops-at-cap",
+      "note": "Ten hours away from empty: capped at 5, the cap was reached at 04:30.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 0,
+        "anchor_at": "2026-10-21T02:00:00Z"
+      },
+      "now": "2026-10-21T12:00:00Z",
+      "expect": {
+        "value": 5,
+        "anchor_at": "2026-10-21T04:30:00Z",
+        "next_tick_at": null,
+        "full_at": null
+      }
+    },
+    {
+      "id": "never-above-cap",
+      "note": "Two ticks would give 6; regeneration stops at the cap.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 4,
+        "anchor_at": "2026-10-21T11:00:00Z"
+      },
+      "now": "2026-10-21T12:00:00Z",
+      "expect": {
+        "value": 5,
+        "anchor_at": "2026-10-21T11:30:00Z",
+        "next_tick_at": null,
+        "full_at": null
+      }
+    },
+    {
+      "id": "overflow-does-not-regenerate",
+      "note": "A value above the cap (earned) stays and nothing accrues.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 8,
+        "anchor_at": "2026-10-21T01:00:00Z"
+      },
+      "now": "2026-10-21T12:00:00Z",
+      "expect": {
+        "value": 8,
+        "anchor_at": "2026-10-21T01:00:00Z",
+        "next_tick_at": null,
+        "full_at": null
+      }
+    },
+    {
+      "id": "amount-two-clamped",
+      "note": "Two units per tick: 1 -> 3 at 11:30 -> 5 at 12:00.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 2,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 1,
+        "anchor_at": "2026-10-21T11:00:00Z"
+      },
+      "now": "2026-10-21T12:00:00Z",
+      "expect": {
+        "value": 5,
+        "anchor_at": "2026-10-21T12:00:00Z",
+        "next_tick_at": null,
+        "full_at": null
+      }
+    },
+    {
+      "id": "amount-two-clamp-at-cap",
+      "note": "4 + 2 clamps to 5.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 2,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 4,
+        "anchor_at": "2026-10-21T11:00:00Z"
+      },
+      "now": "2026-10-21T11:30:00Z",
+      "expect": {
+        "value": 5,
+        "anchor_at": "2026-10-21T11:30:00Z",
+        "next_tick_at": null,
+        "full_at": null
+      }
+    },
+    {
+      "id": "now-before-anchor",
+      "note": "A server clock that reads earlier than the anchor changes nothing.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 2,
+        "anchor_at": "2026-10-21T12:10:00Z"
+      },
+      "now": "2026-10-21T12:00:00Z",
+      "expect": {
+        "value": 2,
+        "anchor_at": "2026-10-21T12:10:00Z",
+        "next_tick_at": "2026-10-21T12:40:00Z",
+        "full_at": "2026-10-21T13:40:00Z"
+      }
+    },
+    {
+      "id": "cap-raised-timer-starts-at-effective-time",
+      "note": "Full at 5 of 5; cap becomes 8 at 12:00. The cycle starts at 12:00, no retroactive points.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        },
+        {
+          "version": 2,
+          "effective_at": "2026-10-21T12:00:00Z",
+          "cap": 8,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 5,
+        "anchor_at": "2026-10-21T11:00:00Z"
+      },
+      "now": "2026-10-21T12:00:00Z",
+      "expect": {
+        "value": 5,
+        "anchor_at": "2026-10-21T12:00:00Z",
+        "next_tick_at": "2026-10-21T12:30:00Z",
+        "full_at": "2026-10-21T13:30:00Z"
+      }
+    },
+    {
+      "id": "cap-raised-two-ticks-later",
+      "note": "One hour after the change: two points.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        },
+        {
+          "version": 2,
+          "effective_at": "2026-10-21T12:00:00Z",
+          "cap": 8,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 5,
+        "anchor_at": "2026-10-21T11:00:00Z"
+      },
+      "now": "2026-10-21T13:00:00Z",
+      "expect": {
+        "value": 7,
+        "anchor_at": "2026-10-21T13:00:00Z",
+        "next_tick_at": "2026-10-21T13:30:00Z",
+        "full_at": "2026-10-21T13:30:00Z"
+      }
+    },
+    {
+      "id": "cap-lowered-keeps-units",
+      "note": "Cap becomes 3 at 12:00; the 5 units held stay spendable and nothing accrues.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        },
+        {
+          "version": 2,
+          "effective_at": "2026-10-21T12:00:00Z",
+          "cap": 3,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 5,
+        "anchor_at": "2026-10-21T08:00:00Z"
+      },
+      "now": "2026-10-21T13:00:00Z",
+      "expect": {
+        "value": 5,
+        "anchor_at": "2026-10-21T12:00:00Z",
+        "next_tick_at": null,
+        "full_at": null
+      }
+    },
+    {
+      "id": "cap-lowered-regen-stops-at-new-cap",
+      "note": "From 2 the meter regenerates to the new cap 3 and stops.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        },
+        {
+          "version": 2,
+          "effective_at": "2026-10-21T12:00:00Z",
+          "cap": 3,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 2,
+        "anchor_at": "2026-10-21T12:10:00Z"
+      },
+      "now": "2026-10-21T15:00:00Z",
+      "expect": {
+        "value": 3,
+        "anchor_at": "2026-10-21T12:40:00Z",
+        "next_tick_at": null,
+        "full_at": null
+      }
+    },
+    {
+      "id": "interval-lengthened-before-old-end",
+      "note": "Interval 1800 -> 3600 at 12:00. The tick started 11:50 still ends 12:20.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        },
+        {
+          "version": 2,
+          "effective_at": "2026-10-21T12:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 3600,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 2,
+        "anchor_at": "2026-10-21T11:50:00Z"
+      },
+      "now": "2026-10-21T12:00:00Z",
+      "expect": {
+        "value": 2,
+        "anchor_at": "2026-10-21T11:50:00Z",
+        "next_tick_at": "2026-10-21T12:20:00Z",
+        "full_at": "2026-10-21T14:20:00Z"
+      }
+    },
+    {
+      "id": "interval-lengthened-after-old-end",
+      "note": "At 12:20 the point lands; the next cycle takes 3600 seconds.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        },
+        {
+          "version": 2,
+          "effective_at": "2026-10-21T12:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 3600,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 2,
+        "anchor_at": "2026-10-21T11:50:00Z"
+      },
+      "now": "2026-10-21T12:20:00Z",
+      "expect": {
+        "value": 3,
+        "anchor_at": "2026-10-21T12:20:00Z",
+        "next_tick_at": "2026-10-21T13:20:00Z",
+        "full_at": "2026-10-21T14:20:00Z"
+      }
+    },
+    {
+      "id": "interval-lengthened-one-minute-short",
+      "note": "One minute before the second point of the new interval.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        },
+        {
+          "version": 2,
+          "effective_at": "2026-10-21T12:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 3600,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 2,
+        "anchor_at": "2026-10-21T11:50:00Z"
+      },
+      "now": "2026-10-21T13:19:00Z",
+      "expect": {
+        "value": 3,
+        "anchor_at": "2026-10-21T12:20:00Z",
+        "next_tick_at": "2026-10-21T13:20:00Z",
+        "full_at": "2026-10-21T14:20:00Z"
+      }
+    },
+    {
+      "id": "interval-shortened-in-flight-tick-ends-early",
+      "note": "Interval 1800 -> 900 at 12:00. The tick started 11:50 ends at 12:05 (earlier of old end 12:20 and new end 12:05).",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        },
+        {
+          "version": 2,
+          "effective_at": "2026-10-21T12:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 900,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 2,
+        "anchor_at": "2026-10-21T11:50:00Z"
+      },
+      "now": "2026-10-21T12:05:00Z",
+      "expect": {
+        "value": 3,
+        "anchor_at": "2026-10-21T12:05:00Z",
+        "next_tick_at": "2026-10-21T12:20:00Z",
+        "full_at": "2026-10-21T12:35:00Z"
+      }
+    },
+    {
+      "id": "interval-shortened-elapsed-already-longer",
+      "note": "Tick started 11:20 ends 11:50 under the old interval, before the change; the next ends 12:05.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        },
+        {
+          "version": 2,
+          "effective_at": "2026-10-21T12:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 900,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 2,
+        "anchor_at": "2026-10-21T11:20:00Z"
+      },
+      "now": "2026-10-21T12:00:00Z",
+      "expect": {
+        "value": 3,
+        "anchor_at": "2026-10-21T11:50:00Z",
+        "next_tick_at": "2026-10-21T12:05:00Z",
+        "full_at": "2026-10-21T12:20:00Z"
+      }
+    },
+    {
+      "id": "scheduled-version-in-the-future",
+      "note": "A version with a higher cap is scheduled for 13:00; at 12:00 the meter is full and nothing is projected.",
+      "versions": [
+        {
+          "version": 1,
+          "effective_at": "2026-01-01T00:00:00Z",
+          "cap": 5,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        },
+        {
+          "version": 2,
+          "effective_at": "2026-10-21T13:00:00Z",
+          "cap": 8,
+          "overfill_max": 5,
+          "regen_amount": 1,
+          "regen_interval_seconds": 1800,
+          "consume_mode": "on_start",
+          "attempt_cost": 1
+        }
+      ],
+      "stored": {
+        "value": 5,
+        "anchor_at": "2026-10-21T04:30:00Z"
+      },
+      "now": "2026-10-21T12:00:00Z",
+      "expect": {
+        "value": 5,
+        "anchor_at": "2026-10-21T04:30:00Z",
+        "next_tick_at": null,
+        "full_at": null
+      }
+    }
+  ]
+}

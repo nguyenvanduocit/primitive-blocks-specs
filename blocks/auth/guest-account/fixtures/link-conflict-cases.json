@@ -1,0 +1,214 @@
+{
+  "_comment": "Holdings, guest weight, defaults, digests and resolution outcomes for link-conflict.feature (README section 3.7, backend.md Pattern 4). Digests are SHA-256 over JSON.stringify of the items sorted by code point on category, NUL, label_key, each item as the array [category, label_key, paid, effect]. All data is example data.",
+  "_usage": "Unit tests for guestWeight, previewDigest and defaultChoice; scenario data for link-conflict.feature and link-same-account.feature. `clock` is the test clock.",
+
+  "clock": "2026-10-27T12:00:00Z",
+  "tenant_id": "tenant-001",
+  "config": {
+    "LINK_CONFLICT_DEFAULT_PLAYED": "keep_existing",
+    "LINK_CONFLICT_DEFAULT_PAID": "none",
+    "LINK_CONFLICT_CONFIRM_PRISTINE": false,
+    "LINK_IMPORTS_PER_TARGET_PER_DAY": 3,
+    "LINK_NONCE_TTL_SECONDS": 300,
+    "LINK_CONFLICT_TTL_SECONDS": 600,
+    "GUEST_ABANDONED_RETENTION_DAYS": 30
+  },
+
+  "participants": [
+    { "id": "engagement.daily-streak", "registered": true },
+    { "id": "engagement.objectives",   "registered": true },
+    { "id": "billing.virtual-currency", "registered": true },
+    { "id": "billing.subscriptions",   "registered": true },
+    { "id": "engagement.energy-lives", "registered": true, "no_holdings": true, "note": "declares no_holdings: nothing to list or merge" }
+  ],
+
+  "holdings_sets": {
+    "empty": [],
+    "played": [
+      { "category": "progress", "label_key": "streak",     "paid": false, "effect": "carried" },
+      { "category": "progress", "label_key": "objectives", "paid": false, "effect": "carried" },
+      { "category": "currency", "label_key": "coins",      "paid": false, "effect": "left_behind" }
+    ],
+    "played_currency_carried": [
+      { "category": "progress", "label_key": "streak",     "paid": false, "effect": "carried" },
+      { "category": "progress", "label_key": "objectives", "paid": false, "effect": "carried" },
+      { "category": "currency", "label_key": "coins",      "paid": false, "effect": "carried" }
+    ],
+    "paid": [
+      { "category": "progress",  "label_key": "streak",           "paid": false, "effect": "carried" },
+      { "category": "progress",  "label_key": "objectives",       "paid": false, "effect": "carried" },
+      { "category": "currency",  "label_key": "coins",            "paid": false, "effect": "left_behind" },
+      { "category": "currency",  "label_key": "gems",             "paid": true,  "effect": "left_behind" },
+      { "category": "purchases", "label_key": "subscription_pro", "paid": true,  "effect": "left_behind" }
+    ]
+  },
+
+  "weight_cases": [
+    { "name": "nothing held",              "set": "empty",                   "weight": "pristine", "default_choice": "keep_existing", "sheet": false, "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945" },
+    { "name": "progress and soft currency", "set": "played",                  "weight": "played",   "default_choice": "keep_existing", "sheet": true,  "digest": "91ac3ea96bbbb3fc8040d4498748dd10b51a82cb25df2083bcd2509f2fc3c9fa" },
+    { "name": "currency carried by billing", "set": "played_currency_carried", "weight": "played",   "default_choice": "keep_existing", "sheet": true,  "digest": "839bac68fa1ab1dc8316fd42a3a724635add3128da877fcda828cbd3f735c8f8" },
+    { "name": "paid currency and a subscription", "set": "paid",             "weight": "paid",     "default_choice": "none",          "sheet": true,  "digest": "9d7d1a235bbf5f93c23677b9463385fbd06687586c5e64337a6bf3199fefc247",
+      "acknowledge_each": ["currency:gems", "purchases:subscription_pro"] }
+  ],
+
+  "digest_order_independence": {
+    "set": "played",
+    "reordered": [2, 0, 1],
+    "digest": "91ac3ea96bbbb3fc8040d4498748dd10b51a82cb25df2083bcd2509f2fc3c9fa"
+  },
+
+  "accounts": [
+    { "name": "guest",    "id": "a0000000-0000-4000-8000-0000000000a1", "kind": "guest",  "status": "active" },
+    { "name": "existing", "id": "a0000000-0000-4000-8000-0000000000b1", "kind": "linked", "status": "active", "provider": "google" },
+    { "name": "other-provider-user", "id": "a0000000-0000-4000-8000-0000000000c1", "kind": "linked", "status": "active", "provider": "apple", "email": "player@example.com" }
+  ],
+
+  "conflict_cases": [
+    {
+      "name": "credential owned, pristine guest: no sheet",
+      "reason": "credential_owned", "set": "empty",
+      "expect": { "sheet": false, "result": "signed in to existing", "participants_called": 0, "guest": "abandoned", "notice": "new guest account had no progress" }
+    },
+    {
+      "name": "credential owned, played guest: keep existing with import",
+      "reason": "credential_owned", "set": "played",
+      "resolve": { "choice": "keep_existing", "import": true, "confirmed_preview_digest": "91ac3ea96bbbb3fc8040d4498748dd10b51a82cb25df2083bcd2509f2fc3c9fa" },
+      "expect": {
+        "status": 200,
+        "merge_calls": ["engagement.daily-streak", "engagement.objectives"],
+        "merge_id": "link:<link_attempt_id>",
+        "guest": { "status": "abandoned", "merged_into_account_id": "existing", "credentials": "retired:abandoned", "sessions": "revoked" },
+        "attempt": "kept_existing",
+        "removed_for_the_player": ["currency:coins"],
+        "login_session_for": "existing"
+      }
+    },
+    {
+      "name": "credential owned, played guest: keep existing without import",
+      "reason": "credential_owned", "set": "played",
+      "resolve": { "choice": "keep_existing", "import": false, "confirmed_preview_digest": "91ac3ea96bbbb3fc8040d4498748dd10b51a82cb25df2083bcd2509f2fc3c9fa" },
+      "expect": { "status": 200, "merge_calls": [], "guest": { "status": "abandoned", "merged_into_account_id": null }, "client_data": "device data saved aside with the previous-data backup of data.progress-sync and the local record reset before the sign-in; no owner-less data remains to merge" }
+    },
+    {
+      "name": "credential owned, played guest: keep the guest and refuse",
+      "reason": "credential_owned", "set": "played",
+      "resolve": { "choice": "keep_guest" },
+      "expect": { "status": 200, "merge_calls": [], "guest": { "kind": "guest", "status": "active" }, "attempt": "kept_guest", "destroyed": [] }
+    },
+    {
+      "name": "paid guest: confirmation without acknowledging each paid holding is refused",
+      "reason": "credential_owned", "set": "paid",
+      "resolve": { "choice": "keep_existing", "import": true, "confirmed_preview_digest": "9d7d1a235bbf5f93c23677b9463385fbd06687586c5e64337a6bf3199fefc247", "acknowledged_paid": ["currency:gems"] },
+      "expect": { "status": 400, "error": "invalid_request", "changed": "nothing" }
+    },
+    {
+      "name": "paid guest: everything acknowledged",
+      "reason": "credential_owned", "set": "paid",
+      "resolve": { "choice": "keep_existing", "import": true, "confirmed_preview_digest": "9d7d1a235bbf5f93c23677b9463385fbd06687586c5e64337a6bf3199fefc247", "acknowledged_paid": ["currency:gems", "purchases:subscription_pro"] },
+      "expect": { "status": 200, "removed_for_the_player": ["currency:coins", "currency:gems", "purchases:subscription_pro"] }
+    },
+    {
+      "name": "holdings changed after the preview",
+      "reason": "credential_owned", "shown_set": "played", "now_set": "played_currency_carried",
+      "resolve": { "choice": "keep_existing", "import": true, "confirmed_preview_digest": "91ac3ea96bbbb3fc8040d4498748dd10b51a82cb25df2083bcd2509f2fc3c9fa" },
+      "expect": { "status": 409, "error": "preview_changed", "new_digest": "839bac68fa1ab1dc8316fd42a3a724635add3128da877fcda828cbd3f735c8f8", "changed": "nothing" }
+    },
+    {
+      "name": "email owned by another provider: no import, no holdings",
+      "reason": "email_owned_by_other_provider", "provider": "google", "email": "player@example.com", "owner": "other-provider-user",
+      "expect": { "status": 409, "error": "link_conflict", "items": [], "choices": ["sign in with the other provider", "stay a guest"], "attempt": "conflict" }
+    },
+    {
+      "name": "a fourth import into one account in a day",
+      "reason": "credential_owned", "set": "played", "imports_into_target_today": 3,
+      "resolve": { "choice": "keep_existing", "import": true, "confirmed_preview_digest": "91ac3ea96bbbb3fc8040d4498748dd10b51a82cb25df2083bcd2509f2fc3c9fa" },
+      "expect": { "status": 429, "error": "rate_limited", "changed": "nothing", "keep_guest_still_allowed": true }
+    },
+    {
+      "name": "import interrupted after the first participant",
+      "reason": "credential_owned", "set": "played",
+      "resolve": { "choice": "keep_existing", "import": true, "confirmed_preview_digest": "91ac3ea96bbbb3fc8040d4498748dd10b51a82cb25df2083bcd2509f2fc3c9fa" },
+      "failure": { "after": "engagement.daily-streak" },
+      "expect_first": { "status": 503, "error": "import_incomplete", "attempt": "importing", "guest": { "status": "active" } },
+      "expect_retry": { "status": 200, "merge_calls_applied_once": ["engagement.daily-streak", "engagement.objectives"], "guest": { "status": "abandoned" } }
+    },
+    {
+      "name": "the same guest cannot be merged into a second account",
+      "reason": "credential_owned", "set": "played",
+      "second_merge": { "merge_id": "link:<other attempt>", "into": "other-provider-user" },
+      "expect": { "error": "already_merged" }
+    }
+  ],
+
+  "progress_sync_cases": [
+    {
+      "_comment": "Device data of a guest has no owner marker for the whole guest life (INV-19). Entry counts follow data.progress-sync account-switch.feature: a guest with 2 entries joins an account that holds 1 other entry and ends with 3.",
+      "name": "guest data merges into the existing account, nothing is replaced",
+      "path": "conflict, keep_existing, import on",
+      "device": { "owner_marker": null, "history_entries": 2, "prefs_lang": "vi" },
+      "existing_account_snapshot": { "history_entries": 1, "revision": 4 },
+      "expected": { "device_history_entries": 3, "snapshot_put_base_revision": 4, "owner_marker_after": "existing", "previous_data_slot": "empty", "replaced": false }
+    },
+    {
+      "name": "declined import saves the device data aside and resets it",
+      "path": "conflict, keep_existing, import off",
+      "device": { "owner_marker": null, "history_entries": 2 },
+      "existing_account_snapshot": { "history_entries": 1, "revision": 4 },
+      "expected": { "previous_data_slot": "export with the 2 original entries", "device_history_entries_after_sign_in": 1, "owner_marker_after": "existing", "guest_entries_in_existing_snapshot": 0 }
+    },
+    {
+      "name": "same-account link keeps the device data and starts the snapshot",
+      "path": "same-account link",
+      "device": { "owner_marker": null, "history_entries": 2 },
+      "existing_account_snapshot": null,
+      "expected": { "snapshot_get": "404 no_snapshot", "snapshot_put_base_revision": 0, "snapshot_history_entries": 2, "device_history_entries": 2, "owner_marker_after": "the unchanged account_id", "previous_data_slot": "empty", "replaced": false }
+    },
+    {
+      "name": "keep the guest: the device data is untouched",
+      "path": "conflict, keep_guest",
+      "device": { "owner_marker": null, "history_entries": 2 },
+      "expected": { "device_history_entries": 2, "owner_marker_after": null, "snapshot_requests": 0 }
+    },
+    {
+      "name": "a guest never writes a snapshot",
+      "path": "any time while kind is guest",
+      "device": { "owner_marker": null, "history_entries": 5 },
+      "expected": { "snapshot_requests": 0, "owner_marker_after": null }
+    }
+  ],
+
+  "same_account_link_cases": [
+    {
+      "name": "credential is new: the id does not change",
+      "provider": "google", "guest": "guest",
+      "expect": {
+        "status": 200,
+        "account_id": "unchanged",
+        "accounts": { "kind": "linked", "linked_at": "2026-10-27T12:00:00Z", "status": "active" },
+        "users_row": { "id": "equals account_id", "google_id": "from the verified claims" },
+        "credentials": "device and recovery retired:linked",
+        "guest_sessions": "revoked",
+        "rows_rekeyed_in_other_blocks": 0,
+        "participants_called": 0,
+        "event": "account_linked"
+      }
+    },
+    {
+      "name": "lost response: the old secret now answers account_linked",
+      "after": "link committed, response lost",
+      "expect": { "exchange_with_old_secret": { "status": 403, "error": "account_linked" }, "provider_sign_in_lands_on": "the same account_id" }
+    },
+    {
+      "name": "two attempts race for one provider identity",
+      "expect": { "winner": "links", "loser": "409 link_conflict reason credential_owned", "kind_changes": 1 }
+    },
+    {
+      "name": "proof carries the nonce of another attempt",
+      "expect": { "status": 401, "changed": "nothing" }
+    },
+    {
+      "name": "link start without the device secret",
+      "expect": { "status": 401, "error": "credential_invalid", "link_attempts_created": 0 }
+    }
+  ]
+}

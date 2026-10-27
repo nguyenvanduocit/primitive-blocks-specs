@@ -1,0 +1,292 @@
+{
+  "clock": "2026-10-27T12:00:00Z",
+  "tenant_id": "tenant-001",
+  "note": "Event definitions as stored after publish. For window_kind local, starts_at and ends_at are the derived outer bounds (local start minus 14 hours, local end plus 12 hours, read as UTC). Rewards are listed in reward_tables and attached by name.",
+  "config": {
+    "ENDING_SOON_WINDOW_SECONDS": { "daily": 3600, "weekly": 86400, "seasonal": 259200 },
+    "CLAIM_GRACE_SECONDS": { "daily": 86400, "weekly": 259200, "seasonal": 604800 },
+    "UPCOMING_HORIZON_SECONDS": 604800,
+    "NEW_PLAYER_WINDOW_SECONDS": 604800,
+    "LAPSED_AFTER_SECONDS": 1209600,
+    "REWARD_CAP_PER_PLAYER": {
+      "daily.coins": 100,
+      "weekly.coins": 500,
+      "weekly.booster-hint": 3,
+      "weekly.frame-sprint": 1,
+      "seasonal.coins": 1000,
+      "seasonal.skin-harvest": 1
+    },
+    "RELEASED_APP_VERSIONS": { "ios": "2.5.0", "android": "2.5.0", "web": "2.5.0" },
+    "ASSET_ORIGIN_ALLOWLIST": ["https://cdn.example.com"],
+    "EVENT_TYPES": {
+      "daily-jackpot": { "shared_outcome": false, "config_schema_versions": [1] },
+      "sprint": { "shared_outcome": false, "config_schema_versions": [1] },
+      "collection": { "shared_outcome": false, "config_schema_versions": [1, 2] },
+      "comeback-chest": { "shared_outcome": false, "config_schema_versions": [1] },
+      "welcome-track": { "shared_outcome": false, "config_schema_versions": [1] },
+      "community-goal": { "shared_outcome": true, "config_schema_versions": [1] }
+    }
+  },
+  "reward_tables": {
+    "daily-standard": [
+      { "reward_key": "win-1", "trigger_kind": "milestone", "threshold": 1, "claim_mode": "auto", "grants": [{ "currency": "coins", "amount": 20 }] },
+      { "reward_key": "win-3", "trigger_kind": "milestone", "threshold": 3, "claim_mode": "manual", "grants": [{ "currency": "coins", "amount": 60 }] }
+    ],
+    "sprint-standard": [
+      { "reward_key": "m1", "trigger_kind": "milestone", "threshold": 100, "claim_mode": "auto", "grants": [{ "currency": "coins", "amount": 50 }] },
+      { "reward_key": "m2", "trigger_kind": "milestone", "threshold": 300, "claim_mode": "manual", "grants": [{ "currency": "coins", "amount": 100 }, { "currency": "booster-hint", "amount": 1 }] },
+      { "reward_key": "m3", "trigger_kind": "milestone", "threshold": 600, "claim_mode": "manual", "grants": [{ "currency": "coins", "amount": 250 }] },
+      { "reward_key": "done", "trigger_kind": "completion", "claim_mode": "auto", "grants": [{ "currency": "frame-sprint", "amount": 1 }] },
+      { "reward_key": "part", "trigger_kind": "participation", "claim_mode": "auto", "grants": [{ "currency": "coins", "amount": 10 }] }
+    ],
+    "season-standard": [
+      { "reward_key": "s1", "trigger_kind": "milestone", "threshold": 250, "claim_mode": "auto", "grants": [{ "currency": "coins", "amount": 100 }] },
+      { "reward_key": "s2", "trigger_kind": "milestone", "threshold": 500, "claim_mode": "manual", "grants": [{ "currency": "coins", "amount": 200 }] },
+      { "reward_key": "s3", "trigger_kind": "milestone", "threshold": 1000, "claim_mode": "manual", "grants": [{ "currency": "coins", "amount": 400 }, { "currency": "skin-harvest", "amount": 1 }] }
+    ],
+    "comeback-standard": [
+      { "reward_key": "c1", "trigger_kind": "milestone", "threshold": 1, "claim_mode": "auto", "grants": [{ "currency": "coins", "amount": 100 }] },
+      { "reward_key": "c3", "trigger_kind": "milestone", "threshold": 3, "claim_mode": "manual", "grants": [{ "currency": "coins", "amount": 200 }] }
+    ],
+    "welcome-standard": [
+      { "reward_key": "w1", "trigger_kind": "milestone", "threshold": 2, "claim_mode": "auto", "grants": [{ "currency": "coins", "amount": 150 }] }
+    ],
+    "qa-minimal": [
+      { "reward_key": "q1", "trigger_kind": "milestone", "threshold": 1, "claim_mode": "manual", "grants": [{ "currency": "coins", "amount": 1 }] }
+    ]
+  },
+  "events": [
+    {
+      "id": "evt-daily-1027",
+      "type": "daily-jackpot", "config_schema_version": 1, "cadence_layer": "daily",
+      "window_kind": "local",
+      "local_starts_at": "2026-10-27T00:00:00", "local_ends_at": "2026-10-28T00:00:00",
+      "starts_at": "2026-10-26T10:00:00Z", "ends_at": "2026-10-28T12:00:00Z",
+      "min_app_version": null,
+      "audience": { "segment": "all", "platforms": ["ios", "android", "web"] },
+      "allow_list": [],
+      "priority": 80, "exclusive_group": null, "join_mode": "auto", "progress_cap": 3, "progress_max_per_call": 1,
+      "series_key": "daily-jackpot", "occurrence_index": 26,
+      "season_ref": null, "original_ends_at": null,
+      "reward_table": "daily-standard",
+      "issuance_budget": { "coins": 10000000 },
+      "authoring_status": "published", "held_at": null, "closes_at": null,
+      "content": { "default_locale": "en", "locales": { "en": { "title": "Daily Jackpot", "summary": "Win three levels today to open the jackpot.", "rules": ["Wins count from the start of your local day.", "Rewards you earn are yours to keep."] } }, "assets": { "banner": { "url": "https://cdn.example.com/events/daily-jackpot/banner-v1.webp", "alt": { "en": "A chest full of coins" } } }, "cta": { "route": "level-select" } }
+    },
+    {
+      "id": "evt-daily-1028",
+      "type": "daily-jackpot", "config_schema_version": 1, "cadence_layer": "daily",
+      "window_kind": "local",
+      "local_starts_at": "2026-10-28T00:00:00", "local_ends_at": "2026-10-29T00:00:00",
+      "starts_at": "2026-10-27T10:00:00Z", "ends_at": "2026-10-29T12:00:00Z",
+      "min_app_version": null,
+      "audience": { "segment": "all", "platforms": ["ios", "android", "web"] },
+      "allow_list": [],
+      "priority": 80, "exclusive_group": null, "join_mode": "auto", "progress_cap": 3, "progress_max_per_call": 1,
+      "series_key": "daily-jackpot", "occurrence_index": 27,
+      "season_ref": null, "original_ends_at": null,
+      "reward_table": "daily-standard",
+      "issuance_budget": { "coins": 10000000 },
+      "authoring_status": "published", "held_at": null, "closes_at": null,
+      "content": { "default_locale": "en", "locales": { "en": { "title": "Daily Jackpot", "summary": "Win three levels today to open the jackpot.", "rules": ["Wins count from the start of your local day.", "Rewards you earn are yours to keep."] } }, "assets": { "banner": { "url": "https://cdn.example.com/events/daily-jackpot/banner-v1.webp", "alt": { "en": "A chest full of coins" } } }, "cta": { "route": "level-select" } }
+    },
+    {
+      "id": "evt-weekly-sprint-w44",
+      "type": "sprint", "config_schema_version": 1, "cadence_layer": "weekly",
+      "window_kind": "absolute",
+      "local_starts_at": null, "local_ends_at": null,
+      "starts_at": "2026-10-26T00:00:00Z", "ends_at": "2026-11-02T00:00:00Z",
+      "min_app_version": null,
+      "audience": { "segment": "all", "platforms": ["ios", "android", "web"] },
+      "allow_list": [],
+      "priority": 50, "exclusive_group": null, "join_mode": "opt_in", "progress_cap": 600, "progress_max_per_call": 100,
+      "series_key": "weekly-sprint", "occurrence_index": 44,
+      "season_ref": null, "original_ends_at": null,
+      "reward_table": "sprint-standard",
+      "issuance_budget": { "coins": 2000000, "booster-hint": 10000, "frame-sprint": 10000 },
+      "authoring_status": "published", "held_at": null, "closes_at": null,
+      "content": { "default_locale": "en", "locales": { "en": { "title": "Weekly Sprint", "summary": "Collect points all week and unlock rewards.", "rules": ["Points come from finished levels.", "Join before you play: points earned before joining do not count.", "Rewards you earn are yours to keep."] } }, "assets": { "banner": { "url": "https://cdn.example.com/events/weekly-sprint/banner-v2.webp", "alt": { "en": "A runner crossing a finish line" } } }, "cta": { "route": "level-select" } }
+    },
+    {
+      "id": "evt-weekly-sprint-w45",
+      "type": "sprint", "config_schema_version": 1, "cadence_layer": "weekly",
+      "window_kind": "absolute",
+      "local_starts_at": null, "local_ends_at": null,
+      "starts_at": "2026-11-02T00:00:00Z", "ends_at": "2026-11-09T00:00:00Z",
+      "min_app_version": null,
+      "audience": { "segment": "all", "platforms": ["ios", "android", "web"] },
+      "allow_list": [],
+      "priority": 50, "exclusive_group": null, "join_mode": "opt_in", "progress_cap": 600, "progress_max_per_call": 100,
+      "series_key": "weekly-sprint", "occurrence_index": 45,
+      "season_ref": null, "original_ends_at": null,
+      "reward_table": "sprint-standard",
+      "issuance_budget": { "coins": 2000000, "booster-hint": 10000, "frame-sprint": 10000 },
+      "authoring_status": "published", "held_at": null, "closes_at": null,
+      "content": { "default_locale": "en", "locales": { "en": { "title": "Weekly Sprint", "summary": "Collect points all week and unlock rewards.", "rules": ["Points come from finished levels.", "Join before you play: points earned before joining do not count.", "Rewards you earn are yours to keep."] } }, "assets": { "banner": { "url": "https://cdn.example.com/events/weekly-sprint/banner-v2.webp", "alt": { "en": "A runner crossing a finish line" } } }, "cta": { "route": "level-select" } }
+    },
+    {
+      "id": "evt-weekend-rush",
+      "type": "sprint", "config_schema_version": 1, "cadence_layer": "weekly",
+      "window_kind": "absolute",
+      "local_starts_at": null, "local_ends_at": null,
+      "starts_at": "2026-10-30T18:00:00Z", "ends_at": "2026-11-01T18:00:00Z",
+      "min_app_version": null,
+      "audience": { "segment": "all", "platforms": ["ios", "android", "web"] },
+      "allow_list": [],
+      "priority": 55, "exclusive_group": null, "join_mode": "opt_in", "progress_cap": 600, "progress_max_per_call": 100,
+      "series_key": null, "occurrence_index": null,
+      "season_ref": null, "original_ends_at": null,
+      "reward_table": "sprint-standard",
+      "issuance_budget": { "coins": 2000000, "booster-hint": 10000, "frame-sprint": 10000 },
+      "authoring_status": "published", "held_at": null, "closes_at": null,
+      "content": { "default_locale": "en", "locales": { "en": { "title": "Weekend Rush", "summary": "A two-day sprint from Friday evening to Sunday evening.", "rules": ["Points come from finished levels.", "Join before you play: points earned before joining do not count.", "Rewards you earn are yours to keep."] } }, "assets": {}, "cta": { "route": "level-select" } }
+    },
+    {
+      "id": "evt-harvest-season",
+      "type": "collection", "config_schema_version": 2, "cadence_layer": "seasonal",
+      "window_kind": "absolute",
+      "local_starts_at": null, "local_ends_at": null,
+      "starts_at": "2026-10-12T00:00:00Z", "ends_at": "2026-11-09T00:00:00Z",
+      "min_app_version": "2.4.0",
+      "audience": { "segment": "all", "platforms": ["ios", "android", "web"] },
+      "allow_list": [],
+      "priority": 70, "exclusive_group": null, "join_mode": "auto", "progress_cap": 1000, "progress_max_per_call": 50,
+      "series_key": null, "occurrence_index": null,
+      "season_ref": "season-2026-autumn", "original_ends_at": null,
+      "reward_table": "season-standard",
+      "issuance_budget": { "coins": 6000000, "skin-harvest": 10000 },
+      "authoring_status": "published", "held_at": null, "closes_at": null,
+      "content": { "default_locale": "en", "locales": { "en": { "title": "Harvest Season", "summary": "Gather harvest items for four weeks.", "rules": ["Items drop from finished levels.", "Rewards you earn are yours to keep."] } }, "assets": { "banner": { "url": "https://cdn.example.com/events/harvest/banner-v1.webp", "alt": { "en": "A basket of autumn fruit" } } }, "cta": { "route": "collection" } }
+    },
+    {
+      "id": "evt-comeback-w44",
+      "type": "comeback-chest", "config_schema_version": 1, "cadence_layer": "weekly",
+      "window_kind": "absolute",
+      "local_starts_at": null, "local_ends_at": null,
+      "starts_at": "2026-10-26T00:00:00Z", "ends_at": "2026-11-02T00:00:00Z",
+      "min_app_version": null,
+      "audience": { "segment": "lapsed_player", "platforms": ["ios", "android", "web"] },
+      "allow_list": [],
+      "priority": 60, "exclusive_group": null, "join_mode": "auto", "progress_cap": 3, "progress_max_per_call": 1,
+      "series_key": null, "occurrence_index": null,
+      "season_ref": null, "original_ends_at": null,
+      "reward_table": "comeback-standard",
+      "issuance_budget": { "coins": 300000 },
+      "authoring_status": "published", "held_at": null, "closes_at": null,
+      "content": { "default_locale": "en", "locales": { "en": { "title": "Welcome Back", "summary": "Win a few levels to open your comeback chest.", "rules": ["Wins count from your return.", "Rewards you earn are yours to keep."] } }, "assets": {}, "cta": { "route": "level-select" } }
+    },
+    {
+      "id": "evt-welcome-w44",
+      "type": "welcome-track", "config_schema_version": 1, "cadence_layer": "weekly",
+      "window_kind": "absolute",
+      "local_starts_at": null, "local_ends_at": null,
+      "starts_at": "2026-10-26T00:00:00Z", "ends_at": "2026-11-02T00:00:00Z",
+      "min_app_version": null,
+      "audience": { "segment": "new_player", "platforms": ["ios", "android", "web"] },
+      "allow_list": [],
+      "priority": 65, "exclusive_group": null, "join_mode": "auto", "progress_cap": 2, "progress_max_per_call": 1,
+      "series_key": null, "occurrence_index": null,
+      "season_ref": null, "original_ends_at": null,
+      "reward_table": "welcome-standard",
+      "issuance_budget": { "coins": 300000 },
+      "authoring_status": "published", "held_at": null, "closes_at": null,
+      "content": { "default_locale": "en", "locales": { "en": { "title": "First Week", "summary": "Finish two levels to claim a welcome gift.", "rules": ["Open to players in their first week.", "Rewards you earn are yours to keep."] } }, "assets": {}, "cta": { "route": "level-select" } }
+    },
+    {
+      "id": "evt-qa-short",
+      "type": "sprint", "config_schema_version": 1, "cadence_layer": "weekly",
+      "window_kind": "absolute",
+      "local_starts_at": null, "local_ends_at": null,
+      "starts_at": "2026-10-27T11:00:00Z", "ends_at": "2026-10-27T13:00:00Z",
+      "min_app_version": null,
+      "audience": { "segment": "all", "platforms": ["ios", "android", "web"], "allow_list_only": true },
+      "allow_list": ["acc-qa-1"],
+      "priority": 10, "exclusive_group": null, "join_mode": "opt_in", "progress_cap": 1, "progress_max_per_call": 1,
+      "series_key": null, "occurrence_index": null,
+      "season_ref": null, "original_ends_at": null,
+      "reward_table": "qa-minimal",
+      "issuance_budget": { "coins": 10 },
+      "authoring_status": "published", "held_at": null, "closes_at": null,
+      "content": { "default_locale": "en", "locales": { "en": { "title": "QA Sprint", "summary": "Internal check of the join and claim path.", "rules": ["Visible to testers only."] } }, "assets": {}, "cta": { "route": "level-select" } }
+    }
+  ],
+  "expected_discovery": {
+    "note": "Order is priority descending, then ends_at ascending, then starts_at ascending, then id. upcoming omits an event whose series already has an instance in events. ends_at here is the account's resolved end.",
+    "acc-ann": {
+      "events": ["evt-daily-1027", "evt-harvest-season", "evt-weekly-sprint-w44"],
+      "upcoming": ["evt-weekend-rush"],
+      "recent": [],
+      "unavailable": [],
+      "resolved_window": { "evt-daily-1027": { "starts_at": "2026-10-26T17:00:00Z", "ends_at": "2026-10-27T17:00:00Z" } }
+    },
+    "acc-ben": {
+      "events": ["evt-daily-1027", "evt-weekly-sprint-w44"],
+      "upcoming": ["evt-weekend-rush"],
+      "recent": [],
+      "unavailable": [{ "event_id": "evt-harvest-season", "reason": "update_required", "min_app_version": "2.4.0" }],
+      "resolved_window": { "evt-daily-1027": { "starts_at": "2026-10-27T04:00:00Z", "ends_at": "2026-10-28T04:00:00Z" } }
+    },
+    "acc-cara": {
+      "events": ["evt-daily-1028", "evt-harvest-season", "evt-weekly-sprint-w44"],
+      "upcoming": ["evt-weekend-rush"],
+      "recent": [],
+      "unavailable": [],
+      "resolved_window": { "evt-daily-1028": { "starts_at": "2026-10-27T10:00:00Z", "ends_at": "2026-10-28T10:00:00Z" } }
+    },
+    "acc-dan": {
+      "events": ["evt-daily-1027", "evt-harvest-season", "evt-comeback-w44", "evt-weekly-sprint-w44"],
+      "upcoming": ["evt-weekend-rush"],
+      "recent": [],
+      "unavailable": [],
+      "resolved_window": { "evt-daily-1027": { "starts_at": "2026-10-26T23:00:00Z", "ends_at": "2026-10-27T23:00:00Z" } }
+    },
+    "acc-eve": {
+      "events": ["evt-daily-1027", "evt-harvest-season", "evt-welcome-w44", "evt-weekly-sprint-w44"],
+      "upcoming": ["evt-weekend-rush"],
+      "recent": [],
+      "unavailable": [],
+      "resolved_window": { "evt-daily-1027": { "starts_at": "2026-10-27T04:00:00Z", "ends_at": "2026-10-28T04:00:00Z" } }
+    },
+    "acc-fay": {
+      "events": ["evt-daily-1027", "evt-harvest-season", "evt-weekly-sprint-w44"],
+      "upcoming": ["evt-weekend-rush"],
+      "recent": [],
+      "unavailable": [],
+      "resolved_window": { "evt-daily-1027": { "starts_at": "2026-10-27T11:00:00Z", "ends_at": "2026-10-28T11:00:00Z" } }
+    },
+    "acc-qa-1": {
+      "events": ["evt-daily-1027", "evt-harvest-season", "evt-weekly-sprint-w44", "evt-qa-short"],
+      "upcoming": ["evt-weekend-rush"],
+      "recent": [],
+      "unavailable": [],
+      "resolved_window": { "evt-daily-1027": { "starts_at": "2026-10-26T17:00:00Z", "ends_at": "2026-10-27T17:00:00Z" } }
+    }
+  },
+  "expected_recurrence": {
+    "note": "recurrence as returned to acc-ann; next_starts_at is resolved in the account's zone",
+    "evt-daily-1027": { "repeats": true, "next_starts_at": "2026-10-27T17:00:00Z" },
+    "evt-weekly-sprint-w44": { "repeats": true, "next_starts_at": "2026-11-02T00:00:00Z" },
+    "evt-harvest-season": null,
+    "evt-weekend-rush": null
+  },
+  "season_ref_cases": {
+    "note": "season_ref is display data of engagement.season-pass; the calendar passes it through and never validates it against the pass",
+    "evt-harvest-season": "season-2026-autumn"
+  },
+  "authoring_cases": [
+    { "name": "ends-before-starts", "base": "evt-weekly-sprint-w45", "mutation": { "ends_at": "2026-11-01T00:00:00Z" }, "expect_errors": ["ends_not_after_starts"] },
+    { "name": "exclusive-overlap", "base": "evt-weekly-sprint-w45", "mutation": { "exclusive_group": "weekend-tournament", "starts_at": "2026-10-31T12:00:00Z", "ends_at": "2026-11-02T00:00:00Z" }, "context": "another published event in group weekend-tournament runs 2026-10-30T00:00:00Z to 2026-11-01T00:00:00Z", "expect_errors": ["exclusive_group_overlap"] },
+    { "name": "reward-cap-exceeded", "base": "evt-weekly-sprint-w45", "mutation": { "reward_table_append": { "reward_key": "bonus", "trigger_kind": "participation", "claim_mode": "auto", "grants": [{ "currency": "coins", "amount": 200 }] } }, "context": "per-player coins would be 610 against weekly.coins 500", "expect_errors": ["reward_cap_exceeded"] },
+    { "name": "reward-cap-missing", "base": "evt-weekly-sprint-w45", "mutation": { "reward_table_append": { "reward_key": "gems-gift", "trigger_kind": "participation", "claim_mode": "auto", "grants": [{ "currency": "gems", "amount": 5 }] } }, "expect_errors": ["reward_cap_missing"] },
+    { "name": "spend-based-audience", "base": "evt-weekly-sprint-w45", "mutation": { "audience": { "segment": "all", "platforms": ["ios"], "lifetime_spend_min": 50 } }, "expect_errors": ["audience_key_not_allowed"] },
+    { "name": "unreleased-version", "base": "evt-harvest-season", "mutation": { "min_app_version": "2.6.0" }, "expect_errors": ["min_app_version_unreleased"] },
+    { "name": "local-window-shared-outcome", "base": "evt-daily-1028", "mutation": { "type": "community-goal" }, "expect_errors": ["local_window_shared_outcome"] },
+    { "name": "thresholds-not-increasing", "base": "evt-weekly-sprint-w45", "mutation": { "reward_table_replace": [{ "reward_key": "m1", "trigger_kind": "milestone", "threshold": 300, "claim_mode": "auto", "grants": [{ "currency": "coins", "amount": 50 }] }, { "reward_key": "m2", "trigger_kind": "milestone", "threshold": 300, "claim_mode": "manual", "grants": [{ "currency": "coins", "amount": 100 }] }] }, "expect_errors": ["reward_trigger_invalid"] },
+    { "name": "asset-origin-not-allowed", "base": "evt-weekly-sprint-w45", "mutation": { "content_banner_url": "https://images.example.net/banner.webp" }, "expect_errors": ["asset_origin_not_allowed"] },
+    { "name": "lead-time-too-short", "base": "evt-weekly-sprint-w45", "mutation": { "starts_at": "2026-10-27T12:20:00Z" }, "context": "publish at the fixed clock; the lead time is 3600 seconds", "expect_errors": ["lead_time_too_short"] },
+    { "name": "season-ref-on-weekly-event", "base": "evt-weekly-sprint-w45", "mutation": { "season_ref": "season-2026-autumn" }, "expect_errors": ["season_ref_invalid"] },
+    { "name": "repeat-without-series", "base": "evt-weekend-rush", "mutation": { "starts_at": "2026-11-13T18:00:00Z", "ends_at": "2026-11-15T18:00:00Z" }, "context": "same type and title as the published evt-weekend-rush and no series_key", "expect_warnings": ["repeat_without_series"] },
+    { "name": "purchase-trigger", "base": "evt-weekly-sprint-w45", "mutation": { "reward_table_append": { "reward_key": "buyer-bonus", "trigger_kind": "purchase", "claim_mode": "auto", "grants": [{ "currency": "coins", "amount": 10 }] } }, "expect_errors": ["reward_trigger_invalid"] },
+    { "name": "density-warning", "base": "evt-weekly-sprint-w45", "context": "six events live for one player at the same instant against MAX_CONCURRENT_LIVE 5", "expect_warnings": ["density_over_cap"] }
+  ]
+}

@@ -1,0 +1,127 @@
+{
+  "_comment": "Account merge, holdings, carry-over, unclaimed-reward and definition-versioning vectors. Default clock now = 2026-10-21T12:00:00Z; content from fixtures/definitions.json; CARRY_OVER_MIN_PERCENT 80.",
+  "_usage": "merge: seed both accounts as listed, call mergeAccounts(from_account_id, into_account_id, merge_id) and assert `expected`; rows not listed in `expected.instances` follow the normal unlock rules and are not asserted. carry_over: expire the weekly window at `window_end` and assert the next window's instance. versioning and migrations: publish as listed and assert `expected`.",
+
+  "merge": {
+    "merge_id": "merge-001",
+    "from_account_id": "acct-guest-001",
+    "into_account_id": "acct-001",
+    "from": {
+      "counters": { "level_completed": 12, "run_score": 4000, "active_day": 1, "match_won": 3 },
+      "reroll_banks": { "daily": 1 },
+      "windows": ["starter", "daily@2026-10-21"],
+      "instances": [
+        { "objective_id": "starter.finish-level", "window_key": "starter",    "state": "claimed",   "progress": 1,    "target": 1 },
+        { "objective_id": "starter.spend-coins",  "window_key": "starter",    "state": "completed", "progress": 50,   "target": 50 },
+        { "objective_id": "daily.win-3",          "window_key": "2026-10-21", "state": "active",    "progress": 2,    "target": 3 },
+        { "objective_id": "daily.win-5",          "window_key": "2026-10-21", "state": "active",    "progress": 1,    "target": 5 },
+        { "objective_id": "daily.score-5000",     "window_key": "2026-10-21", "state": "active",    "progress": 3000, "target": 5000 }
+      ]
+    },
+    "to": {
+      "counters": { "level_completed": 40, "run_score": 6000, "active_day": 2, "match_won": 10 },
+      "reroll_banks": { "daily": 0 },
+      "windows": ["starter", "daily@2026-10-21"],
+      "instances": [
+        { "objective_id": "starter.finish-level", "window_key": "starter",    "state": "completed", "progress": 1,    "target": 1 },
+        { "objective_id": "starter.spend-coins",  "window_key": "starter",    "state": "active",    "progress": 20,   "target": 50 },
+        { "objective_id": "daily.win-3",          "window_key": "2026-10-21", "state": "active",    "progress": 2,    "target": 3 },
+        { "objective_id": "daily.collect-20",     "window_key": "2026-10-21", "state": "active",    "progress": 5,    "target": 20 },
+        { "objective_id": "daily.score-5000",     "window_key": "2026-10-21", "state": "active",    "progress": 4000, "target": 5000 }
+      ]
+    },
+    "expected": {
+      "counters": { "level_completed": 52, "run_score": 6000, "active_day": 3, "match_won": 13 },
+      "reroll_banks": { "daily": 1, "_why": "the higher balance, capped at the plan cap; banks are not added, so merging guests cannot farm rerolls" },
+      "instances": {
+        "starter.finish-level@starter":    { "state": "claimed",   "progress": 1,    "_why": "claimed outranks completed" },
+        "starter.spend-coins@starter":     { "state": "completed", "progress": 50,   "_why": "completed outranks active" },
+        "daily.win-3@2026-10-21":          { "state": "completed", "progress": 3,    "_why": "both active, sum aggregation: 2 + 2 clamped at the target of the receiving account" },
+        "daily.win-5@2026-10-21":          { "absent": true,                        "_why": "unmatched active row of a window the receiving account already holds is dropped" },
+        "daily.collect-20@2026-10-21":     { "state": "active",    "progress": 5,    "_why": "only on the receiving side: unchanged" },
+        "daily.score-5000@2026-10-21":     { "state": "active",    "progress": 4000, "_why": "both active, max aggregation: the higher value" },
+        "ach.levels.1@lifetime":           { "state": "completed", "progress": 10,   "_why": "recomputed from the merged counter 52" },
+        "ach.levels.2@lifetime":           { "state": "completed", "progress": 50,   "_why": "recomputed from the merged counter 52" },
+        "ach.levels.3@lifetime":           { "state": "active",    "progress": 52,   "_why": "recomputed from the merged counter 52" }
+      },
+      "ledger_calls": 0,
+      "guest_rows_remaining": 0
+    },
+    "replay": { "merge_id": "merge-001", "expected": "no change, same result" },
+    "second_merge_of_same_guest": { "merge_id": "merge-002", "into_account_id": "acct-002", "expected": { "error": "already_merged" } }
+  },
+
+  "holdings": [
+    { "name": "pristine-guest", "given": "a guest that only called GET /api/objectives once: starter instances at progress 0, no counter above 0", "expected": [] },
+    {
+      "name": "played-guest",
+      "given": "the `from` account of the merge case: counters above 0, a claimed and a completed starter instance, active daily instances in window 2026-10-21",
+      "expected": [
+        { "category": "progress", "label_key": "objectives.holdings.progress", "paid": false, "effect": "carried" },
+        { "category": "progress", "label_key": "objectives.holdings.unclaimed", "paid": false, "effect": "carried" },
+        { "category": "progress", "label_key": "objectives.holdings.todays_board", "paid": false, "effect": "kept_target" }
+      ]
+    }
+  ],
+
+  "carry_over": {
+    "definition": "weekly.win-20",
+    "target": 20,
+    "window": "2026-10-19",
+    "window_end": "2026-10-25T17:00:00Z",
+    "next_window": { "window_key": "2026-10-26", "starts_at": "2026-10-25T17:00:00Z", "ends_at": "2026-11-01T17:00:00Z" },
+    "cases": [
+      { "name": "at-threshold-carries",           "state_at_end": "active",    "progress_at_end": 16, "carried_in_before": 0,  "expected": { "old_state": "expired",   "next_progress": 16, "next_carried_in": 16 } },
+      { "name": "below-threshold-forfeits",       "state_at_end": "active",    "progress_at_end": 15, "carried_in_before": 0,  "expected": { "old_state": "expired",   "next_progress": 0,  "next_carried_in": 0 } },
+      { "name": "almost-complete-carries",        "state_at_end": "active",    "progress_at_end": 19, "carried_in_before": 0,  "expected": { "old_state": "expired",   "next_progress": 19, "next_carried_in": 19 } },
+      { "name": "completed-does-not-carry",       "state_at_end": "completed", "progress_at_end": 20, "carried_in_before": 0,  "expected": { "old_state": "completed", "next_progress": 0,  "next_carried_in": 0, "old_still_claimable": true } },
+      { "name": "carried-progress-carries-once",  "state_at_end": "active",    "progress_at_end": 18, "carried_in_before": 16, "expected": { "old_state": "expired",   "next_progress": 0,  "next_carried_in": 0 }, "note": "an instance that started with a carry-in forfeits at its own expiry, even at 90 percent" }
+    ]
+  },
+
+  "unclaimed_at_reset": {
+    "_comment": "UNCLAIMED_AT_RESET decides what happens to a completed, unclaimed instance when its window closes. The server returns the active rule with every list so the screen can state it.",
+    "given": "daily.win-3 completed and unclaimed in window 2026-10-21; the window closes at 2026-10-21T17:00:00Z; the player reads the list at 2026-10-22T01:00:00Z",
+    "cases": [
+      { "name": "stay-claimable-is-the-default", "config": { "UNCLAIMED_AT_RESET": "stay_claimable" }, "expected": { "instance_state": "completed", "ledger_calls": 0, "claim_later": "pays the stored reward once", "list_rule": "stay_claimable" } },
+      { "name": "auto-grant-pays-at-reset", "config": { "UNCLAIMED_AT_RESET": "auto_grant" }, "expected": { "instance_state": "claimed", "claim_source": "auto", "ledger_calls": 1, "ledger_key": "objectives:acct-001:daily.win-3:2026-10-21:0", "second_read_ledger_calls": 0, "list_rule": "auto_grant" } }
+    ]
+  },
+
+  "versioning": [
+    {
+      "name": "in-flight-instance-keeps-its-version",
+      "definition": "daily.win-3",
+      "published_at": "2026-10-21T12:00:00Z",
+      "v1": { "target": 3, "reward": [{ "currency": "coins", "amount": 40 }] },
+      "v2": { "target": 4, "reward": [{ "currency": "coins", "amount": 60 }] },
+      "in_flight": { "window_key": "2026-10-21", "state": "active", "progress": 2, "definition_version": 1, "target": 3 },
+      "then": "one match_won event of amount 1 arrives",
+      "expected": {
+        "in_flight": { "state": "completed", "progress": 3, "target": 3, "definition_version": 1, "reward": [{ "currency": "coins", "amount": 40 }] },
+        "next_window_assignment": { "definition_version": 2, "target": 4, "reward": [{ "currency": "coins", "amount": 60 }] }
+      }
+    },
+    {
+      "name": "completed-reward-is-a-snapshot",
+      "definition": "daily.win-3",
+      "given": { "instance_state": "completed", "instance_reward": [{ "currency": "coins", "amount": 40 }], "published_v2_reward": [{ "currency": "coins", "amount": 60 }] },
+      "then": "the player claims the instance",
+      "expected": { "ledger_grants": [{ "currency": "coins", "amount": 40 }] }
+    },
+    {
+      "name": "retired-definition",
+      "definition": "daily.win-5",
+      "change": "status becomes retired",
+      "expected": { "drawn_in_new_windows": false, "in_flight_instances_finish": true, "completed_unclaimed_stay_claimable": true, "history_rows_keep_their_version": true }
+    }
+  ],
+
+  "migrations": [
+    { "name": "lower-target-is-allowed",   "objective_id": "daily.win-3", "change": { "target": { "from": 3, "to": 2 } },                                        "apply_to_in_flight": true, "expected": { "accepted": true, "in_flight_with_progress_2": "completes" } },
+    { "name": "raise-reward-is-allowed",   "objective_id": "daily.win-3", "change": { "reward": { "from": [{ "currency": "coins", "amount": 40 }], "to": [{ "currency": "coins", "amount": 60 }] } }, "apply_to_in_flight": true, "expected": { "accepted": true } },
+    { "name": "raise-target-is-rejected",  "objective_id": "daily.win-3", "change": { "target": { "from": 3, "to": 4 } },                                        "apply_to_in_flight": true, "expected": { "accepted": false, "error": "migration_unfavorable" } },
+    { "name": "lower-reward-is-rejected",  "objective_id": "daily.win-3", "change": { "reward": { "from": [{ "currency": "coins", "amount": 40 }], "to": [{ "currency": "coins", "amount": 30 }] } }, "apply_to_in_flight": true, "expected": { "accepted": false, "error": "migration_unfavorable" } },
+    { "name": "metric-change-needs-a-new-id", "objective_id": "daily.win-3", "change": { "metric": { "from": "match_won", "to": "item_collected" } },            "apply_to_in_flight": false, "expected": { "accepted": false, "error": "metric_change_requires_new_id" } }
+  ]
+}

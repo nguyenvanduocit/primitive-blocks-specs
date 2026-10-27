@@ -6,7 +6,7 @@ Claude Code runs this checklist after implementation, before reporting done. Ite
 
 - [ ] Migration runs successfully on a clean database (`account_deletions` created)
 - [ ] Migration is idempotent (running twice does not error)
-- [ ] `account_deletions.user_id` is UNIQUE and a foreign key to `users.id` with ON DELETE CASCADE
+- [ ] `account_deletions.user_id` is UNIQUE and a foreign key to `accounts.id` (the project's account or user id) with ON DELETE CASCADE, so a guest account can hold an open deletion
 - [ ] On SQLite: foreign key enforcement is enabled per connection, so the cascade really runs
 - [ ] Every table with a column naming a user (`user_id`, owner or friend column) is either covered by an eraser in the registry or has a cascading foreign key (the completeness query from `backend.md` Pattern 3 returns nothing unaccounted for)
 - [ ] The registry completeness check is a test that fails when a new user-owned table is added without an eraser
@@ -18,7 +18,8 @@ Claude Code runs this checklist after implementation, before reporting done. Ite
 - [ ] No session returns `401 no_session`
 - [ ] Invalid, expired, replayed or too-old proof returns `401 reauth_required`
 - [ ] Proof whose `sub` differs from the current user returns `403 wrong_account` and nothing is deleted
-- [ ] Unknown or unlinked `provider` returns `400 invalid_provider`
+- [ ] Unknown or unlinked `provider` returns `400 invalid_provider`; `guest` on an account that is not an active guest returns the same
+- [ ] **(when `auth.guest-account` is installed)** `provider: guest` with the device credential and a fresh challenge returns `204` (the `guest_valid` proof); a wrong secret, a retired credential, another account's secret, a missing secret and a replayed challenge each return `401 reauth_required` and delete nothing
 - [ ] A concurrent second request returns `409 deletion_in_progress`
 - [ ] Failure of a step returns `500 deletion_incomplete`, the session stays valid
 - [ ] Error bodies contain only the code (no tokens, subjects, emails, table names)
@@ -30,6 +31,7 @@ Claude Code runs this checklist after implementation, before reporting done. Ite
 - [ ] Order observed in a test: erase content, then revoke, then delete identity
 - [ ] Content erase is one transaction: an injected failure leaves all rows in place
 - [ ] Identity delete is the last mutation
+- [ ] **(when `auth.guest-account` is installed)** The identity step deletes the `users` row (when one exists) and then the `accounts` row in one transaction; for a guest only the `accounts` row exists; the `accounts` cascade removes credentials, sessions, link attempts and every `account_id` table
 - [ ] Revocation failure is recorded and does not fail the deletion
 - [ ] Injected failure after the content erase: the user is still signed in, the row is `failed`, and a second request with a new proof returns `204`
 - [ ] Erasers are idempotent: running them on already-erased data raises no error
@@ -44,6 +46,7 @@ Claude Code runs this checklist after implementation, before reporting done. Ite
 - [ ] The user's friend code deleted, and only when owned by the user (test with `friend_code_owned_by_someone_else`)
 - [ ] Rows in other users' friend lists that point at the deleted user are removed (or readers omit them): after deletion the other user's list does not show them
 - [ ] Sessions and provider link deleted, `users` row deleted
+- [ ] **(when `auth.guest-account` is installed)** The `accounts` row is deleted after the `users` row; later exchanges of the old device credential find only a tombstone with reason `deleted` and no account id
 - [ ] Derived or cached copies (search index, cached leaderboard, exports, analytics keyed by user id) are either erased or listed as retained in the privacy page
 - [ ] A bystander user's rows are unchanged (compare `other_user` before and after)
 
@@ -64,6 +67,7 @@ Claude Code runs this checklist after implementation, before reporting done. Ite
 - [ ] No table keeps the deleted user's id or email after completion
 - [ ] `account.deleted` and `account.deletion_failed` events carry no user identifiers
 - [ ] No hardcoded secrets; the Apple private key (if used) comes from the secret store
+- [ ] The guest device secret never appears in logs, events or the database of this block (grep test output; the server compares hashes only)
 
 ## Provider Revocation
 

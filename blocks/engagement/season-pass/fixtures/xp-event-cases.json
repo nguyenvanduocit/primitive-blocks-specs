@@ -1,0 +1,578 @@
+{
+  "_comment": "XP ingestion cases against fixtures/season-2026-10.json config and fixtures/progress-states.json counters. Each case states the server instant of ingestion, the event, and the expected outcome. credited_xp = floor(allowed_xp x boost_percent / 100); caps bind allowed_xp (before the boost). capped_by is the cap with the smallest remaining allowance; ties resolve in the order source_daily, source_season, total_daily. Sources with requires_attempt (level.completed, event.stage_completed) carry an attempt_id whose state engagement.energy-lives reports through attemptState; attempt_states lists the state for every attempt id used. Cases without an attempt_id use objective.completed, which does not require one.",
+  "tenant_id": "tenant-001",
+  "season_id": "season-2026-10",
+  "cases": [
+    {
+      "name": "plain-credit",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "event": {
+        "event_id": "evt-0001",
+        "source": "level.completed",
+        "units": 1,
+        "attempt_id": "att-0001"
+      },
+      "expect": {
+        "outcome": "credited",
+        "requested_xp": 20,
+        "allowed_xp": 20,
+        "boost_percent": 100,
+        "credited_xp": 20,
+        "capped_by": null,
+        "total_xp_after": 770,
+        "tier_after": 5
+      }
+    },
+    {
+      "name": "replay-of-evt-0001",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:05Z",
+      "event": {
+        "event_id": "evt-0001",
+        "source": "level.completed",
+        "units": 1,
+        "attempt_id": "att-0001"
+      },
+      "expect": {
+        "outcome": "credited",
+        "duplicate": true,
+        "credited_xp": 20,
+        "total_xp_after": 770,
+        "new_xp_events_rows": 0
+      }
+    },
+    {
+      "name": "source-daily-cap-partial",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "_comment": "objective.completed daily counter is 280 of 300: requested 50, allowed 20.",
+      "event": {
+        "event_id": "evt-0002",
+        "source": "objective.completed",
+        "units": 1
+      },
+      "expect": {
+        "outcome": "credited",
+        "requested_xp": 50,
+        "allowed_xp": 20,
+        "boost_percent": 100,
+        "credited_xp": 20,
+        "capped_by": "source_daily",
+        "total_xp_after": 770
+      }
+    },
+    {
+      "name": "source-daily-cap-with-boost-caps-base-not-credit",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "_comment": "Same cap with an active boost-x2-24h: allowed 20 base, credited 40.",
+      "given_active_boost": {
+        "boost_code": "boost-x2-24h",
+        "multiplier_percent": 200,
+        "starts_at": "2026-10-21T11:00:00Z",
+        "ends_at": "2026-10-22T11:00:00Z"
+      },
+      "event": {
+        "event_id": "evt-0003",
+        "source": "objective.completed",
+        "units": 1
+      },
+      "expect": {
+        "outcome": "credited",
+        "requested_xp": 50,
+        "allowed_xp": 20,
+        "boost_percent": 200,
+        "credited_xp": 40,
+        "capped_by": "source_daily",
+        "total_xp_after": 790
+      }
+    },
+    {
+      "name": "source-season-cap-partial",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "_comment": "event.stage_completed season counter is 440 of 480: requested 80, allowed 40. The daily counter is 0 of 240.",
+      "event": {
+        "event_id": "evt-0004",
+        "source": "event.stage_completed",
+        "units": 1,
+        "attempt_id": "att-0004"
+      },
+      "expect": {
+        "outcome": "credited",
+        "requested_xp": 80,
+        "allowed_xp": 40,
+        "credited_xp": 40,
+        "capped_by": "source_season",
+        "total_xp_after": 790
+      }
+    },
+    {
+      "name": "fully-capped-today",
+      "account_id": "acc-bob",
+      "at": "2026-10-21T12:00:00Z",
+      "_comment": "Bob's objective.completed daily counter is 300 of 300.",
+      "event": {
+        "event_id": "evt-0005",
+        "source": "objective.completed",
+        "units": 1
+      },
+      "expect": {
+        "outcome": "capped",
+        "requested_xp": 50,
+        "allowed_xp": 0,
+        "credited_xp": 0,
+        "capped_by": "source_daily",
+        "total_xp_after": 1150,
+        "xp_events_row_written": true
+      }
+    },
+    {
+      "name": "day-key-resets-at-local-midnight-for-ann",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T17:00:00Z",
+      "_comment": "17:00:00Z is 2026-10-22 00:00:00 in Asia/Ho_Chi_Minh: new day_key, daily counter restarts at 0.",
+      "given_counters": {
+        "day_key": "2026-10-21",
+        "day": {
+          "objective.completed": 300
+        }
+      },
+      "event": {
+        "event_id": "evt-0006",
+        "source": "objective.completed",
+        "units": 1
+      },
+      "expect": {
+        "outcome": "credited",
+        "day_key": "2026-10-22",
+        "requested_xp": 50,
+        "allowed_xp": 50,
+        "credited_xp": 50,
+        "capped_by": null
+      }
+    },
+    {
+      "name": "day-key-unchanged-one-second-before-local-midnight",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T16:59:59Z",
+      "given_counters": {
+        "day_key": "2026-10-21",
+        "day": {
+          "objective.completed": 300
+        }
+      },
+      "event": {
+        "event_id": "evt-0007",
+        "source": "objective.completed",
+        "units": 1
+      },
+      "expect": {
+        "outcome": "capped",
+        "day_key": "2026-10-21",
+        "allowed_xp": 0,
+        "credited_xp": 0,
+        "capped_by": "source_daily"
+      }
+    },
+    {
+      "name": "same-instant-other-timezone-still-same-day",
+      "account_id": "acc-bob",
+      "at": "2026-10-21T17:00:00Z",
+      "_comment": "17:00:00Z is 10:00 on 2026-10-21 in America/Los_Angeles: Bob's day_key is still 2026-10-21 and his counter is full.",
+      "event": {
+        "event_id": "evt-0008",
+        "source": "objective.completed",
+        "units": 1
+      },
+      "expect": {
+        "outcome": "capped",
+        "day_key": "2026-10-21",
+        "credited_xp": 0,
+        "capped_by": "source_daily"
+      }
+    },
+    {
+      "name": "total-daily-cap-enabled",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "_comment": "With DAILY_XP_CAP_TOTAL = 500 and 480 XP already booked today across sources, a level.completed worth 20 is allowed, the next one is capped by total_daily.",
+      "given_config": {
+        "DAILY_XP_CAP_TOTAL": 500
+      },
+      "given_counters": {
+        "day_key": "2026-10-21",
+        "day": {
+          "objective.completed": 280,
+          "level.completed": 200
+        }
+      },
+      "event": {
+        "event_id": "evt-0009",
+        "source": "level.completed",
+        "units": 1,
+        "attempt_id": "att-0009"
+      },
+      "expect": {
+        "outcome": "credited",
+        "requested_xp": 20,
+        "allowed_xp": 20,
+        "capped_by": null,
+        "total_xp_after": 770
+      }
+    },
+    {
+      "name": "unknown-source-rejected",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "event": {
+        "event_id": "evt-0010",
+        "source": "app.opened",
+        "units": 1
+      },
+      "expect": {
+        "http_status": 422,
+        "error": "unknown_source",
+        "xp_events_row_written": false
+      }
+    },
+    {
+      "name": "units-above-max-rejected",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "event": {
+        "event_id": "evt-0011",
+        "source": "level.completed",
+        "units": 2,
+        "attempt_id": "att-0011"
+      },
+      "expect": {
+        "http_status": 422,
+        "error": "invalid_event",
+        "xp_events_row_written": false
+      }
+    },
+    {
+      "name": "client-supplied-xp-amount-rejected",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "event": {
+        "event_id": "evt-0012",
+        "source": "level.completed",
+        "units": 1,
+        "xp": 5000,
+        "attempt_id": "att-0012"
+      },
+      "expect": {
+        "http_status": 422,
+        "error": "invalid_event",
+        "xp_events_row_written": false
+      }
+    },
+    {
+      "name": "event-older-than-max-age-rejected",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "_comment": "occurred_at is 86401 seconds before the ingestion instant while INGEST_MAX_EVENT_AGE_SECONDS is 86400.",
+      "event": {
+        "event_id": "evt-0016",
+        "source": "level.completed",
+        "units": 1,
+        "occurred_at": "2026-10-20T11:59:59Z",
+        "attempt_id": "att-0016"
+      },
+      "expect": {
+        "http_status": 422,
+        "error": "event_too_old",
+        "xp_events_row_written": false
+      }
+    },
+    {
+      "name": "event-after-season-end-not-credited",
+      "account_id": "acc-ann",
+      "at": "2026-11-01T00:00:00Z",
+      "event": {
+        "event_id": "evt-0013",
+        "source": "level.completed",
+        "units": 1,
+        "attempt_id": "att-0013"
+      },
+      "expect": {
+        "outcome": "no_active_season",
+        "credited_xp": 0,
+        "total_xp_after": 750
+      }
+    },
+    {
+      "name": "event-in-last-second-credited",
+      "account_id": "acc-ann",
+      "at": "2026-10-31T23:59:59Z",
+      "event": {
+        "event_id": "evt-0014",
+        "source": "level.completed",
+        "units": 1,
+        "attempt_id": "att-0014"
+      },
+      "expect": {
+        "outcome": "credited",
+        "credited_xp": 20,
+        "total_xp_after": 770
+      }
+    },
+    {
+      "name": "first-event-with-catch-up",
+      "account_id": "acc-dee",
+      "at": "2026-10-21T12:00:00Z",
+      "given_config": {
+        "CATCH_UP_PERCENT": 50
+      },
+      "event": {
+        "event_id": "evt-0015",
+        "source": "level.completed",
+        "units": 1,
+        "attempt_id": "att-0015"
+      },
+      "expect": {
+        "outcome": "credited",
+        "catch_up_xp": 661,
+        "credited_xp": 20,
+        "total_xp_after": 681,
+        "tier_after": 4,
+        "catch_up_event_id": "catch-up:season-2026-10"
+      }
+    },
+    {
+      "name": "attempt-won-credited",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "event": {
+        "event_id": "evt-0101",
+        "source": "level.completed",
+        "units": 1,
+        "attempt_id": "att-9005"
+      },
+      "expect": {
+        "outcome": "credited",
+        "credited_xp": 20,
+        "total_xp_after": 770
+      }
+    },
+    {
+      "name": "attempt-failed-credited",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "_comment": "A failed attempt is still a play that happened; the source decides whether a failed play emits an event at all.",
+      "event": {
+        "event_id": "evt-0102",
+        "source": "level.completed",
+        "units": 1,
+        "attempt_id": "att-9006"
+      },
+      "expect": {
+        "outcome": "credited",
+        "credited_xp": 20,
+        "total_xp_after": 770
+      }
+    },
+    {
+      "name": "attempt-open-rejected",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "event": {
+        "event_id": "evt-0103",
+        "source": "level.completed",
+        "units": 1,
+        "attempt_id": "att-9001"
+      },
+      "expect": {
+        "http_status": 422,
+        "error": "attempt_not_proven",
+        "xp_events_row_written": false
+      }
+    },
+    {
+      "name": "attempt-cancelled-rejected",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "event": {
+        "event_id": "evt-0104",
+        "source": "level.completed",
+        "units": 1,
+        "attempt_id": "att-9002"
+      },
+      "expect": {
+        "http_status": 422,
+        "error": "attempt_not_proven",
+        "xp_events_row_written": false
+      }
+    },
+    {
+      "name": "attempt-expired-rejected",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "event": {
+        "event_id": "evt-0105",
+        "source": "level.completed",
+        "units": 1,
+        "attempt_id": "att-9003"
+      },
+      "expect": {
+        "http_status": 422,
+        "error": "attempt_not_proven",
+        "xp_events_row_written": false
+      }
+    },
+    {
+      "name": "attempt-rejected-state-rejected",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "event": {
+        "event_id": "evt-0106",
+        "source": "level.completed",
+        "units": 1,
+        "attempt_id": "att-9004"
+      },
+      "expect": {
+        "http_status": 422,
+        "error": "attempt_not_proven",
+        "xp_events_row_written": false
+      }
+    },
+    {
+      "name": "attempt-unknown-rejected",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "_comment": "attemptState returns null for an id the account never started.",
+      "event": {
+        "event_id": "evt-0107",
+        "source": "event.stage_completed",
+        "units": 1,
+        "attempt_id": "att-0000"
+      },
+      "expect": {
+        "http_status": 422,
+        "error": "attempt_not_proven",
+        "xp_events_row_written": false
+      }
+    },
+    {
+      "name": "attempt-missing-rejected",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "event": {
+        "event_id": "evt-0108",
+        "source": "level.completed",
+        "units": 1
+      },
+      "expect": {
+        "http_status": 422,
+        "error": "invalid_event",
+        "xp_events_row_written": false
+      }
+    },
+    {
+      "name": "attempt-on-source-without-requirement-rejected",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "event": {
+        "event_id": "evt-0109",
+        "source": "objective.completed",
+        "units": 1,
+        "attempt_id": "att-9007"
+      },
+      "expect": {
+        "http_status": 422,
+        "error": "invalid_event",
+        "xp_events_row_written": false
+      }
+    },
+    {
+      "name": "attempt-already-credited-under-another-event-id",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:05Z",
+      "_comment": "att-0001 already credited level.completed through evt-0001. A new event id for the same attempt and source books nothing.",
+      "given_booked": {
+        "event_id": "evt-0001",
+        "source": "level.completed",
+        "attempt_id": "att-0001"
+      },
+      "event": {
+        "event_id": "evt-0110",
+        "source": "level.completed",
+        "units": 1,
+        "attempt_id": "att-0001"
+      },
+      "expect": {
+        "outcome": "attempt_already_credited",
+        "credited_xp": 0,
+        "xp_events_row_written": false,
+        "total_xp_after": 770
+      }
+    },
+    {
+      "name": "replay-after-attempt-expired-keeps-the-first-answer",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:30:00Z",
+      "_comment": "evt-0001 was booked while att-0001 was confirmed; the attempt later became expired. The replay returns the first answer and does not ask attemptState again.",
+      "given_attempt_state_now": {
+        "att-0001": "expired"
+      },
+      "event": {
+        "event_id": "evt-0001",
+        "source": "level.completed",
+        "units": 1,
+        "attempt_id": "att-0001"
+      },
+      "expect": {
+        "outcome": "credited",
+        "duplicate": true,
+        "credited_xp": 20,
+        "total_xp_after": 770,
+        "attempt_state_asked": false
+      }
+    },
+    {
+      "name": "same-attempt-other-source-allowed",
+      "account_id": "acc-ann",
+      "at": "2026-10-21T12:00:00Z",
+      "_comment": "The one-credit rule is per attempt and per source.",
+      "given_booked": {
+        "event_id": "evt-0001",
+        "source": "level.completed",
+        "attempt_id": "att-0001"
+      },
+      "event": {
+        "event_id": "evt-0111",
+        "source": "event.stage_completed",
+        "units": 1,
+        "attempt_id": "att-0001"
+      },
+      "expect": {
+        "outcome": "credited",
+        "requested_xp": 80,
+        "allowed_xp": 40,
+        "credited_xp": 40,
+        "capped_by": "source_season"
+      }
+    }
+  ],
+  "attempt_states": {
+    "att-0001": "confirmed",
+    "att-0004": "confirmed",
+    "att-0009": "confirmed",
+    "att-0011": "confirmed",
+    "att-0012": "confirmed",
+    "att-0013": "confirmed",
+    "att-0014": "confirmed",
+    "att-0015": "confirmed",
+    "att-0016": "confirmed",
+    "att-9001": "open",
+    "att-9002": "cancelled",
+    "att-9003": "expired",
+    "att-9004": "rejected",
+    "att-9005": "won",
+    "att-9006": "failed",
+    "att-9007": "confirmed"
+  }
+}

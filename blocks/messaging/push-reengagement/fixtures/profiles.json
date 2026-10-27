@@ -1,0 +1,1118 @@
+{
+  "_comment": "Seed profiles (spread_minutes is the account's precomputed ladder offset, 3 to 12), decision cases, local-time cases and reward-selection cases. Fixed clock: now = 2026-10-21T12:00:00Z (a Wednesday). At that instant it is 19:00 in Asia/Ho_Chi_Minh (UTC+7), 08:00 in America/New_York (EDT, UTC-4) and 14:00 in Europe/Berlin (CEST, UTC+2). US daylight time ends 2026-11-01 06:00Z; Berlin daylight time ends 2026-10-25 01:00Z. Config values come from config-defaults.json. In prefs, true or false is a service category switch; the string consent:v1 means enabled with consent_text_version v1; an absent key means the category default (service on, promotional off). All ids, tokens and names are synthetic placeholders.",
+  "tenant_id": "tenant-001",
+  "now": "2026-10-21T12:00:00Z",
+  "profiles": [
+    {
+      "_comment": "Ho Chi Minh, all categories on, lapsed three local days (last session 2026-10-18 12:00 local). Ladder step lapse-d3 is due at 18:00 local = 11:00Z plus this account's 4 minute spread.",
+      "account_id": "acc-ann",
+      "age_status": "adult",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "locale": "en",
+      "global_enabled": true,
+      "holdout": false,
+      "spread_minutes": 4,
+      "last_session_at": "2026-10-18T05:00:00Z",
+      "ladder_unopened_sends": 0,
+      "last_comeback_granted_at": null,
+      "prefs": {
+        "timers": true,
+        "streak": true,
+        "rewards": true,
+        "events": "consent:v1",
+        "comeback": "consent:v1"
+      },
+      "sent_day_keys": [],
+      "tokens": [
+        {
+          "id": "tok-ann-1",
+          "installation_id": "inst-ann-1",
+          "platform": "ios",
+          "provider": "apns",
+          "target_kind": "apns_token",
+          "apns_environment": "production",
+          "token": "apns-token-ann-1",
+          "status": "active",
+          "permission_state": "authorized",
+          "os_blocked_categories": [],
+          "last_registered_at": "2026-10-18T05:00:00Z"
+        }
+      ]
+    },
+    {
+      "_comment": "New York, in the holdout group. Last session 2026-10-14 12:00 EDT; lapse-d7 is due 2026-10-21 18:00 EDT = 22:00Z plus a 7 minute spread.",
+      "account_id": "acc-ben",
+      "age_status": "adult",
+      "timezone": "America/New_York",
+      "locale": "en",
+      "global_enabled": true,
+      "holdout": true,
+      "spread_minutes": 7,
+      "last_session_at": "2026-10-14T16:00:00Z",
+      "ladder_unopened_sends": 0,
+      "last_comeback_granted_at": null,
+      "prefs": {
+        "timers": true,
+        "streak": true,
+        "rewards": true,
+        "events": "consent:v1",
+        "comeback": "consent:v1"
+      },
+      "sent_day_keys": [],
+      "tokens": [
+        {
+          "id": "tok-ben-1",
+          "installation_id": "inst-ben-1",
+          "platform": "android",
+          "provider": "fcm",
+          "target_kind": "fcm_fid",
+          "apns_environment": null,
+          "token": "fcm-fid-ben-1",
+          "status": "active",
+          "permission_state": "authorized",
+          "os_blocked_categories": [],
+          "last_registered_at": "2026-10-14T16:00:00Z"
+        }
+      ]
+    },
+    {
+      "_comment": "Berlin, global switch off.",
+      "account_id": "acc-cara",
+      "age_status": "adult",
+      "timezone": "Europe/Berlin",
+      "locale": "en",
+      "global_enabled": false,
+      "holdout": false,
+      "spread_minutes": 5,
+      "last_session_at": "2026-10-20T18:00:00Z",
+      "ladder_unopened_sends": 0,
+      "last_comeback_granted_at": null,
+      "prefs": {
+        "timers": true,
+        "streak": true,
+        "rewards": true,
+        "events": "consent:v1",
+        "comeback": "consent:v1"
+      },
+      "sent_day_keys": [],
+      "tokens": [
+        {
+          "id": "tok-cara-1",
+          "installation_id": "inst-cara-1",
+          "platform": "android",
+          "provider": "fcm",
+          "target_kind": "fcm_fid",
+          "apns_environment": null,
+          "token": "fcm-fid-cara-1",
+          "status": "active",
+          "permission_state": "authorized",
+          "os_blocked_categories": [],
+          "last_registered_at": "2026-10-20T18:00:00Z"
+        }
+      ]
+    },
+    {
+      "_comment": "Under the age threshold: no active token, no ladder, no local plan.",
+      "account_id": "acc-dan",
+      "age_status": "minor",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "locale": "en",
+      "global_enabled": true,
+      "holdout": false,
+      "spread_minutes": 3,
+      "last_session_at": "2026-10-18T05:00:00Z",
+      "ladder_unopened_sends": 0,
+      "last_comeback_granted_at": null,
+      "prefs": {
+        "timers": true,
+        "streak": true,
+        "rewards": true,
+        "events": false,
+        "comeback": false
+      },
+      "sent_day_keys": [],
+      "tokens": [
+        {
+          "id": "tok-dan-1",
+          "installation_id": "inst-dan-1",
+          "platform": "ios",
+          "provider": "apns",
+          "target_kind": "apns_token",
+          "apns_environment": "production",
+          "token": "apns-token-dan-1",
+          "status": "inactive",
+          "inactive_reason": "age_blocked",
+          "permission_state": "authorized",
+          "os_blocked_categories": [],
+          "last_registered_at": "2026-10-10T05:00:00Z"
+        }
+      ]
+    },
+    {
+      "_comment": "Comeback category switched off, events on.",
+      "account_id": "acc-eve",
+      "age_status": "adult",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "locale": "en",
+      "global_enabled": true,
+      "holdout": false,
+      "spread_minutes": 3,
+      "last_session_at": "2026-10-18T05:00:00Z",
+      "ladder_unopened_sends": 0,
+      "last_comeback_granted_at": null,
+      "prefs": {
+        "timers": true,
+        "streak": true,
+        "rewards": true,
+        "events": "consent:v1",
+        "comeback": false
+      },
+      "sent_day_keys": [],
+      "tokens": [
+        {
+          "id": "tok-eve-1",
+          "installation_id": "inst-eve-1",
+          "platform": "ios",
+          "provider": "apns",
+          "target_kind": "apns_token",
+          "apns_environment": "production",
+          "token": "apns-token-eve-1",
+          "status": "active",
+          "permission_state": "authorized",
+          "os_blocked_categories": [],
+          "last_registered_at": "2026-10-18T05:00:00Z"
+        }
+      ]
+    },
+    {
+      "_comment": "Age decision not yet made (unknown); the default policy blocks registration.",
+      "account_id": "acc-gus",
+      "age_status": "unknown",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "locale": "en",
+      "global_enabled": true,
+      "holdout": false,
+      "spread_minutes": 6,
+      "last_session_at": "2026-10-21T10:00:00Z",
+      "ladder_unopened_sends": 0,
+      "last_comeback_granted_at": null,
+      "prefs": {},
+      "sent_day_keys": [],
+      "tokens": []
+    },
+    {
+      "_comment": "The only device reported permission denied, so its token is inactive.",
+      "account_id": "acc-hal",
+      "age_status": "adult",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "locale": "en",
+      "global_enabled": true,
+      "holdout": false,
+      "spread_minutes": 5,
+      "last_session_at": "2026-10-20T05:00:00Z",
+      "ladder_unopened_sends": 0,
+      "last_comeback_granted_at": null,
+      "prefs": {
+        "timers": true,
+        "streak": true,
+        "rewards": true,
+        "events": "consent:v1",
+        "comeback": "consent:v1"
+      },
+      "sent_day_keys": [],
+      "tokens": [
+        {
+          "id": "tok-hal-1",
+          "installation_id": "inst-hal-1",
+          "platform": "ios",
+          "provider": "apns",
+          "target_kind": "apns_token",
+          "apns_environment": "production",
+          "token": "apns-token-hal-1",
+          "status": "inactive",
+          "inactive_reason": "permission_denied",
+          "permission_state": "denied",
+          "os_blocked_categories": [],
+          "last_registered_at": "2026-10-19T05:00:00Z"
+        }
+      ]
+    },
+    {
+      "_comment": "Two sends already today (local day 2026-10-21): the day cap of 2 is reached.",
+      "account_id": "acc-ivy",
+      "age_status": "adult",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "locale": "en",
+      "global_enabled": true,
+      "holdout": false,
+      "spread_minutes": 6,
+      "last_session_at": "2026-10-21T02:00:00Z",
+      "ladder_unopened_sends": 0,
+      "last_comeback_granted_at": null,
+      "prefs": {
+        "timers": true,
+        "streak": true,
+        "rewards": true,
+        "events": "consent:v1",
+        "comeback": "consent:v1"
+      },
+      "sent_day_keys": [
+        "2026-10-21",
+        "2026-10-21"
+      ],
+      "tokens": [
+        {
+          "id": "tok-ivy-1",
+          "installation_id": "inst-ivy-1",
+          "platform": "ios",
+          "provider": "apns",
+          "target_kind": "apns_token",
+          "apns_environment": "production",
+          "token": "apns-token-ivy-1",
+          "status": "active",
+          "permission_state": "authorized",
+          "os_blocked_categories": [],
+          "last_registered_at": "2026-10-21T02:00:00Z"
+        }
+      ]
+    },
+    {
+      "_comment": "Eight sends in the last 7 local days (2 on each of 2026-10-16 to 2026-10-19), none today: the week cap of 8 is reached, the day cap is not.",
+      "account_id": "acc-jon",
+      "age_status": "adult",
+      "timezone": "America/New_York",
+      "locale": "en",
+      "global_enabled": true,
+      "holdout": false,
+      "spread_minutes": 8,
+      "last_session_at": "2026-10-20T15:00:00Z",
+      "ladder_unopened_sends": 0,
+      "last_comeback_granted_at": null,
+      "prefs": {
+        "timers": true,
+        "streak": true,
+        "rewards": true,
+        "events": "consent:v1",
+        "comeback": "consent:v1"
+      },
+      "sent_day_keys": [
+        "2026-10-16",
+        "2026-10-16",
+        "2026-10-17",
+        "2026-10-17",
+        "2026-10-18",
+        "2026-10-18",
+        "2026-10-19",
+        "2026-10-19"
+      ],
+      "tokens": [
+        {
+          "id": "tok-jon-1",
+          "installation_id": "inst-jon-1",
+          "platform": "ios",
+          "provider": "apns",
+          "target_kind": "apns_token",
+          "apns_environment": "production",
+          "token": "apns-token-jon-1",
+          "status": "active",
+          "permission_state": "authorized",
+          "os_blocked_categories": [],
+          "last_registered_at": "2026-10-20T15:00:00Z"
+        }
+      ]
+    },
+    {
+      "_comment": "Android device whose system channel for events is blocked by the player.",
+      "account_id": "acc-kim",
+      "age_status": "adult",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "locale": "en",
+      "global_enabled": true,
+      "holdout": false,
+      "spread_minutes": 10,
+      "last_session_at": "2026-10-21T02:00:00Z",
+      "ladder_unopened_sends": 0,
+      "last_comeback_granted_at": null,
+      "prefs": {
+        "timers": true,
+        "streak": true,
+        "rewards": true,
+        "events": "consent:v1",
+        "comeback": "consent:v1"
+      },
+      "sent_day_keys": [],
+      "tokens": [
+        {
+          "id": "tok-kim-1",
+          "installation_id": "inst-kim-1",
+          "platform": "android",
+          "provider": "fcm",
+          "target_kind": "fcm_fid",
+          "apns_environment": null,
+          "token": "fcm-fid-kim-1",
+          "status": "active",
+          "permission_state": "authorized",
+          "os_blocked_categories": [
+            "events"
+          ],
+          "last_registered_at": "2026-10-21T02:00:00Z"
+        }
+      ]
+    },
+    {
+      "_comment": "Events category never switched on (no consent recorded).",
+      "account_id": "acc-fay",
+      "age_status": "adult",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "locale": "en",
+      "global_enabled": true,
+      "holdout": false,
+      "spread_minutes": 12,
+      "last_session_at": "2026-10-21T02:00:00Z",
+      "ladder_unopened_sends": 0,
+      "last_comeback_granted_at": null,
+      "prefs": {
+        "timers": true,
+        "streak": true,
+        "rewards": true
+      },
+      "sent_day_keys": [],
+      "tokens": [
+        {
+          "id": "tok-fay-1",
+          "installation_id": "inst-fay-1",
+          "platform": "ios",
+          "provider": "apns",
+          "target_kind": "apns_token",
+          "apns_environment": "production",
+          "token": "apns-token-fay-1",
+          "status": "active",
+          "permission_state": "authorized",
+          "os_blocked_categories": [],
+          "last_registered_at": "2026-10-21T02:00:00Z"
+        }
+      ]
+    },
+    {
+      "_comment": "Received a comeback reward on 2026-10-05 (16 local days before now); the 30 day cooldown has not passed.",
+      "account_id": "acc-lou",
+      "age_status": "adult",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "locale": "en",
+      "global_enabled": true,
+      "holdout": false,
+      "spread_minutes": 9,
+      "last_session_at": "2026-10-14T05:00:00Z",
+      "ladder_unopened_sends": 0,
+      "last_comeback_granted_at": "2026-10-05T05:00:00Z",
+      "prefs": {
+        "timers": true,
+        "streak": true,
+        "rewards": true,
+        "events": "consent:v1",
+        "comeback": "consent:v1"
+      },
+      "sent_day_keys": [],
+      "tokens": [
+        {
+          "id": "tok-lou-1",
+          "installation_id": "inst-lou-1",
+          "platform": "ios",
+          "provider": "apns",
+          "target_kind": "apns_token",
+          "apns_environment": "production",
+          "token": "apns-token-lou-1",
+          "status": "active",
+          "permission_state": "authorized",
+          "os_blocked_categories": [],
+          "last_registered_at": "2026-10-14T05:00:00Z"
+        }
+      ]
+    },
+    {
+      "_comment": "Six ladder sends in a row without a tap: the stop rule (after_unopened_sends 6) applies.",
+      "account_id": "acc-moe",
+      "age_status": "adult",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "locale": "en",
+      "global_enabled": true,
+      "holdout": false,
+      "spread_minutes": 3,
+      "last_session_at": "2026-10-14T05:00:00Z",
+      "ladder_unopened_sends": 6,
+      "last_comeback_granted_at": null,
+      "prefs": {
+        "timers": true,
+        "streak": true,
+        "rewards": true,
+        "events": "consent:v1",
+        "comeback": "consent:v1"
+      },
+      "sent_day_keys": [],
+      "tokens": [
+        {
+          "id": "tok-moe-1",
+          "installation_id": "inst-moe-1",
+          "platform": "ios",
+          "provider": "apns",
+          "target_kind": "apns_token",
+          "apns_environment": "production",
+          "token": "apns-token-moe-1",
+          "status": "active",
+          "permission_state": "authorized",
+          "os_blocked_categories": [],
+          "last_registered_at": "2026-10-14T05:00:00Z"
+        }
+      ]
+    },
+    {
+      "_comment": "Age not decided and the adopter allows unknown (config override age.unknown_policy = allow): service categories start on, subscription starts off, promotional categories start off.",
+      "account_id": "acc-ned",
+      "age_status": "unknown",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "locale": "en",
+      "global_enabled": true,
+      "holdout": false,
+      "spread_minutes": 6,
+      "last_session_at": "2026-10-21T02:00:00Z",
+      "ladder_unopened_sends": 0,
+      "last_comeback_granted_at": null,
+      "prefs": {},
+      "sent_day_keys": [],
+      "tokens": [
+        {
+          "id": "tok-ned-1",
+          "installation_id": "inst-ned-1",
+          "platform": "ios",
+          "provider": "apns",
+          "target_kind": "apns_token",
+          "apns_environment": "production",
+          "token": "apns-token-ned-1",
+          "status": "active",
+          "permission_state": "authorized",
+          "os_blocked_categories": [],
+          "last_registered_at": "2026-10-21T02:00:00Z"
+        }
+      ]
+    },
+    {
+      "_comment": "One service notice already sent in her local day 2026-10-21: the service cap of 1 is reached (marketing counts are untouched).",
+      "account_id": "acc-opal",
+      "age_status": "adult",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "locale": "en",
+      "global_enabled": true,
+      "holdout": false,
+      "spread_minutes": 7,
+      "last_session_at": "2026-10-21T02:00:00Z",
+      "ladder_unopened_sends": 0,
+      "last_comeback_granted_at": null,
+      "prefs": {},
+      "sent_day_keys": [],
+      "service_sent_day_keys": [
+        "2026-10-21"
+      ],
+      "tokens": [
+        {
+          "id": "tok-opal-1",
+          "installation_id": "inst-opal-1",
+          "platform": "ios",
+          "provider": "apns",
+          "target_kind": "apns_token",
+          "apns_environment": "production",
+          "token": "apns-token-opal-1",
+          "status": "active",
+          "permission_state": "authorized",
+          "os_blocked_categories": [],
+          "last_registered_at": "2026-10-21T02:00:00Z"
+        }
+      ]
+    }
+  ],
+  "decision_cases": [
+    {
+      "id": "D01-ladder-send",
+      "profile": "acc-ann",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "ladder",
+        "category": "comeback",
+        "subject": "lapse-d3",
+        "due_at": "2026-10-21T11:04:00Z",
+        "expires_at": "2026-10-22T11:04:00Z"
+      },
+      "expect": {
+        "action": "send"
+      }
+    },
+    {
+      "id": "D02-holdout-last",
+      "profile": "acc-ben",
+      "now": "2026-10-21T22:10:00Z",
+      "candidate": {
+        "source": "ladder",
+        "category": "comeback",
+        "subject": "lapse-d7",
+        "due_at": "2026-10-21T22:07:00Z",
+        "expires_at": "2026-10-22T22:07:00Z"
+      },
+      "expect": {
+        "action": "hold_out"
+      }
+    },
+    {
+      "id": "D03-global-off",
+      "profile": "acc-cara",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "events",
+        "subject": "event:spring-rush",
+        "due_at": "2026-10-21T12:00:00Z",
+        "expires_at": "2026-10-21T18:00:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "global_off"
+      }
+    },
+    {
+      "id": "D04-minor",
+      "profile": "acc-dan",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "ladder",
+        "category": "comeback",
+        "subject": "lapse-d3",
+        "due_at": "2026-10-21T11:03:00Z",
+        "expires_at": "2026-10-22T11:03:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "age_ineligible"
+      }
+    },
+    {
+      "id": "D05-category-off",
+      "profile": "acc-eve",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "ladder",
+        "category": "comeback",
+        "subject": "lapse-d3",
+        "due_at": "2026-10-21T11:03:00Z",
+        "expires_at": "2026-10-22T11:03:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "category_off"
+      }
+    },
+    {
+      "id": "D06-no-device",
+      "profile": "acc-hal",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "rewards",
+        "subject": "objective:daily-1:2026-10-21",
+        "due_at": "2026-10-21T12:00:00Z",
+        "expires_at": "2026-10-21T18:00:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "no_device"
+      }
+    },
+    {
+      "id": "D07-cap-day",
+      "profile": "acc-ivy",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "events",
+        "subject": "event:spring-rush",
+        "due_at": "2026-10-21T12:00:00Z",
+        "expires_at": "2026-10-21T18:00:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "cap_day"
+      }
+    },
+    {
+      "id": "D08-cap-week",
+      "profile": "acc-jon",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "events",
+        "subject": "event:spring-rush",
+        "due_at": "2026-10-21T12:00:00Z",
+        "expires_at": "2026-10-21T18:00:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "cap_week"
+      }
+    },
+    {
+      "id": "D09-os-channel-blocked",
+      "profile": "acc-kim",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "events",
+        "subject": "event:spring-rush",
+        "due_at": "2026-10-21T12:00:00Z",
+        "expires_at": "2026-10-21T18:00:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "os_blocked"
+      }
+    },
+    {
+      "id": "D10-quiet-defer",
+      "profile": "acc-ben",
+      "now": "2026-10-21T03:30:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "events",
+        "subject": "event:spring-rush",
+        "due_at": "2026-10-21T03:30:00Z",
+        "expires_at": "2026-10-21T20:00:00Z"
+      },
+      "expect": {
+        "action": "defer",
+        "due_at": "2026-10-21T12:00:00Z"
+      }
+    },
+    {
+      "id": "D11-quiet-expired",
+      "profile": "acc-ben",
+      "now": "2026-10-21T03:30:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "events",
+        "subject": "event:spring-rush",
+        "due_at": "2026-10-21T03:30:00Z",
+        "expires_at": "2026-10-21T10:00:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "quiet_expired"
+      }
+    },
+    {
+      "id": "D12-promotional-with-consent",
+      "profile": "acc-ann",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "events",
+        "subject": "event:spring-rush",
+        "due_at": "2026-10-21T12:00:00Z",
+        "expires_at": "2026-10-21T18:00:00Z"
+      },
+      "expect": {
+        "action": "send"
+      }
+    },
+    {
+      "id": "D13-promotional-without-consent",
+      "profile": "acc-fay",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "events",
+        "subject": "event:spring-rush",
+        "due_at": "2026-10-21T12:00:00Z",
+        "expires_at": "2026-10-21T18:00:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "category_off"
+      }
+    },
+    {
+      "id": "D14-reward-in-cooldown",
+      "profile": "acc-lou",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "ladder",
+        "category": "comeback",
+        "subject": "lapse-d7",
+        "due_at": "2026-10-21T11:09:00Z",
+        "expires_at": "2026-10-22T11:09:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "reward_unavailable"
+      }
+    },
+    {
+      "id": "D15-ladder-stopped",
+      "profile": "acc-moe",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "ladder",
+        "category": "comeback",
+        "subject": "lapse-d7",
+        "due_at": "2026-10-21T11:03:00Z",
+        "expires_at": "2026-10-22T11:03:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "ladder_stopped"
+      }
+    },
+    {
+      "id": "D16-expired-before-due-check",
+      "profile": "acc-ann",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "rewards",
+        "subject": "objective:daily-2:2026-10-20",
+        "due_at": "2026-10-20T12:00:00Z",
+        "expires_at": "2026-10-21T06:00:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "expired"
+      }
+    },
+    {
+      "id": "D17-service-ignores-marketing-cap",
+      "profile": "acc-ivy",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "subscription",
+        "subject": "trial:term-42:1",
+        "due_at": "2026-10-21T12:00:00Z",
+        "expires_at": "2026-10-23T12:00:00Z"
+      },
+      "expect": {
+        "action": "send"
+      }
+    },
+    {
+      "id": "D18-service-honours-global-off",
+      "profile": "acc-cara",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "subscription",
+        "subject": "trial:term-42:1",
+        "due_at": "2026-10-21T12:00:00Z",
+        "expires_at": "2026-10-23T12:00:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "global_off"
+      }
+    },
+    {
+      "id": "D19-service-honours-quiet-hours",
+      "profile": "acc-ben",
+      "now": "2026-10-21T03:30:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "subscription",
+        "subject": "trial:term-42:1",
+        "due_at": "2026-10-21T03:30:00Z",
+        "expires_at": "2026-10-23T12:00:00Z"
+      },
+      "expect": {
+        "action": "defer",
+        "due_at": "2026-10-21T12:00:00Z"
+      }
+    },
+    {
+      "id": "D20-service-never-held-out",
+      "profile": "acc-ben",
+      "now": "2026-10-21T22:10:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "subscription",
+        "subject": "trial:term-42:1",
+        "due_at": "2026-10-21T22:10:00Z",
+        "expires_at": "2026-10-23T12:00:00Z"
+      },
+      "expect": {
+        "action": "send"
+      }
+    },
+    {
+      "id": "D21-service-default-off-when-not-adult",
+      "profile": "acc-ned",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "subscription",
+        "subject": "trial:term-42:1",
+        "due_at": "2026-10-21T12:00:00Z",
+        "expires_at": "2026-10-23T12:00:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "category_off"
+      },
+      "config_override": {
+        "age.unknown_policy": "allow"
+      }
+    },
+    {
+      "id": "D22-service-cap",
+      "profile": "acc-opal",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "subscription",
+        "subject": "trial:term-42:1",
+        "due_at": "2026-10-21T12:00:00Z",
+        "expires_at": "2026-10-23T12:00:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "cap_service"
+      }
+    },
+    {
+      "id": "D23-service-never-bypasses-age",
+      "profile": "acc-dan",
+      "now": "2026-10-21T12:00:00Z",
+      "candidate": {
+        "source": "handoff",
+        "category": "subscription",
+        "subject": "trial:term-42:1",
+        "due_at": "2026-10-21T12:00:00Z",
+        "expires_at": "2026-10-23T12:00:00Z"
+      },
+      "expect": {
+        "action": "suppress",
+        "reason": "age_ineligible"
+      }
+    }
+  ],
+  "local_time_cases": [
+    {
+      "id": "T01-hcm-inside-quiet",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "quiet": {
+        "start": "22:00",
+        "end": "08:00"
+      },
+      "now": "2026-10-21T16:30:00Z",
+      "local": "23:30",
+      "in_quiet": true,
+      "next_allowed": "2026-10-22T01:00:00Z"
+    },
+    {
+      "id": "T02-hcm-at-quiet-start",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "quiet": {
+        "start": "22:00",
+        "end": "08:00"
+      },
+      "now": "2026-10-21T15:00:00Z",
+      "local": "22:00",
+      "in_quiet": true,
+      "next_allowed": "2026-10-22T01:00:00Z"
+    },
+    {
+      "id": "T03-hcm-at-quiet-end",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "quiet": {
+        "start": "22:00",
+        "end": "08:00"
+      },
+      "now": "2026-10-22T01:00:00Z",
+      "local": "08:00",
+      "in_quiet": false,
+      "next_allowed": "2026-10-22T01:00:00Z"
+    },
+    {
+      "id": "T04-ny-before-dst-end",
+      "timezone": "America/New_York",
+      "quiet": {
+        "start": "22:00",
+        "end": "08:00"
+      },
+      "now": "2026-10-31T11:30:00Z",
+      "local": "07:30 EDT",
+      "in_quiet": true,
+      "next_allowed": "2026-10-31T12:00:00Z"
+    },
+    {
+      "id": "T05-ny-after-dst-end",
+      "timezone": "America/New_York",
+      "quiet": {
+        "start": "22:00",
+        "end": "08:00"
+      },
+      "now": "2026-11-01T11:30:00Z",
+      "local": "06:30 EST",
+      "in_quiet": true,
+      "next_allowed": "2026-11-01T13:00:00Z"
+    },
+    {
+      "id": "T06-berlin-after-dst-end",
+      "timezone": "Europe/Berlin",
+      "quiet": {
+        "start": "22:00",
+        "end": "08:00"
+      },
+      "now": "2026-10-25T06:30:00Z",
+      "local": "07:30 CET",
+      "in_quiet": true,
+      "next_allowed": "2026-10-25T07:00:00Z"
+    },
+    {
+      "id": "T07-berlin-after-quiet",
+      "timezone": "Europe/Berlin",
+      "quiet": {
+        "start": "22:00",
+        "end": "08:00"
+      },
+      "now": "2026-10-25T07:30:00Z",
+      "local": "08:30 CET",
+      "in_quiet": false,
+      "next_allowed": "2026-10-25T07:30:00Z"
+    },
+    {
+      "id": "T08-quiet-disabled",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "quiet": null,
+      "now": "2026-10-21T16:30:00Z",
+      "local": "23:30",
+      "in_quiet": false,
+      "next_allowed": "2026-10-21T16:30:00Z"
+    },
+    {
+      "id": "T09-same-day-window",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "quiet": {
+        "start": "13:00",
+        "end": "15:00"
+      },
+      "now": "2026-10-21T07:30:00Z",
+      "local": "14:30",
+      "in_quiet": true,
+      "next_allowed": "2026-10-21T08:00:00Z"
+    }
+  ],
+  "lapse_cases": [
+    {
+      "id": "L01-local-day-not-utc-day",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "previous_session": "2026-10-14T23:30:00Z",
+      "return_at": "2026-10-21T16:30:00Z",
+      "lapse_days": 6,
+      "note": "local days 2026-10-15 to 2026-10-21; the UTC dates differ by 7"
+    },
+    {
+      "id": "L02-three-days",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "previous_session": "2026-10-18T05:00:00Z",
+      "return_at": "2026-10-21T12:30:00Z",
+      "lapse_days": 3
+    },
+    {
+      "id": "L03-same-day",
+      "timezone": "Asia/Ho_Chi_Minh",
+      "previous_session": "2026-10-21T02:00:00Z",
+      "return_at": "2026-10-21T12:30:00Z",
+      "lapse_days": 0
+    }
+  ],
+  "reward_selection_cases": [
+    {
+      "id": "R01",
+      "lapse_days": 2,
+      "cooldown_clear": true,
+      "step": null
+    },
+    {
+      "id": "R02",
+      "lapse_days": 3,
+      "cooldown_clear": true,
+      "step": null,
+      "note": "lapse-d3 has no reward"
+    },
+    {
+      "id": "R03",
+      "lapse_days": 6,
+      "cooldown_clear": true,
+      "step": null
+    },
+    {
+      "id": "R04",
+      "lapse_days": 7,
+      "cooldown_clear": true,
+      "step": "lapse-d7",
+      "grant": {
+        "currency": "coin",
+        "amount": 50
+      }
+    },
+    {
+      "id": "R05",
+      "lapse_days": 20,
+      "cooldown_clear": true,
+      "step": "lapse-d7",
+      "grant": {
+        "currency": "coin",
+        "amount": 50
+      },
+      "note": "lapse-d14 has no reward; lapse-d7 is claimable until day 27"
+    },
+    {
+      "id": "R06",
+      "lapse_days": 27,
+      "cooldown_clear": true,
+      "step": "lapse-d7"
+    },
+    {
+      "id": "R07",
+      "lapse_days": 28,
+      "cooldown_clear": true,
+      "step": "lapse-d28",
+      "grant": {
+        "currency": "coin",
+        "amount": 100
+      },
+      "note": "the highest applicable step only; no stacking"
+    },
+    {
+      "id": "R08",
+      "lapse_days": 90,
+      "cooldown_clear": true,
+      "step": "lapse-d28"
+    },
+    {
+      "id": "R09",
+      "lapse_days": 91,
+      "cooldown_clear": true,
+      "step": null,
+      "note": "past claim_until_day 90"
+    },
+    {
+      "id": "R10",
+      "lapse_days": 10,
+      "cooldown_clear": false,
+      "step": null,
+      "note": "inside the 30 day cooldown"
+    },
+    {
+      "id": "R11",
+      "lapse_days": 10,
+      "cooldown_clear": true,
+      "previous_session": null,
+      "step": null,
+      "note": "an account with no earlier session has no lapse"
+    }
+  ]
+}

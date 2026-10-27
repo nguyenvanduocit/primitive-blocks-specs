@@ -1,0 +1,91 @@
+{
+  "_comment": "Season definition, configuration and pure-function vectors. Fixed clock for most scenarios: 2026-10-21T12:00:00Z (a Wednesday, 20.5 days into the season). The season runs [starts_at, ends_at) in absolute UTC instants; duration_seconds is 31 x 86400. All names, codes and amounts are synthetic placeholders chosen for tests; none is a recommendation.",
+  "tenant_id": "tenant-001",
+  "fixed_clock": "2026-10-21T12:00:00Z",
+  "season": {
+    "season_id": "season-2026-10",
+    "name": "October Season",
+    "starts_at": "2026-10-01T00:00:00Z",
+    "ends_at": "2026-11-01T00:00:00Z",
+    "claim_until": "2026-11-01T00:10:00Z",
+    "duration_seconds": 2678400,
+    "premium_product_code": "season_pass_premium",
+    "published_at": "2026-09-28T09:00:00Z",
+    "repeat": {
+      "xp_per_tier": 300,
+      "max_tiers": 5,
+      "free": null,
+      "premium": { "code": "gem", "amount": 25 }
+    }
+  },
+  "next_season": {
+    "season_id": "season-2026-11",
+    "name": "November Season",
+    "starts_at": "2026-11-01T00:00:00Z",
+    "ends_at": "2026-12-01T00:00:00Z",
+    "premium_product_code": "season_pass_premium"
+  },
+  "tiers": [
+    { "tier": 1,  "xp_cost": 100, "cumulative_xp": 100,  "free": { "code": "coin", "amount": 100 },      "premium": { "code": "gem", "amount": 10 } },
+    { "tier": 2,  "xp_cost": 100, "cumulative_xp": 200,  "free": null,                                  "premium": { "code": "coin", "amount": 200 } },
+    { "tier": 3,  "xp_cost": 150, "cumulative_xp": 350,  "free": { "code": "coin", "amount": 150 },      "premium": { "code": "gem", "amount": 10 } },
+    { "tier": 4,  "xp_cost": 150, "cumulative_xp": 500,  "free": { "code": "hint-pack", "amount": 1 },  "premium": { "code": "frame-oct", "amount": 1 } },
+    { "tier": 5,  "xp_cost": 200, "cumulative_xp": 700,  "free": { "code": "coin", "amount": 200 },      "premium": { "code": "gem", "amount": 15 } },
+    { "tier": 6,  "xp_cost": 200, "cumulative_xp": 900,  "free": null,                                  "premium": { "code": "coin", "amount": 300 } },
+    { "tier": 7,  "xp_cost": 250, "cumulative_xp": 1150, "free": { "code": "coin", "amount": 250 },      "premium": { "code": "gem", "amount": 15 } },
+    { "tier": 8,  "xp_cost": 250, "cumulative_xp": 1400, "free": { "code": "hint-pack", "amount": 2 },  "premium": { "code": "trail-oct", "amount": 1 } },
+    { "tier": 9,  "xp_cost": 300, "cumulative_xp": 1700, "free": null,                                  "premium": { "code": "gem", "amount": 20 } },
+    { "tier": 10, "xp_cost": 300, "cumulative_xp": 2000, "free": { "code": "gem", "amount": 20 },       "premium": { "code": "avatar-oct", "amount": 1 } }
+  ],
+  "config": {
+    "UNCLAIMED_AT_END": "auto_claim",
+    "CLAIM_GRACE_SECONDS": 600,
+    "DAILY_XP_CAP_TOTAL": 0,
+    "CATCH_UP_PERCENT": 0,
+    "PREMIUM_VALUE_FIGURE": false,
+    "REFUND_POLICY": "keep_claimed",
+    "PREMIUM_SALE_MIN_REMAINING_SECONDS": 3600,
+    "ENDING_SOON_WINDOW_SECONDS": 259200,
+    "INGEST_MAX_EVENT_AGE_SECONDS": 86400,
+    "TIER_SKIP_REQUIRES_PREMIUM": false,
+    "MAX_SKIP_TIERS_PER_REQUEST": 10,
+    "TIER_SKIP_PRICE": { "currency": "gem", "amount_per_tier": 40 },
+    "XP_SOURCES": {
+      "level.completed":       { "xp_per_unit": 20, "max_units_per_event": 1, "daily_cap_xp": 400, "season_cap_xp": 4000, "requires_attempt": true },
+      "objective.completed":   { "xp_per_unit": 50, "max_units_per_event": 1, "daily_cap_xp": 300, "season_cap_xp": 3000, "requires_attempt": false },
+      "event.stage_completed": { "xp_per_unit": 80, "max_units_per_event": 1, "daily_cap_xp": 240, "season_cap_xp": 480, "requires_attempt": true }
+    },
+    "XP_BOOST_CATALOG": [
+      { "boost_code": "boost-x2-24h", "multiplier_percent": 200, "duration_seconds": 86400, "price": { "currency": "gem", "amount": 60 } }
+    ]
+  },
+  "tier_derivation_cases": {
+    "_comment": "tier = number of defined tiers whose cumulative_xp <= total_xp, plus min(floor((total_xp - 2000) / 300), 5) once total_xp >= 2000. xp_into_tier = total_xp - cumulative_xp(tier) for tiers 0 to 10 and (total_xp - 2000) mod 300 for tiers 11 to 14; at the final tier 15 xp_into_tier is 0 and xp_for_next_tier is null while total_xp keeps counting.",
+    "cases": [
+      { "total_xp": 0,    "tier": 0,  "xp_into_tier": 0,   "xp_for_next_tier": 100 },
+      { "total_xp": 99,   "tier": 0,  "xp_into_tier": 99,  "xp_for_next_tier": 100 },
+      { "total_xp": 100,  "tier": 1,  "xp_into_tier": 0,   "xp_for_next_tier": 100 },
+      { "total_xp": 349,  "tier": 2,  "xp_into_tier": 149, "xp_for_next_tier": 150 },
+      { "total_xp": 350,  "tier": 3,  "xp_into_tier": 0,   "xp_for_next_tier": 150 },
+      { "total_xp": 750,  "tier": 5,  "xp_into_tier": 50,  "xp_for_next_tier": 200 },
+      { "total_xp": 1150, "tier": 7,  "xp_into_tier": 0,   "xp_for_next_tier": 250 },
+      { "total_xp": 1999, "tier": 9,  "xp_into_tier": 299, "xp_for_next_tier": 300 },
+      { "total_xp": 2000, "tier": 10, "xp_into_tier": 0,   "xp_for_next_tier": 300 },
+      { "total_xp": 2299, "tier": 10, "xp_into_tier": 299, "xp_for_next_tier": 300 },
+      { "total_xp": 2300, "tier": 11, "xp_into_tier": 0,   "xp_for_next_tier": 300 },
+      { "total_xp": 2600, "tier": 12, "xp_into_tier": 0,   "xp_for_next_tier": 300 },
+      { "total_xp": 3499, "tier": 14, "xp_into_tier": 299, "xp_for_next_tier": 300 },
+      { "total_xp": 3500, "tier": 15, "xp_into_tier": 0,   "xp_for_next_tier": null },
+      { "total_xp": 9999, "tier": 15, "xp_into_tier": 0,   "xp_for_next_tier": null }
+    ]
+  },
+  "catch_up_cases": {
+    "_comment": "catch_up_xp = floor(cumulative_xp(last defined tier) x CATCH_UP_PERCENT x elapsed_seconds / (100 x duration_seconds)), elapsed_seconds = whole seconds from starts_at to the server instant of the account's first credited event, integer arithmetic, multiply before dividing. cumulative_xp(10) = 2000.",
+    "cases": [
+      { "catch_up_percent": 50, "first_event_at": "2026-10-21T12:00:00Z", "elapsed_seconds": 1771200, "catch_up_xp": 661 },
+      { "catch_up_percent": 50, "first_event_at": "2026-10-11T00:00:00Z", "elapsed_seconds": 864000,  "catch_up_xp": 322 },
+      { "catch_up_percent": 50, "first_event_at": "2026-10-01T00:00:00Z", "elapsed_seconds": 0,       "catch_up_xp": 0 },
+      { "catch_up_percent": 0,  "first_event_at": "2026-10-21T12:00:00Z", "elapsed_seconds": 1771200, "catch_up_xp": 0 }
+    ]
+  }
+}

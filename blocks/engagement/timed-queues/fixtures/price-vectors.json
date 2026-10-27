@@ -1,0 +1,617 @@
+{
+  "_comment": "Price-function and quote vectors for engagement.timed-queues. Curve and config come from fixtures/catalog.json (anchors (3600,20), (86400,260), (604800,1000) plus the implicit origin (0,0); FREE_FINISH_SECONDS 300; round up to a whole unit). Values were computed with exact rational arithmetic and checked for every whole second from 1 to 604800 (non-decreasing, price below remaining_hours * 20 + 1) and for steps of 3600 (step price + price_raw after = price_raw before). Fixed clock now = 2026-10-21T12:00:00Z.",
+  "curve": {
+    "anchors": [
+      [
+        0,
+        0
+      ],
+      [
+        3600,
+        20
+      ],
+      [
+        86400,
+        260
+      ],
+      [
+        604800,
+        1000
+      ]
+    ],
+    "free_finish_seconds": 300,
+    "rounding": "ceil to a whole unit",
+    "price_per_hour_cap": 20
+  },
+  "price_vectors": [
+    {
+      "remaining_seconds": 1,
+      "units_exact": "1/180",
+      "price_raw": 1,
+      "finish_price": 0,
+      "free": true
+    },
+    {
+      "remaining_seconds": 60,
+      "units_exact": "1/3",
+      "price_raw": 1,
+      "finish_price": 0,
+      "free": true
+    },
+    {
+      "remaining_seconds": 300,
+      "units_exact": "5/3",
+      "price_raw": 2,
+      "finish_price": 0,
+      "free": true
+    },
+    {
+      "remaining_seconds": 301,
+      "units_exact": "301/180",
+      "price_raw": 2,
+      "finish_price": 2,
+      "free": false
+    },
+    {
+      "remaining_seconds": 600,
+      "units_exact": "10/3",
+      "price_raw": 4,
+      "finish_price": 4,
+      "free": false
+    },
+    {
+      "remaining_seconds": 1800,
+      "units_exact": "10",
+      "price_raw": 10,
+      "finish_price": 10,
+      "free": false
+    },
+    {
+      "remaining_seconds": 3599,
+      "units_exact": "3599/180",
+      "price_raw": 20,
+      "finish_price": 20,
+      "free": false
+    },
+    {
+      "remaining_seconds": 3600,
+      "units_exact": "20",
+      "price_raw": 20,
+      "finish_price": 20,
+      "free": false
+    },
+    {
+      "remaining_seconds": 3601,
+      "units_exact": "6901/345",
+      "price_raw": 21,
+      "finish_price": 21,
+      "free": false
+    },
+    {
+      "remaining_seconds": 5400,
+      "units_exact": "580/23",
+      "price_raw": 26,
+      "finish_price": 26,
+      "free": false
+    },
+    {
+      "remaining_seconds": 7200,
+      "units_exact": "700/23",
+      "price_raw": 31,
+      "finish_price": 31,
+      "free": false
+    },
+    {
+      "remaining_seconds": 14400,
+      "units_exact": "1180/23",
+      "price_raw": 52,
+      "finish_price": 52,
+      "free": false
+    },
+    {
+      "remaining_seconds": 43200,
+      "units_exact": "3100/23",
+      "price_raw": 135,
+      "finish_price": 135,
+      "free": false
+    },
+    {
+      "remaining_seconds": 86399,
+      "units_exact": "89699/345",
+      "price_raw": 260,
+      "finish_price": 260,
+      "free": false
+    },
+    {
+      "remaining_seconds": 86400,
+      "units_exact": "260",
+      "price_raw": 260,
+      "finish_price": 260,
+      "free": false
+    },
+    {
+      "remaining_seconds": 86401,
+      "units_exact": "6739237/25920",
+      "price_raw": 261,
+      "finish_price": 261,
+      "free": false
+    },
+    {
+      "remaining_seconds": 172800,
+      "units_exact": "1150/3",
+      "price_raw": 384,
+      "finish_price": 384,
+      "free": false
+    },
+    {
+      "remaining_seconds": 604800,
+      "units_exact": "1000",
+      "price_raw": 1000,
+      "finish_price": 1000,
+      "free": false
+    }
+  ],
+  "step_vectors": [
+    {
+      "remaining_seconds": 5400,
+      "step_seconds": 3600,
+      "step_price": 16,
+      "finish_price_at_start": 26,
+      "finish_price_after": 10,
+      "sum_equals_finish_at_start": true
+    },
+    {
+      "remaining_seconds": 7200,
+      "step_seconds": 3600,
+      "step_price": 11,
+      "finish_price_at_start": 31,
+      "finish_price_after": 20,
+      "sum_equals_finish_at_start": true
+    },
+    {
+      "remaining_seconds": 14400,
+      "step_seconds": 3600,
+      "step_price": 11,
+      "finish_price_at_start": 52,
+      "finish_price_after": 41,
+      "sum_equals_finish_at_start": true
+    },
+    {
+      "remaining_seconds": 43200,
+      "step_seconds": 3600,
+      "step_price": 10,
+      "finish_price_at_start": 135,
+      "finish_price_after": 125,
+      "sum_equals_finish_at_start": true
+    },
+    {
+      "remaining_seconds": 86400,
+      "step_seconds": 3600,
+      "step_price": 10,
+      "finish_price_at_start": 260,
+      "finish_price_after": 250,
+      "sum_equals_finish_at_start": true
+    },
+    {
+      "remaining_seconds": 172800,
+      "step_seconds": 3600,
+      "step_price": 5,
+      "finish_price_at_start": 384,
+      "finish_price_after": 379,
+      "sum_equals_finish_at_start": true
+    }
+  ],
+  "invariants_checked": {
+    "monotone_non_decreasing_seconds_1_to_604800": true,
+    "price_below_hours_times_cap_plus_one_seconds_1_to_604800": true,
+    "steps_telescope_for_step_3600": true
+  },
+  "preset": {
+    "_comment": "Running items at now. item-run-1 has 7200 seconds left (craft lane 0, schedule_version 1). item-run-2 has 3660 seconds left. Wallet: gems 100, speedup_1h 2.",
+    "items": {
+      "item-run-1": {
+        "queue_id": "craft",
+        "slot_index": 0,
+        "state": "running",
+        "starts_at": "2026-10-21T11:00:00Z",
+        "ends_at": "2026-10-21T14:00:00Z",
+        "schedule_version": 1
+      },
+      "item-run-2": {
+        "queue_id": "craft",
+        "slot_index": 0,
+        "state": "running",
+        "starts_at": "2026-10-21T10:01:00Z",
+        "ends_at": "2026-10-21T13:01:00Z",
+        "schedule_version": 1
+      },
+      "item-run-3": {
+        "queue_id": "craft",
+        "slot_index": 0,
+        "state": "running",
+        "starts_at": "2026-10-21T11:00:00Z",
+        "ends_at": "2026-10-21T12:05:00Z",
+        "schedule_version": 1
+      },
+      "item-queued-1": {
+        "queue_id": "craft",
+        "slot_index": 0,
+        "state": "queued",
+        "starts_at": "2026-10-21T14:00:00Z",
+        "ends_at": "2026-10-21T14:15:00Z",
+        "schedule_version": 1
+      }
+    },
+    "wallet": {
+      "gems": 100,
+      "speedup_1h": 2,
+      "speedup_5m": 0
+    }
+  },
+  "quote_cases": [
+    {
+      "name": "quote-two-modes",
+      "item": "item-run-1",
+      "at": "2026-10-21T12:00:00Z",
+      "expected": {
+        "remaining_seconds": 7200,
+        "quotes": [
+          {
+            "mode": "finish",
+            "price_amount": 31,
+            "price_currency": "gems",
+            "free": false,
+            "valid_until": "2026-10-21T12:01:00Z",
+            "ends_at_after": "2026-10-21T12:00:00Z"
+          },
+          {
+            "mode": "step",
+            "step_seconds": 3600,
+            "price_amount": 11,
+            "price_currency": "gems",
+            "free": false,
+            "valid_until": "2026-10-21T12:01:00Z",
+            "ends_at_after": "2026-10-21T13:00:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "charge-is-lower-than-quote",
+      "item": "item-run-2",
+      "quote_at": "2026-10-21T12:00:00Z",
+      "spend_at": "2026-10-21T12:01:00Z",
+      "quote": {
+        "mode": "finish",
+        "remaining_seconds": 3660,
+        "price_amount": 21
+      },
+      "expected": {
+        "current_price_at_spend": 20,
+        "quoted": 21,
+        "charged": 20,
+        "ledger": {
+          "op": "spend",
+          "currency": "gems",
+          "amount": 20,
+          "reason": "timed-queues.speed-up"
+        },
+        "item_state": "ready",
+        "balance_gems": 80
+      }
+    },
+    {
+      "name": "quote-expired-never-charges",
+      "item": "item-run-2",
+      "quote_at": "2026-10-21T12:00:00Z",
+      "spend_at": "2026-10-21T12:01:01Z",
+      "expected": {
+        "error": "quote_expired",
+        "charged": 0,
+        "ledger_calls": 0,
+        "fresh_quotes": [
+          {
+            "mode": "finish",
+            "remaining_seconds": 3599,
+            "price_amount": 20,
+            "valid_until": "2026-10-21T12:02:01Z"
+          }
+        ],
+        "balance_gems": 100
+      }
+    },
+    {
+      "name": "quote-stale-after-another-device-step",
+      "item": "item-run-1",
+      "quote_at": "2026-10-21T12:00:00Z",
+      "between": {
+        "at": "2026-10-21T12:00:30Z",
+        "device": "tablet",
+        "action": "speed-up step 3600",
+        "result": {
+          "ends_at": "2026-10-21T13:00:00Z",
+          "schedule_version": 2
+        }
+      },
+      "spend_at": "2026-10-21T12:00:40Z",
+      "expected": {
+        "error": "quote_stale",
+        "charged": 0,
+        "ledger_calls": 0,
+        "fresh_quotes": [
+          {
+            "mode": "finish",
+            "remaining_seconds": 3560,
+            "price_amount": 20
+          }
+        ],
+        "note": "no step quote: the 3600-second step is not shorter than the 3560 seconds left"
+      }
+    },
+    {
+      "name": "curve-change-cannot-raise-an-open-quote",
+      "item": "item-run-2",
+      "quote_at": "2026-10-21T12:00:00Z",
+      "spend_at": "2026-10-21T12:00:40Z",
+      "between": {
+        "at": "2026-10-21T12:00:30Z",
+        "operator": "publishes SPEEDUP_CURVE [[3600,40],[86400,520],[604800,2000]] with SPEEDUP_PRICE_PER_HOUR_CAP 40"
+      },
+      "expected": {
+        "quoted": 21,
+        "current_price_under_new_curve": 41,
+        "charged": 21,
+        "note": "charge = min(quote, current price) inside valid_until; the new curve applies to new quotes"
+      }
+    },
+    {
+      "name": "free-finish-at-threshold",
+      "item": "item-run-3",
+      "at": "2026-10-21T12:00:00Z",
+      "expected": {
+        "remaining_seconds": 300,
+        "quotes": [
+          {
+            "mode": "finish",
+            "price_amount": 0,
+            "free": true
+          }
+        ],
+        "spend": {
+          "ledger_calls": 0,
+          "reduction_source": "free_finish",
+          "item_state": "ready"
+        }
+      }
+    },
+    {
+      "name": "one-second-above-free-threshold",
+      "item": "item-run-3",
+      "at": "2026-10-21T11:59:59Z",
+      "expected": {
+        "remaining_seconds": 301,
+        "quotes": [
+          {
+            "mode": "finish",
+            "price_amount": 2,
+            "free": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "insufficient-balance",
+      "item": "item-run-1",
+      "wallet_override": {
+        "gems": 10
+      },
+      "at": "2026-10-21T12:00:00Z",
+      "expected": {
+        "error": "insufficient_balance",
+        "currency": "gems",
+        "needed": 31,
+        "balance": 10,
+        "shortfall": 21,
+        "reduction_status": "rejected",
+        "quote_consumed": false,
+        "item_state": "running"
+      }
+    },
+    {
+      "name": "queued-item-has-no-quote",
+      "item": "item-queued-1",
+      "at": "2026-10-21T12:00:00Z",
+      "expected": {
+        "error": "item_not_running",
+        "charged": 0
+      }
+    },
+    {
+      "name": "paid-speedup-off-for-a-flagged-minor",
+      "item": "item-run-1",
+      "account_override": {
+        "is_minor": true
+      },
+      "at": "2026-10-21T12:00:00Z",
+      "expected": {
+        "paid_quotes": [],
+        "error_on_paid_spend": "paid_speedup_disabled",
+        "free_finish_still_offered_when_remaining_at_most_300": true,
+        "time_items_still_usable": true
+      }
+    }
+  ],
+  "time_item_cases": [
+    {
+      "name": "two-items-finish-the-item",
+      "item": "item-run-1",
+      "at": "2026-10-21T12:00:00Z",
+      "request": {
+        "item_code": "speedup_1h",
+        "max_count": 5
+      },
+      "expected": {
+        "used": 2,
+        "seconds_applied": 7200,
+        "ledger": {
+          "op": "spend",
+          "currency": "speedup_1h",
+          "amount": 2,
+          "reason": "timed-queues.speed-up"
+        },
+        "item_state": "ready",
+        "speedup_1h_after": 0
+      }
+    },
+    {
+      "name": "one-item-partial",
+      "item": "item-run-1",
+      "at": "2026-10-21T12:00:00Z",
+      "request": {
+        "item_code": "speedup_1h",
+        "max_count": 1
+      },
+      "expected": {
+        "used": 1,
+        "seconds_applied": 3600,
+        "ends_at_after": "2026-10-21T13:00:00Z",
+        "item_state": "running",
+        "speedup_1h_after": 1
+      }
+    },
+    {
+      "name": "never-consumes-more-than-needed",
+      "item": "item-run-1",
+      "at": "2026-10-21T12:30:00Z",
+      "ends_at_override": "2026-10-21T13:30:00Z",
+      "request": {
+        "item_code": "speedup_1h",
+        "max_count": 5
+      },
+      "expected": {
+        "remaining_seconds": 3600,
+        "used": 1,
+        "seconds_applied": 3600,
+        "item_state": "ready",
+        "speedup_1h_after": 1
+      }
+    },
+    {
+      "name": "overshoot-uses-the-rounded-up-count",
+      "item": "item-run-1",
+      "at": "2026-10-21T12:30:00Z",
+      "ends_at_override": "2026-10-21T14:00:00Z",
+      "wallet_override": {
+        "speedup_1h": 2
+      },
+      "request": {
+        "item_code": "speedup_1h",
+        "max_count": 5
+      },
+      "expected": {
+        "remaining_seconds": 5400,
+        "used": 2,
+        "seconds_applied": 5400,
+        "item_state": "ready",
+        "speedup_1h_after": 0,
+        "note": "ceil(5400 / 3600) = 2 items; the time applied is capped at the remaining 5400 seconds"
+      }
+    },
+    {
+      "name": "no-items-owned",
+      "item": "item-run-1",
+      "at": "2026-10-21T12:00:00Z",
+      "wallet_override": {
+        "speedup_1h": 0
+      },
+      "request": {
+        "item_code": "speedup_1h",
+        "max_count": 1
+      },
+      "expected": {
+        "error": "insufficient_balance",
+        "currency": "speedup_1h",
+        "needed": 1,
+        "balance": 0
+      }
+    }
+  ],
+  "invalid_curves": [
+    {
+      "name": "slope-over-cap",
+      "anchors": [
+        [
+          3600,
+          25
+        ],
+        [
+          86400,
+          260
+        ],
+        [
+          604800,
+          1000
+        ]
+      ],
+      "cap": 20,
+      "error": "curve_slope_over_cap"
+    },
+    {
+      "name": "decreasing-units",
+      "anchors": [
+        [
+          3600,
+          20
+        ],
+        [
+          86400,
+          10
+        ],
+        [
+          604800,
+          1000
+        ]
+      ],
+      "cap": 20,
+      "error": "curve_not_monotone"
+    },
+    {
+      "name": "seconds-not-increasing",
+      "anchors": [
+        [
+          3600,
+          20
+        ],
+        [
+          3600,
+          30
+        ]
+      ],
+      "cap": 20,
+      "error": "curve_not_monotone"
+    },
+    {
+      "name": "ends-before-longest-job",
+      "anchors": [
+        [
+          3600,
+          20
+        ]
+      ],
+      "longest_job_seconds": 43200,
+      "cap": 20,
+      "error": "curve_too_short"
+    },
+    {
+      "name": "non-integer-units",
+      "anchors": [
+        [
+          3600,
+          20.5
+        ]
+      ],
+      "cap": 20,
+      "error": "curve_not_integer"
+    }
+  ]
+}
